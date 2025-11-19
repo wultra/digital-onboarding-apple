@@ -1,5 +1,8 @@
 # Changelog
 
+### TBA
+- `SDKInitRequestAttributes` now contains `platform` property (mainly to support BlinkID SDK).
+
 ## 1.3.0 (October, 2024)
 
 - PowerAuth "server stack" `1.9+` is now required
