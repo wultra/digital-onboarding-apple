@@ -36,6 +36,12 @@ enum Endpoints {
             static var endpoint: EndpointType { .init(endpointURLPath: "/api/onboarding/status", e2ee: .applicationScope) }
         }
     }
+    enum Configuration {
+        enum GetConfiguration {
+            typealias EndpointType = WPNEndpointBasic<WPNRequest<ProcessTypeRequest>, WPNResponse<WDOConfigurationResponse>>
+            static var endpoint: EndpointType { .init(endpointURLPath: "/api/configuration", e2ee: .applicationScope) }
+        }
+    }
     enum Identification {
         enum GetStatus {
             typealias EndpointType = WPNEndpointSignedWithToken<WPNRequest<EmptyRequest>, WPNResponse<IdentityStatusResponse>>

@@ -32,6 +32,7 @@ class Networking {
     let onboarding: Onboarding
     /// All necessary communication for Identity Verification (After PowerAuth was enrolled with verification pending)
     let identityVerification: IdentityVerification
+    let configuration: Configuration
     /// Networking service for HTTP communication and request signing.
     let networking: WPNNetworkingService
     
@@ -49,6 +50,36 @@ class Networking {
         self.networking = networking
         self.onboarding = Onboarding(networking: networking)
         self.identityVerification = IdentityVerification(networking: networking)
+        self.configuration = Configuration(networking: networking)
+    }
+    
+    class Configuration {
+        fileprivate let networking: WPNNetworkingService
+        
+        init(networking: WPNNetworkingService) {
+            self.networking = networking
+        }
+        
+        @discardableResult
+        func getConfiguration(
+            processType: ProcessTypeRequest,
+            completion: @escaping (Result<WDOConfigurationResponse, WPNError>) -> Void
+        ) -> Operation? {
+            typealias Endpoint = Endpoints.Configuration.GetConfiguration
+            
+            return networking.post(
+                data: Endpoint.EndpointType.RequestData(processType),
+                to: Endpoint.endpoint,
+                completion: { result, error in
+                    assert(Thread.isMainThread)
+                    if let data = result?.responseObject {
+                        completion(.success(data))
+                    } else {
+                        completion(.failure(error ?? WPNError(reason: .unknown)))
+                    }
+                }
+            )
+        }
     }
     
     /// Class that provides all necessary communication for Identity Onboarding (PowerAuth activation via user information such as client id and birthdate).
@@ -163,6 +194,28 @@ class Networking {
                     assert(Thread.isMainThread)
                     if result?.status == .Ok {
                         completion(.success(()))
+                    } else {
+                        completion(.failure(error ?? WPNError(reason: .unknown)))
+                    }
+                }
+            )
+        }
+        
+        @discardableResult
+        func getConfiguration(
+            processType: String,
+            completion: @escaping (Result<WDOConfigurationResponse, WPNError>) -> Void
+        ) -> Operation? {
+            
+            typealias Endpoint = Endpoints.Configuration.GetConfiguration
+            
+            return networking.post(
+                data: Endpoint.EndpointType.RequestData(.init(processType: processType)),
+                to: Endpoint.endpoint,
+                completion: { result, error in
+                    assert(Thread.isMainThread)
+                    if let data = result?.responseObject {
+                        completion(.success(data))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
                     }
