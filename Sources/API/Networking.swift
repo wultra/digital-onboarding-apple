@@ -517,7 +517,7 @@ class Networking {
         /// Retrieves configuration
         ///
         /// - Parameters:
-        ///   - processType: type of the process.
+        ///   - request: Configuration request containing the process type.
         ///   - completion: Result completion.
         /// - Returns: Operation to observe.
         @discardableResult

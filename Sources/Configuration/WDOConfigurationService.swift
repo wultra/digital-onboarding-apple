@@ -28,7 +28,7 @@ public class WDOConfigurationService {
     
     /// Creates service instance
     /// - Parameters:
-    ///   - powerAuth: Configured PowerAuthSDK instance. This instance needs to be without valid activation.
+    ///   - powerAuth: Configured PowerAuthSDK instance.
     ///   - config: Configuration for the networking.
     public convenience init(powerAuth: PowerAuthSDK, config: WPNConfig) {
         self.init(
@@ -38,7 +38,7 @@ public class WDOConfigurationService {
     
     /// Creates service instance
     /// - Parameters:
-    ///   - networking: Networking service for the onboarding server with configured PowerAuthSDK instance that needs to be without valid activation.
+    ///   - networking: Networking service for the onboarding server with configured PowerAuthSDK instance.
     public convenience init(networking: WPNNetworkingService) {
         self.init(api: .init(networking: networking))
     }
@@ -67,8 +67,7 @@ public class WDOConfigurationService {
                 completion(.success($0))
             }.onError {
                 D.error($0)
-                let error = WPNError(reason: .unknown, error: $0)
-                completion(.failure(error))
+                completion(.failure($0))
             }
         }
     }
