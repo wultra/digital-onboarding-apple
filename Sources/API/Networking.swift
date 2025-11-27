@@ -32,6 +32,8 @@ class Networking {
     let onboarding: Onboarding
     /// All necessary communication for Identity Verification (After PowerAuth was enrolled with verification pending)
     let identityVerification: IdentityVerification
+    /// All necessary communication for Configuration
+    let configuration: Configuration
     /// Networking service for HTTP communication and request signing.
     let networking: WPNNetworkingService
     
@@ -49,6 +51,7 @@ class Networking {
         self.networking = networking
         self.onboarding = Onboarding(networking: networking)
         self.identityVerification = IdentityVerification(networking: networking)
+        self.configuration = Configuration(networking: networking)
     }
     
     /// Class that provides all necessary communication for Identity Onboarding (PowerAuth activation via user information such as client id and birthdate).
@@ -489,6 +492,41 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId, otpCode: otp)),
+                to: Endpoint.endpoint,
+                completion: { result, error in
+                    assert(Thread.isMainThread)
+                    if let data = result?.responseObject {
+                        completion(.success(data))
+                    } else {
+                        completion(.failure(error ?? WPNError(reason: .unknown)))
+                    }
+                }
+            )
+        }
+    }
+    
+    /// Class for all necessary communication for Configuration
+    class Configuration {
+        
+        private let networking: WPNNetworkingService
+        
+        init(networking: WPNNetworkingService) {
+            self.networking = networking
+        }
+        
+        /// Retrieves configuration
+        ///
+        /// - Parameters:
+        ///   - processType: type of the process.
+        ///   - completion: Result completion.
+        /// - Returns: Operation to observe.
+        @discardableResult
+        func getConfiguration(request: ConfigurationRequest, completion: @escaping (Result<ConfigurationResponse, WPNError>) -> Void ) -> Operation? {
+            
+            typealias Endpoint = Endpoints.Configuration.GetConfiguration
+            
+            return networking.post(
+                data: Endpoint.EndpointType.RequestData(request),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)

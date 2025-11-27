@@ -86,6 +86,12 @@ enum Endpoints {
             static var endpoint: EndpointType { .init(endpointURLPath: "/api/identity/otp/verify", e2ee: .activationScope) }
         }
     }
+    enum Configuration {
+        enum GetConfiguration {
+            typealias EndpointType = WPNEndpointBasic<WPNRequest<ConfigurationRequest>, WPNResponse<ConfigurationResponse>>
+            static var endpoint: EndpointType { .init(endpointURLPath: "/api/configuration", e2ee: .applicationScope) }
+        }
+    }
 }
 
 /// Some Endpoints require empty JSON object, so this is it.
