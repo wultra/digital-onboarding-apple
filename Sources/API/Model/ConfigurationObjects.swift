@@ -14,7 +14,6 @@
 // and limitations under the License.
 //
 
-
 /// Configuration request object
 struct ConfigurationRequest: Codable {
     let processType: String
