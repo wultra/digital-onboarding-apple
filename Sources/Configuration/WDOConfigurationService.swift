@@ -68,7 +68,7 @@ public class WDOConfigurationService {
             }.onError {
                 D.error($0)
                 let error = WPNError(reason: .unknown, error: $0)
-                completion(.failure(.init(reason: .unknown, error: error)))
+                completion(.failure(error))
             }
         }
     }

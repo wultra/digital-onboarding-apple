@@ -22,27 +22,27 @@ struct ConfigurationRequest: Codable {
 /// Configuration response objects
 public struct ConfigurationResponse: Codable {
     /// Is the onboarding process enabled
-    let enabled: Bool
+    public let enabled: Bool
     /// Is OTP required for the first part - identification/activation.
-    let otpForIdentification: Bool
+    public let otpForIdentification: Bool
     /// Is OTP required for the second part - identity verification.
-    let optForIdentityVerification: Bool
+    public let otpForIdentityVerification: Bool
     /// Documents required for identity verification.
-    let documents: ConfigurationDocuments
+    public let documents: ConfigurationDocuments
 }
 
-struct ConfigurationDocument: Codable {
+public struct ConfigurationDocument: Codable {
     /// Type of the document
-    let type: String
+    public let type: String
     /// Is the document mandatory?
-    let mandatory: Bool
+    public let mandatory: Bool
     /// Number of sides the document has
-    let sideCount: Int
+    public let sideCount: Int
 }
 
-struct ConfigurationDocuments: Codable {
+public struct ConfigurationDocuments: Codable {
     /// Number of required documents
-    let requiredDocumentsCount: Int
+    public let requiredDocumentsCount: Int
     /// List of documents
-    let items: [ConfigurationDocument]
+    public let items: [ConfigurationDocument]
 }
