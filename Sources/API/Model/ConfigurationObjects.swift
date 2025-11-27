@@ -18,31 +18,3 @@
 struct ConfigurationRequest: Codable {
     let processType: String
 }
-
-/// Configuration response objects
-public struct ConfigurationResponse: Codable {
-    /// Is the onboarding process enabled
-    public let enabled: Bool
-    /// Is OTP required for the first part - identification/activation.
-    public let otpForIdentification: Bool
-    /// Is OTP required for the second part - identity verification.
-    public let otpForIdentityVerification: Bool
-    /// Documents required for identity verification.
-    public let documents: ConfigurationDocuments
-}
-
-public struct ConfigurationDocument: Codable {
-    /// Type of the document
-    public let type: String
-    /// Is the document mandatory?
-    public let mandatory: Bool
-    /// Number of sides the document has
-    public let sideCount: Int
-}
-
-public struct ConfigurationDocuments: Codable {
-    /// Number of required documents
-    public let requiredDocumentsCount: Int
-    /// List of documents
-    public let items: [ConfigurationDocument]
-}
