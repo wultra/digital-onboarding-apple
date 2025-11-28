@@ -48,6 +48,7 @@ The code of the library is open source and you can freely browse it in our GitHu
 <!-- begin remove -->
 ## Integration Tutorials
 - [SDK Integration](SDK-Integration.md)
+- [Process Configuration](Process-Configuration.md)
 - [Device Activation With Email* Only](Device-Activation.md)
 - [Verifying User With Document Scan And Genuine Presence Check](Verifying-User.md)
 - Onboarding a new user _(not available at the moment)_

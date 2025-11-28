@@ -60,4 +60,4 @@ We recommend using Xcode version 15.0 or newer.
 
 ## Read next
 
-- [Device Activation](Device-Activation.md)
+- [Process Configuration](Process-Configuration.md)
