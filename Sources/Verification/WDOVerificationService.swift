@@ -138,7 +138,20 @@ public class WDOVerificationService {
                     break
                 }
                 self.lastStatus = response
-                let vf = VerificationStatus.from(status: response)
+                
+                let vf: VerificationStatus
+                do {
+                    vf = try VerificationStatus.from(status: response)
+                } catch {
+                    D.error(error)
+                    if let wpnError = error as? WPNError {
+                        self.markCompleted(wpnError, completion)
+                    } else {
+                        self.markCompleted(.failure(Fail(.init(reason: .unknown))), completion)
+                    }
+                    return
+                }
+                
                 D.info("Verification status: \(vf)")
                 switch vf {
                 case .intro:
@@ -709,7 +722,7 @@ enum VerificationStatus: CustomStringConvertible {
     case success
     
     // Translation from server status to phone status.
-    static func from(status response: IdentityStatusResponse) -> VerificationStatus {
+    static func from(status response: IdentityStatusResponse) throws -> VerificationStatus {
         switch (response.phase, response.status) {
         case (nil, .notInitialized):                    return .intro
         case (nil, .failed):                            return .failed
@@ -737,7 +750,11 @@ enum VerificationStatus: CustomStringConvertible {
         case (.completed, .accepted):                   return .success
         case (.completed, .failed):                     return .failed
         case (.completed, .rejected):                   return .rejected
-        default: D.fatalError("Unknown phase/status combo: \(response.phase?.rawValue ?? "nil"), \(response.status.rawValue)")
+        default:
+            throw WPNError(
+                reason: WPNErrorReason.unknown,
+                error: WDOError(message: "Unknown phase/status combo: \(response.phase?.rawValue ?? "nil"), \(response.status.rawValue)")
+            )
         }
     }
     
