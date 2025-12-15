@@ -46,8 +46,7 @@ public extension PowerAuthSDK {
             }
         }
     }
-    
-    
+
     /// Creates PowerAuth activation based on the activation code and OTP.
     ///
     /// - Parameters:

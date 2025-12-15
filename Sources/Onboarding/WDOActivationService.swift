@@ -67,7 +67,6 @@ public class WDOActivationService {
         }
     }
     
-    
     // Read-only helper for processId, that is used in several places in this file.
     private var processId: String? {
         processData?.processId
