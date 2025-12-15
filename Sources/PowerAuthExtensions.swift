@@ -46,6 +46,37 @@ public extension PowerAuthSDK {
             }
         }
     }
+    
+    
+    /// Creates PowerAuth activation based on the activation code and OTP.
+    ///
+    /// - Parameters:
+    ///   - activationCode: Activation code.
+    ///   - otp: One time password.
+    ///   - activationName: Name of activation.
+    ///   - callback: Result callback.
+    /// - Throws: An error when activation data cannot be constructed.
+    /// - Returns: Operation task.
+    @discardableResult
+    func createActivation(
+        activationCode: String,
+        otp: String?,
+        activationName: String,
+        callback: @escaping (Result<PowerAuthActivationResult, Error>) -> Void
+    ) throws -> PowerAuthOperationTask? {
+        let activation = try PowerAuthActivation(activationCode: activationCode, name: activationName)
+        if let otp = otp {
+            activation.with(additionalActivationOtp: otp)
+        }
+        
+        return createActivation(activation) { result, error in
+            if let result = result {
+                callback(.success(result))
+            } else {
+                callback(.failure(error ?? WDOError(message: "Activation failed without result and error.")))
+            }
+        }
+    }
 }
 
 public extension PowerAuthActivationStatus {

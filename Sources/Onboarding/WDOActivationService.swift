@@ -19,6 +19,8 @@ import UIKit
 import PowerAuth2
 import WultraPowerAuthNetworking
 
+typealias ProcessData = (processId: String, activationCode: String?)
+
 /// Service that can activate PowerAuthSDK instance by user weak credentials (like his email, phone number or client ID) + SMS OTP.
 ///
 /// When the PowerAuthSDK is activated with this service, `PowerAuthActivationStatus.needVerification` will be `true`
@@ -52,18 +54,23 @@ public class WDOActivationService {
     }
     
     // MARK: - Private properties
-    
-    private var processId: String? {
+    private var processData: ProcessData? {
         get {
-            return KeychainWrapper.standard.string(forKey: keychainKey)
+            dataFromCache(cached: KeychainWrapper.standard.string(forKey: keychainKey) ?? "")
         }
         set {
             if let newValue {
-                KeychainWrapper.standard.set(newValue, forKey: keychainKey)
+                KeychainWrapper.standard.set(dataToCache(processData: newValue), forKey: keychainKey)
             } else {
                 KeychainWrapper.standard.removeObject(forKey: keychainKey)
             }
         }
+    }
+    
+    
+    // Read-only helper for processId, that is used in several places in this file.
+    private var processId: String? {
+        processData?.processId
     }
     
     // MARK: - Dependencies and constants
@@ -105,7 +112,7 @@ public class WDOActivationService {
         self.api = api
         self.keychainKey = "wdopid_\(api.networking.powerAuth.configuration.instanceId)"
         if canRestoreSession == false {
-            processId = nil
+            processData = nil
         }
     }
     
@@ -163,6 +170,7 @@ public class WDOActivationService {
     ///   - completion: Callback with the result.
     public func start<T: Codable>(
         credentials: T,
+        processType: String?,
         completion: @escaping (Result<Void, WPNError>) -> Void
     ) {
         D.debug("Starting activation with credentials: \(credentials)")
@@ -180,11 +188,15 @@ public class WDOActivationService {
             guard self.verifyCanStartProcess(completion) else {
                 return
             }
-            self.api.onboarding.start(with: credentials) { [weak self] result in
+            self.api.onboarding.start(with: credentials, processType: processType) { [weak self] result in
                 result.onSuccess {
                     D.info("WDOActivationService.start success")
                     D.debug(" - processId: \($0.processId)")
-                    self?.processId = $0.processId
+                    // cache result
+                    self?.processData = (
+                        processId: $0.processId,
+                        activationCode: $0.activationCode
+                    )
                     completion(.success(()))
                 }.onError {
                     D.error($0)
@@ -221,12 +233,12 @@ public class WDOActivationService {
             self.api.onboarding.cancel(processId: processId) { [weak self]  result in
                 result.onSuccess {
                     D.info("Process cancel - success.")
-                    self?.processId = nil
+                    self?.processData = nil
                     completion(.success(()))
                 }.onError { error in
                     if forceCancel {
                         D.debug("Process canceled (but the request failed).")
-                        self?.processId = nil
+                        self?.processData = nil
                         completion(.success(()))
                     } else {
                         D.error(error)
@@ -241,7 +253,7 @@ public class WDOActivationService {
     public func clear() {
         oq.addOperation { [weak self] in
             D.info("Activation: Cleared.")
-            self?.processId = nil
+            self?.processData = nil
         }
     }
     
@@ -307,27 +319,43 @@ public class WDOActivationService {
             }
             guard self.api.networking.powerAuth.canStartActivation() else {
                 D.error("PowerAuth instance cannot be activated.")
-                self.processId = nil
+                self.processData = nil
                 completion(.failure(WPNError(reason: .wdo_activation_cannotActivate)))
                 return
             }
-            let data = WDOActivationDataWithOTP(processId: processId, otp: otp)
-            do {
-                try self.api.networking.powerAuth.createActivation(data: data, name: activationName) { [weak self] result in
-                    result.onSuccess {
-                        D.info("Activation was successful.")
-                        self?.processId = nil
-                        completion(.success($0))
-                    }.onError {
-                        D.error($0)
-                        let error = WPNError(reason: .unknown, error: $0)
-                        // when no longer possible to retry activation and the error is not "connection" issue
-                        // reset the processID, because we cannot recover
-                        if error.allowOnboardingOtpRetry == false && error.networkIsNotReachable == false {
-                            self?.processId = nil
-                        }
-                        completion(.failure(error))
+            
+            let handleResult: (Result<PowerAuthActivationResult, Error>) -> Void = { [weak self] result in
+                result.onSuccess {
+                    D.info("Activation was successful.")
+                    self?.processData = nil
+                    completion(.success($0))
+                }.onError {
+                    D.error($0)
+                    let error = WPNError(reason: .unknown, error: $0)
+                    if error.allowOnboardingOtpRetry == false && error.networkIsNotReachable == false {
+                        self?.processData = nil
                     }
+                    completion(.failure(error))
+                }
+            }
+            
+            do {
+                if let activationCode = self.processData?.activationCode {
+                    D.info("Activating PowerAuth using activation code from the onboarding process")
+                    try self.api.networking.powerAuth.createActivation(
+                        activationCode: activationCode,
+                        otp: otp,
+                        activationName: activationName,
+                        callback: handleResult
+                    )
+                } else {
+                    D.info("Activating PowerAuth using identity attributes from the onboarding process")
+                    let data = WDOActivationDataWithOTP(processId: processId, otp: otp)
+                    try self.api.networking.powerAuth.createActivation(
+                        data: data,
+                        name: activationName,
+                        callback: handleResult
+                    )
                 }
             } catch let e {
                 completion(.failure(.wrap(.unknown, e)))
@@ -373,10 +401,10 @@ public class WDOActivationService {
     }
     
     private func verifyCanStartProcess<T>(_ completion: @escaping (Result<T, WPNError>) -> Void) -> Bool {
-            
+        
         guard api.networking.powerAuth.canStartActivation() else {
             D.error("PowerAuth is already activated - Activation cannot be started/processed.")
-            self.processId = nil
+            self.processData = nil
             completion(.failure(.wrap(.wdo_activation_cannotActivate)))
             return false
         }
@@ -455,4 +483,17 @@ private struct WDOActivationDataWithOTP: WDOActivationData {
 struct UserData: Codable {
     let userID: String
     let birthDate: String
+}
+
+func dataToCache(processData: ProcessData) -> String {
+    return "\(processData.processId),\(processData.activationCode ?? "")"
+}
+
+func dataFromCache(cached: String) -> ProcessData? {
+    let parts = cached.split(separator: ",", omittingEmptySubsequences: false)
+    guard parts.count > 1 else { return nil }
+    return ProcessData(
+        processId: String(parts[0]),
+        activationCode: String(parts[1])
+    )
 }
