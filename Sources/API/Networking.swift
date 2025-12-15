@@ -70,6 +70,7 @@ class Networking {
         /// Encrypted with the ECIES application scope.
         /// - Parameters:
         ///   - credentials: Custom credentials object for user authentication.
+        ///   - processType: Type of process.
         ///   - completion: Result completion.
         /// - Returns: Operation to observe
         @discardableResult

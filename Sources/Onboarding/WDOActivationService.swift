@@ -166,6 +166,7 @@ public class WDOActivationService {
     ///
     /// - Parameters:
     ///   - credentials: Codable object with credentials. Which credentials are needed should be provided by a system/backend provider.
+    ///   - processType: Type of process.
     ///   - completion: Callback with the result.
     public func start<T: Codable>(
         credentials: T,
