@@ -19,7 +19,7 @@ import UIKit
 import PowerAuth2
 import WultraPowerAuthNetworking
 
-typealias ProcessData = (processId: String, activationCode: String?)
+private typealias ProcessData = (processId: String, activationCode: String?)
 
 /// Service that can activate PowerAuthSDK instance by user weak credentials (like his email, phone number or client ID) + SMS OTP.
 ///
@@ -166,7 +166,7 @@ public class WDOActivationService {
     ///
     /// - Parameters:
     ///   - credentials: Codable object with credentials. Which credentials are needed should be provided by a system/backend provider.
-    ///   - processType: Type of process.
+    ///   - processType: The process type identification. If not specified, the default process type will be used.
     ///   - completion: Callback with the result.
     public func start<T: Codable>(
         credentials: T,
@@ -485,15 +485,18 @@ struct UserData: Codable {
     let birthDate: String
 }
 
-func dataToCache(processData: ProcessData) -> String {
+private func dataToCache(processData: ProcessData) -> String {
+    // activation code nil is converted to empty string
     return "\(processData.processId),\(processData.activationCode ?? "")"
 }
 
-func dataFromCache(cached: String) -> ProcessData? {
+private func dataFromCache(cached: String) -> ProcessData? {
     let parts = cached.split(separator: ",", omittingEmptySubsequences: false)
     guard parts.count > 1 else { return nil }
+    let activationCodePart = String(parts[1])
     return ProcessData(
         processId: String(parts[0]),
-        activationCode: String(parts[1])
+        // empty string of activation code is considered as nil
+        activationCode: activationCodePart.isEmpty ? nil : activationCodePart
     )
 }

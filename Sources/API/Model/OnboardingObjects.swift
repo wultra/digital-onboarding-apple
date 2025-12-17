@@ -35,7 +35,8 @@ struct ProcessResponse: Codable {
     /// Status of the process
     let onboardingStatus: OnboardingStatus
     /// Activation code used during the activation process.
-    /// If not present, the activation is created later on in the onboarding process.
+    /// If not present (`nil`), the activation will be created later in the onboarding process
+    /// using identity attributes.
     let activationCode: String?
 }
 

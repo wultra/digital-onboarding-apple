@@ -36,7 +36,11 @@ public extension PowerAuthSDK {
     /// - Throws: An error when activation data cannot be constructed.
     /// - Returns: Operation task.
     @discardableResult
-    func createActivation(data: WDOActivationData, name: String, callback: @escaping (Result<PowerAuthActivationResult, Error>) -> Void) throws -> PowerAuthOperationTask? {
+    func createActivation(
+        data: WDOActivationData,
+        name: String,
+        callback: @escaping (Result<PowerAuthActivationResult, Error>) -> Void
+    ) throws -> PowerAuthOperationTask? {
         let activation = try PowerAuthActivation(identityAttributes: data.asAttributes(), name: name)
         return createActivation(activation) { result, error in
             if let result = result {
@@ -67,7 +71,7 @@ public extension PowerAuthSDK {
         if let otp = otp {
             activation.with(additionalActivationOtp: otp)
         }
-        
+
         return createActivation(activation) { result, error in
             if let result = result {
                 callback(.success(result))
