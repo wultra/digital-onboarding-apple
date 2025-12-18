@@ -137,8 +137,9 @@ To start the activation, use the `start` function.
 /// 
 /// - Parameters:
 ///   - credentials: Codable object with credentials. Which credentials are needed should be provided by a system/backend provider.
+///   - processType: The process type identification. If not specified, the default process type will be used.
 ///   - completion: Callback with the result.
-public func start<T: Codable>(credentials: T, completion: @escaping (Result<Void, WPNError>) -> Void
+public func start<T: Codable>(credentials: T, processType: String?, completion: @escaping (Result<Void, WPNError>) -> Void
 ```
 
 ### Example
@@ -152,10 +153,11 @@ struct UserData: Codable {
 class MyUserService {
     // prepared service
     private var activationService: WDOActivationService!
+    private let processType = "ONBOARDING"
     
     func startActivation(id: String, bday: String) {
         let data = UserData(userID: id, birthDate: bday)
-        activationService.start(credentials: data) { result in
+        activationService.start(credentials: data, processType: processType) { result in
             switch result {
             case .success:
                 // success, continue with `activate()`
@@ -180,7 +182,7 @@ Use the `activate` function to create the activation.
 /// Activate the PowerAuthSDK instance that was passed in the initializer.
 ///
 /// - Parameters:
-///   - otp: OTP provided by user.
+///   - otp: OTP code received by the user (via SMS or email).
 ///   - activationName: Name of the activation. Device name by default (usually something like John's iPhone or similar).
 ///   - completion: Callback with the result.
 public func activate(
