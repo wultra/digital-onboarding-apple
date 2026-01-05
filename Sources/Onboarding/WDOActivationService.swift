@@ -170,7 +170,7 @@ public class WDOActivationService {
     ///   - completion: Callback with the result.
     public func start<T: Codable>(
         credentials: T,
-        processType: String?,
+        processType: String? = nil,
         completion: @escaping (Result<Void, WPNError>) -> Void
     ) {
         D.debug("Starting activation with credentials: \(credentials)")
