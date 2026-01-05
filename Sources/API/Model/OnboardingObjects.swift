@@ -20,6 +20,7 @@ import Foundation
 /// your backend needs for authentication
 struct StartOnboardingRequest<T: Codable>: Codable {
     let identification: T
+    let processType: String?
 }
 
 /// For request that needs to identify the current process.
@@ -33,6 +34,10 @@ struct ProcessResponse: Codable {
     let processId: String
     /// Status of the process
     let onboardingStatus: OnboardingStatus
+    /// Activation code used during the activation process.
+    /// If not present (`nil`), the activation will be created later in the onboarding process
+    /// using identity attributes.
+    let activationCode: String?
 }
 
 /// Status of the onboarding

@@ -70,15 +70,23 @@ class Networking {
         /// Encrypted with the ECIES application scope.
         /// - Parameters:
         ///   - credentials: Custom credentials object for user authentication.
+        ///   - processType: The process type identification. If not specified, the default process type will be used.
         ///   - completion: Result completion.
         /// - Returns: Operation to observe
         @discardableResult
-        func start<TCreds: Codable>(with credentials: TCreds, completion: @escaping (Result<ProcessResponse, WPNError>) -> Void) -> Operation? {
+        func start<TCreds: Codable>(
+            with credentials: TCreds,
+            processType: String?,
+            completion: @escaping (Result<ProcessResponse, WPNError>) -> Void
+        ) -> Operation? {
             
             typealias Endpoint = Endpoints.Onboarding.Start<TCreds>
             
             return networking.post(
-                data: Endpoint.EndpointType.RequestData(.init(identification: credentials)),
+                data: Endpoint.EndpointType.RequestData(.init(
+                    identification: credentials,
+                    processType: processType
+                )),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)
