@@ -480,11 +480,6 @@ private struct WDOActivationDataWithOTP: WDOActivationData {
     }
 }
 
-struct UserData: Codable {
-    let userID: String
-    let birthDate: String
-}
-
 private func dataToCache(processData: ProcessData) -> String {
     // activation code nil is converted to empty string
     return "\(processData.processId),\(processData.activationCode ?? "")"
