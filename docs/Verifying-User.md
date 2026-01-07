@@ -181,7 +181,7 @@ verification.status { result in
 
 ## Getting the user consent text
 
-When the state is `intro`, and `consentRequired` is true, the first step in the flow is to get the context text for the user to approve.
+When the state is `intro`, and `consentRequired` is true, the first step in the flow is to get the consent text for the user to approve.
 
 If `consentRequired` is false, you can skip this step and call `start(consentApprovedByUser: .notRequired, ...)` directly.
 
