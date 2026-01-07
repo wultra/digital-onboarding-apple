@@ -61,7 +61,8 @@ enum WDOVerificationState {
     
     /// Show the verification introduction screen where the user can start the activation.
     ///
-    /// The next step should be calling the `getConsentText`.
+    /// If consentRequired is `true`, the next step should be calling `consentGet`. 
+    /// Otherwise the next step should be calling the `start`.
     case intro(consentRequired: Bool)
     
     /// Show approve/cancel user consent.
