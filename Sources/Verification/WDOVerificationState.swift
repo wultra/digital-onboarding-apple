@@ -20,14 +20,15 @@ import Foundation
 public enum WDOVerificationState: CustomStringConvertible {
     
     /// Show the verification introduction screen where the user can start the activation.
+    /// For native platforms we assume consentRequired to be true by default.
     ///
     /// The next step should be calling the `getConsentText`.
-    case intro
+    case intro(consentRequired: Bool = true)
     
     /// Show approve/cancel user consent.
     /// The content of the text depends on the server configuration and might be plain text or HTML.
     ///
-    /// The next step should be calling the `consentApprove`.
+    /// The next step should be calling the `start`.
     case consent(_ body: String)
     
     /// Show document selection to the user. Which documents are available and how many
@@ -141,7 +142,7 @@ public enum WDOVerificationState: CustomStringConvertible {
     public var description: String {
         let prefix = "WDOVerificationState"
         switch self {
-        case .intro: return "\(prefix).intro"
+        case .intro(let consentRequired): return "\(prefix).intro(consentRequired: \(consentRequired))"
         case .consent: return "\(prefix).consent"
         case .documentsToScanSelect: return "\(prefix).documentsToScanSelect"
         case .scanDocument: return "\(prefix).scanDocument"

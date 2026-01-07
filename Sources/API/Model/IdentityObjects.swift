@@ -30,12 +30,14 @@ struct IdentityStatusResponse: Decodable {
         case config = "config"
         case status = "identityVerificationStatus"
         case phase = "identityVerificationPhase"
+        case consentRequired = "consentRequired"
     }
     
     let processId: String
     let status: IdentityVerificationStatus
     let phase: IdentityVerificationPhase?
     let config: IdentityConfig
+    let consentRequired: Bool?
 }
 
 public typealias ISO8601Duration = String
