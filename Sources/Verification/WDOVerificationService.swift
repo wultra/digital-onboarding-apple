@@ -232,7 +232,7 @@ public class WDOVerificationService {
         }
         api.identityVerification.getConsentText(processId: processId) { result in
             result.onSuccess {
-                D.info("Consent text data retrieved.")
+                D.info("Consent data retrieved.")
                 completion(.success($0))
             }.onError {
                 D.error($0)

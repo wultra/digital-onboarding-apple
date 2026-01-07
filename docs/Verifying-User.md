@@ -61,15 +61,9 @@ enum WDOVerificationState {
     
     /// Show the verification introduction screen where the user can start the activation.
     ///
-    /// If consentRequired is `true`, the next step should be calling `consentGet`. 
+    /// If consentRequired is `true`, the next step should be calling `getConsent`. 
     /// Otherwise the next step should be calling the `start`.
     case intro(consentRequired: Bool)
-    
-    /// Show approve/cancel user consent.
-    /// The content of the text depends on the server configuration and might be plain text or HTML.
-    ///
-    /// The next step should be calling the `start`.
-    case consent(_ body: String)
     
     /// Show document selection to the user. Which documents are available and how many
     /// can the user select is up to your backend configuration.
@@ -187,18 +181,14 @@ If `consentRequired` is false, you can skip this step and call `start(consentApp
 
 ```swift
 let verification: WDOVerificationService // configured instance
-verification.consentGet { result in 
+verification.getConsent { result in 
     switch result {
-    case .success(let state):
-        // state will be in the `consent` case here - display the consent screen
+    case .success(let consentText):
+        // show the consent text to the user
         break
     case .failure(let error):
-        if let state = error.state {
-            // show expected screen based on the state
-        } else {
-            // navigate to the error screen and show the error in
-            // error.cause
-        }
+        // navigate to the error screen and show the error in
+        // error.cause
     }
 }
 ```

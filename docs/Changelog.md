@@ -4,6 +4,11 @@
 - `SDKInitRequestAttributes` now contains `platform` property (mainly to support BlinkID SDK).
 - `WDOConfigurationService` allows to fetch Wultra Digital Onboarding configuration from the server. 
 - Added support for `processType` and `activationCode` in `WDOActivationService`
+- `WDOVerificationService` now supports optional identity consent:
+    - `WDOVerificationState.intro` now contains associated `consentRequired` property.
+    - Removed `WDOVerificationState.consent` state.
+    - `consentGet(completion:)` renamed to `getConsent(completion:)`.
+    - `consentApprove(completion:)` replaced by `start(consentApprovedByUser:completion:)`.
 
 ## 1.3.0 (October, 2024)
 
