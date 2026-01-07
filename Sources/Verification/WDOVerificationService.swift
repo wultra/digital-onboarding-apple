@@ -157,7 +157,7 @@ public class WDOVerificationService {
                 case .intro(let consentRequired):
                     self.markCompleted(.success(.intro(consentRequired: consentRequired)), completion)
                 case .documentScan:
-                    D.debug("Veryfying documents status")
+                    D.debug("Verifying documents status")
                     self.api.identityVerification.documentsStatus(processId: response.processId) { [weak self] docsResult in
                         guard let self else {
                             completion(.failure(.init(.init(reason: .unknown))))
