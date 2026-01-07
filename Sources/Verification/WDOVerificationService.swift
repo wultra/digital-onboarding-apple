@@ -224,23 +224,19 @@ public class WDOVerificationService {
     ///
     /// Consent text explains how the service will handle his document photos or selfie scans.
     ///
-    /// - Parameter completion: Callback with the result.
-    public func consentGet(completion: @escaping (Result<Success, Fail>) -> Void) {
+    /// - Parameter completion: Callback with the consent text.
+    public func getConsent(completion: @escaping (Result<String, Fail>) -> Void) {
         D.debug("Getting consent.")
         guard let processId = guardProcessId(completion) else {
             return
         }
-        api.identityVerification.getConsentText(processId: processId) { [weak self] result in
-            guard let self else {
-                completion(.failure(.init(.init(reason: .unknown))))
-                return
-            }
+        api.identityVerification.getConsentText(processId: processId) { result in
             result.onSuccess {
-                D.info("Consent data retrieved.")
-                self.markCompleted(.success(.consent($0)), completion)
+                D.info("Consent text data retrieved.")
+                completion(.success($0))
             }.onError {
                 D.error($0)
-                self.markCompleted($0, completion)
+                completion(.failure(.init($0)))
             }
         }
     }
@@ -283,7 +279,6 @@ public class WDOVerificationService {
                     return
                 }
                 result.onSuccess {
-                    // Should we fetch status from API here? or use last status instead?
                     let consentRequired = self.lastStatus?.consentRequired ?? true
                     self.markCompleted(.success(.intro(consentRequired: consentRequired)), completion)
                 }.onError {
