@@ -61,9 +61,9 @@ enum Endpoints {
             typealias EndpointType = WPNEndpointSigned<WPNRequest<SDKInitRequest>, WPNResponse<SDKInitResponse>>
             static var endpoint: EndpointType { .init(endpointURLPath: "/api/identity/document/init-sdk", uriId: "/api/identity/document/init-sdk", e2ee: .activationScope) }
         }
-        enum SubmitDocuments {
+        enum SubmitDocumentsV2 {
             typealias EndpointType = WPNEndpointSignedWithToken<WPNRequest<DocumentSubmitRequest>, WPNResponseBase>
-            static var endpoint: EndpointType { .init(endpointURLPath: "/api/identity/document/submit", tokenName: "possession_universal", e2ee: .activationScope) }
+            static var endpoint: EndpointType { .init(endpointURLPath: "/api/v2/identity/document/submit", tokenName: "possession_universal", e2ee: .activationScope) }
         }
         enum DocumentsStatus {
             typealias EndpointType = WPNEndpointSignedWithToken<WPNRequest<ProcessRequest>, WPNResponse<DocumentStatusResponse>>

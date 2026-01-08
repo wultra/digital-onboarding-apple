@@ -358,9 +358,13 @@ class Networking {
         ///   - completion: Result completion..
         /// - Returns: Operation to observe.
         @discardableResult
-        func submitDocuments(data: DocumentSubmitRequest, progressCallback: ((Double) -> Void)? = nil, completion: @escaping (Result<Void, WPNError>) -> Void) -> Operation? {
+        func submitDocuments(
+            data: DocumentSubmitRequest,
+            progressCallback: ((Double) -> Void)? = nil,
+            completion: @escaping (Result<Void, WPNError>) -> Void
+        ) -> Operation? {
             
-            typealias Endpoint = Endpoints.Identification.SubmitDocuments
+            typealias Endpoint = Endpoints.Identification.SubmitDocumentsV2
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(data),
