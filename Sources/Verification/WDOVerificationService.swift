@@ -154,10 +154,10 @@ public class WDOVerificationService {
                 
                 D.info("Verification status: \(vf)")
                 switch vf {
-                case .intro:
-                    self.markCompleted(.success(.intro), completion)
+                case .intro(let consentRequired):
+                    self.markCompleted(.success(.intro(consentRequired: consentRequired)), completion)
                 case .documentScan:
-                    D.debug("Veryfying documents status")
+                    D.debug("Verifying documents status")
                     self.api.identityVerification.documentsStatus(processId: response.processId) { [weak self] docsResult in
                         guard let self else {
                             completion(.failure(.init(.init(reason: .unknown))))
@@ -224,59 +224,71 @@ public class WDOVerificationService {
     ///
     /// Consent text explains how the service will handle his document photos or selfie scans.
     ///
-    /// - Parameter completion: Callback with the result.
-    public func consentGet(completion: @escaping (Result<Success, Fail>) -> Void) {
+    /// - Parameter completion: Callback with the consent text.
+    public func getConsent(completion: @escaping (Result<String, Fail>) -> Void) {
         D.debug("Getting consent.")
         guard let processId = guardProcessId(completion) else {
             return
         }
-        api.identityVerification.getConsentText(processId: processId) { [weak self] result in
-            guard let self else {
-                completion(.failure(.init(.init(reason: .unknown))))
-                return
-            }
+        api.identityVerification.getConsentText(processId: processId) { result in
             result.onSuccess {
                 D.info("Consent data retrieved.")
-                self.markCompleted(.success(.consent($0)), completion)
+                completion(.success($0))
             }.onError {
                 D.error($0)
-                self.markCompleted($0, completion)
+                completion(.failure(.init($0)))
             }
         }
     }
     
-    /// Approves the consent for this process and starts the activation.
+    /// Start the identity verification after user approved the consent (if required)
     ///
-    /// - Parameter completion: Callback with the result.
-    public func consentApprove(completion: @escaping (Result<Success, Fail>) -> Void) {
-        D.debug("Approving consent.")
+    /// - Parameters:
+    ///   - consentApprovedByUser: Response of the user to the consent.
+    ///   - completion: Callback with the result.
+    public func start(
+        consentApprovedByUser: ConsentResponse,
+        completion: @escaping (Result<Success, Fail>) -> Void
+    ) {
+        D.debug("Starting verification with consent response: \(consentApprovedByUser.rawValue)")
         guard let processId = guardProcessId(completion) else {
             return
         }
-        api.identityVerification.resolveConsent(processId: processId, approved: true) { [weak self] result in
-            guard let self else {
-                completion(.failure(.init(.init(reason: .unknown))))
-                return
-            }
-            result.onSuccess {
-                D.info("Consent granted - starting the process.")
-                self.api.identityVerification.start(processId: processId) { [weak self] startResult in
-                    guard let self = self else {
-                        completion(.failure(.init(.init(reason: .unknown))))
-                        return
-                    }
-                    startResult.onSuccess {
-                        D.info("Process started")
-                        self.markCompleted(.success(.documentsToScanSelect), completion)
-                    }.onError {
-                        D.error($0)
-                        self.markCompleted($0, completion)
-                    }
+        
+        switch consentApprovedByUser {
+        case .approved:
+            D.info("User approved consent - resolving on server")
+            api.identityVerification.resolveConsent(processId: processId, approved: true) { [weak self] result in
+                guard let self else {
+                    completion(.failure(.init(.init(reason: .unknown))))
+                    return
                 }
-            }.onError {
-                D.error($0)
-                self.markCompleted($0, completion)
+                result.onSuccess {
+                    D.info("Consent granted - starting verification process.")
+                    self.startProcess(processId: processId, completion: completion)
+                }.onError { err in
+                    D.error(err)
+                    self.markCompleted(err, completion)
+                }
             }
+        case .declined:
+            D.info("User declined consent - returning to intro state")
+            api.identityVerification.resolveConsent(processId: processId, approved: false) { [weak self] result in
+                guard let self else {
+                    completion(.failure(.init(.init(reason: .unknown))))
+                    return
+                }
+                result.onSuccess {
+                    let consentRequired = self.lastStatus?.consentRequired ?? true
+                    self.markCompleted(.success(.intro(consentRequired: consentRequired)), completion)
+                }.onError {
+                    D.error($0)
+                    self.markCompleted($0, completion)
+                }
+            }
+        case .notRequired:
+            D.info("Consent not required - start verification process immediately")
+            startProcess(processId: processId, completion: completion)
         }
     }
     
@@ -434,7 +446,7 @@ public class WDOVerificationService {
             }
             result.onSuccess {
                 D.info("Verification process restarted.")
-                self.markCompleted(.success(.intro), completion)
+                self.markCompleted(.success(.intro()), completion)
             }.onError {
                 D.error($0)
                 self.markCompleted($0, completion)
@@ -613,6 +625,27 @@ public class WDOVerificationService {
     
     // MARK: - Private helper methods
     
+    /// Function that starts the verification process on the server.
+    /// Must be called once user accepted consent (if required).
+    private func startProcess(
+        processId: String,
+        completion: @escaping (Result<Success, Fail>) -> Void
+    ) {
+        self.api.identityVerification.start(processId: processId) { [weak self] startResult in
+            guard let self else {
+                completion(.failure(.init(.init(reason: .unknown))))
+                return
+            }
+            startResult.onSuccess {
+                D.info("Verification process started")
+                self.markCompleted(.success(.documentsToScanSelect), completion)
+            }.onError {
+                D.error($0)
+                self.markCompleted($0, completion)
+            }
+        }
+    }
+    
     private func guardProcessId<T>(_ completion: (Result<T, Fail>) -> Void) -> String? {
         guard let processId = lastStatus?.processId else {
             D.error("Process id not available - did you start the verification process and fetched the status?")
@@ -712,7 +745,7 @@ enum VerificationStatus: CustomStringConvertible {
         }
     }
     
-    case intro
+    case intro(consentRequired: Bool)
     case documentScan
     case statusCheck(_ reason: Reason)
     case presenceCheck
@@ -723,8 +756,9 @@ enum VerificationStatus: CustomStringConvertible {
     
     // Translation from server status to phone status.
     static func from(status response: IdentityStatusResponse) throws -> VerificationStatus {
+        let consentRequired = response.consentRequired ?? true // on native platforms we assume consent to be required by default
         switch (response.phase, response.status) {
-        case (nil, .notInitialized):                    return .intro
+        case (nil, .notInitialized):                    return .intro(consentRequired: consentRequired)
         case (nil, .failed):                            return .failed
         case (.documentUpload, .inProgress):            return .documentScan
         case (.documentUpload, .verificationPending):   return .statusCheck(.documentVerification)
@@ -760,7 +794,7 @@ enum VerificationStatus: CustomStringConvertible {
     
     var description: String {
         let name = switch self {
-        case .intro: "intro"
+        case .intro(let consentRequired): "intro(consentRequired: \(consentRequired))"
         case .documentScan: "documentScan"
         case .statusCheck(let reason): "statusCheck(\(reason)"
         case .presenceCheck: "presenceCheck"

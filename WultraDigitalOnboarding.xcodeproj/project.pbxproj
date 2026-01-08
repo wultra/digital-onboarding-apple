@@ -29,6 +29,7 @@
 		EAB4E7AE2ED882C6008BBDBF /* WDOConfigurationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB4E7AC2ED882C6008BBDBF /* WDOConfigurationService.swift */; };
 		EAB4E7B02ED8830A008BBDBF /* ConfigurationObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB4E7AF2ED8830A008BBDBF /* ConfigurationObjects.swift */; };
 		EAB4E7B22ED88491008BBDBF /* WDOConfigurationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB4E7B12ED8848A008BBDBF /* WDOConfigurationResponse.swift */; };
+		EABE7CBD2F0E6B5A006D1232 /* ConsentObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = EABE7CBC2F0E6B5A006D1232 /* ConsentObjects.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +56,7 @@
 		EAB4E7AC2ED882C6008BBDBF /* WDOConfigurationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WDOConfigurationService.swift; sourceTree = "<group>"; };
 		EAB4E7AF2ED8830A008BBDBF /* ConfigurationObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationObjects.swift; sourceTree = "<group>"; };
 		EAB4E7B12ED8848A008BBDBF /* WDOConfigurationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WDOConfigurationResponse.swift; sourceTree = "<group>"; };
+		EABE7CBC2F0E6B5A006D1232 /* ConsentObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentObjects.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +123,7 @@
 		DC75BBA32A1521B0009C2901 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				EABE7CBC2F0E6B5A006D1232 /* ConsentObjects.swift */,
 				EAB4E7AF2ED8830A008BBDBF /* ConfigurationObjects.swift */,
 				DC75BBA42A1521B0009C2901 /* Endpoints.swift */,
 				DC75BBA82A1521B0009C2901 /* DemoEndpoints.swift */,
@@ -296,6 +299,7 @@
 				DC75BBBC2A1521B0009C2901 /* Utils.swift in Sources */,
 				EAB4E7AE2ED882C6008BBDBF /* WDOConfigurationService.swift in Sources */,
 				DC75BBAF2A1521B0009C2901 /* WDOLogger.swift in Sources */,
+				EABE7CBD2F0E6B5A006D1232 /* ConsentObjects.swift in Sources */,
 				DC75BBBE2A1521B0009C2901 /* PowerAuthExtensions.swift in Sources */,
 				DC75BBB42A1521B0009C2901 /* Networking.swift in Sources */,
 				EAB4E7B02ED8830A008BBDBF /* ConfigurationObjects.swift in Sources */,

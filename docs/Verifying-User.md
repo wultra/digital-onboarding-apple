@@ -1,4 +1,4 @@
-# Verifyng user
+# Verifying user
 
 If your PowerAuthSDK instance was activated with the `WDOActivationService`, it will be in the state that needs additional verification. Without such verification, it won't be able to properly sign requests.
 
@@ -61,14 +61,9 @@ enum WDOVerificationState {
     
     /// Show the verification introduction screen where the user can start the activation.
     ///
-    /// The next step should be calling the `getConsentText`.
-    case intro
-    
-    /// Show approve/cancel user consent.
-    /// The content of the text depends on the server configuration and might be plain text or HTML.
-    ///
-    /// The next step should be calling the `consentApprove`.
-    case consent(_ body: String)
+    /// If consentRequired is `true`, the next step should be calling `getConsent`. 
+    /// Otherwise the next step should be calling the `start`.
+    case intro(consentRequired: Bool)
     
     /// Show document selection to the user. Which documents are available and how many
     /// can the user select is up to your backend configuration.
@@ -180,22 +175,20 @@ verification.status { result in
 
 ## Getting the user consent text
 
-When the state is `intro`, the first step in the flow is to get the context text for the user to approve.
+When the state is `intro`, and `consentRequired` is true, the first step in the flow is to get the consent text for the user to approve.
+
+If `consentRequired` is false, you can skip this step and call `start(consentApprovedByUser: .notRequired, ...)` directly.
 
 ```swift
 let verification: WDOVerificationService // configured instance
-verification.consentGet { result in 
+verification.getConsent { result in 
     switch result {
-    case .success(let state):
-        // state will be in the `consent` case here - display the consent screen
+    case .success(let consentText):
+        // show the consent text to the user
         break
     case .failure(let error):
-        if let state = error.state {
-            // show expected screen based on the state
-        } else {
-            // navigate to the error screen and show the error in
-            // error.cause
-        }
+        // navigate to the error screen and show the error in
+        // error.cause
     }
 }
 ```
@@ -204,13 +197,13 @@ verification.consentGet { result in
 
 When the state is `consent`, you should display the consent text to the user to approve or reject.
 
-If the user __rejects the consent__, just return him to the intro screen, there's no API call for reject.
+If the user __declines the consent__, call `start(consentApprovedByUser: .declined, ...)` which will return the user to the intro screen.
 
-If the user chooses to accept the consent, call `consentApprove` function. If successful, `documentsToScanSelect` state will be returned.
+If the user chooses to __accept the consent__, call `start(consentApprovedByUser: .approved, ...)` function. If successful, `documentsToScanSelect` state will be returned.
 
 ```swift
 let verification: WDOVerificationService // configured instance
-verification.consentApprove { result in 
+verification.start(consentApprovedByUser: .approved) { result in 
     switch result {
     case .success(let state):
         // state will be in the `documentsToScanSelect` case here - display the document selector
