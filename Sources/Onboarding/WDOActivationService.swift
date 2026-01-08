@@ -473,10 +473,17 @@ private struct WDOActivationDataWithOTP: WDOActivationData {
     /// Process ID retrieved from `start` call.
     let processId: String
     /// OTP received via 3rd party chanel.
-    let otp: String
+    let otp: String?
     
     func asAttributes() -> [String: String] {
-        return ["processId": processId, "otpCode": otp, "credentialsType": "ONBOARDING"]
+        var attrs = [
+            "processId": processId,
+            "credentialsType": "ONBOARDING"
+        ]
+        if let otpCode = otp {
+            attrs["otpCode"] = otpCode
+        }
+        return attrs
     }
 }
 
