@@ -82,7 +82,7 @@ enum IdentityVerificationPhase: String, Decodable {
 
 /// Document submit request
 struct DocumentSubmitRequest: Codable {
-    /// ProcesID of the onboarding process
+    /// ProcessID of the onboarding process
     let processId: String
     /// Is it resubmit?
     let resubmit: Bool

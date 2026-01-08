@@ -25,8 +25,7 @@ class DocumentPayloadBuilder {
     ///   - processId: ID of the process
     ///   - files: Documents to upload
     /// - Returns: Request
-    /// - Throws: Various errors during the document processing.
-    static func build(processId: String, files: [WDODocumentFile]) throws -> DocumentSubmitRequest {
+    static func build(processId: String, files: [WDODocumentFile]) -> DocumentSubmitRequest {
         DocumentSubmitRequest(
             processId: processId,
             resubmit: files.contains { $0.originalDocumentId != nil },
