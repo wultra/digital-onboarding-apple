@@ -84,8 +84,6 @@ enum IdentityVerificationPhase: String, Decodable {
 struct DocumentSubmitRequest: Codable {
     /// ProcesID of the onboarding process
     let processId: String
-    /// Base64 encoded zip with documents (pictures)
-    let data: String
     /// Is it resubmit?
     let resubmit: Bool
     /// ZIP documents metadata (for each document inside)
@@ -102,6 +100,8 @@ struct DocumentSubmitFile: Codable {
     let side: DocumentSubmitFileSide?
     /// Original document ID in case of re-upload
     let originalDocumentId: String?
+    /// Data of the document
+    let data: String
 }
 
 /// Types of available documents
