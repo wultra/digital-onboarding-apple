@@ -86,13 +86,13 @@ struct DocumentSubmitRequest: Codable {
     let processId: String
     /// Is it resubmit?
     let resubmit: Bool
-    /// ZIP documents metadata (for each document inside)
+    /// Documents to submit
     let documents: [DocumentSubmitFile]
 }
 
-/// Metadata for file inside ZIP (in `DocumentSubmitRequest.data`).
+/// Data of document to submit.
 struct DocumentSubmitFile: Codable {
-    /// Name of the file (with path)
+    /// Name of the file
     let filename: String
     /// Type of the document
     let type: DocumentSubmitFileType
@@ -110,7 +110,7 @@ enum DocumentSubmitFileType: String, Codable {
     case idCard = "ID_CARD"
     /// Passport
     case passport = "PASSPORT"
-    // Driving license
+    /// Driving license
     case driversLicense = "DRIVING_LICENSE"
     /// Selfie photo
     case selfiePhoto = "SELFIE_PHOTO"
@@ -126,7 +126,7 @@ enum DocumentSubmitFileSide: String, Codable {
 
 /// Submitted document metadata
 struct Document: Codable {
-    /// Name of the file (with path within the submit ZIP file).
+    /// Name of the file
     let filename: String
     /// Unique ID of the file
     let id: String
