@@ -295,11 +295,11 @@ public class WDOActivationService {
     /// Activate the PowerAuthSDK instance that was passed in the initializer.
     ///
     /// - Parameters:
-    ///   - otp: OTP provided by user.
+    ///   - otp: OTP provided by user. Optional when not required by backend.
     ///   - activationName: Name of the activation. Device name by default (usually something like John's iPhone or similar).
     ///   - completion: Callback with the result.
     public func activate(
-        otp: String,
+        otp: String?,
         activationName: String = UIDevice.current.name,
         completion: @escaping (Result<PowerAuthActivationResult, WPNError>) -> Void
     ) {
@@ -473,10 +473,17 @@ private struct WDOActivationDataWithOTP: WDOActivationData {
     /// Process ID retrieved from `start` call.
     let processId: String
     /// OTP received via 3rd party chanel.
-    let otp: String
+    let otp: String?
     
     func asAttributes() -> [String: String] {
-        return ["processId": processId, "otpCode": otp, "credentialsType": "ONBOARDING"]
+        var attrs = [
+            "processId": processId,
+            "credentialsType": "ONBOARDING"
+        ]
+        if let otpCode = otp {
+            attrs["otpCode"] = otpCode
+        }
+        return attrs
     }
 }
 
