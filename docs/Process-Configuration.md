@@ -47,7 +47,7 @@ public struct ConfigurationDocumentGroup: Codable {
     /// Number of required documents in the group
     public let requiredDocumentsCount: Int
     /// Documents in the group
-    let items: [ConfigurationDocument]
+    public let items: [ConfigurationDocument]
 }
 
 /// Configuration for a document
