@@ -42,20 +42,28 @@ public struct ConfigurationResponse: Codable {
     public let documents: ConfigurationDocuments
 }
 
+/// Group of documents in the configuration
+public struct ConfigurationDocumentGroup: Codable {
+    /// Number of required documents in the group
+    public let requiredDocumentsCount: Int
+    /// Documents in the group
+    let items: [ConfigurationDocument]
+}
+
+/// Configuration for a document
 public struct ConfigurationDocument: Codable {
     /// Type of the document
     public let type: String
-    /// Is the document mandatory?
-    public let mandatory: Bool
     /// Number of sides the document has
     public let sideCount: Int
 }
 
+/// Documents required for identity verification.
 public struct ConfigurationDocuments: Codable {
-    /// Number of required documents
-    public let requiredDocumentsCount: Int
-    /// List of documents
-    public let items: [ConfigurationDocument]
+    /// Number of total required documents
+    public let totalRequiredDocumentsCount: Int
+    /// Groups of documents
+    public let groups: [ConfigurationDocumentGroup]
 }
 ```
 
