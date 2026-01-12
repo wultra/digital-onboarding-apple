@@ -34,12 +34,20 @@ class DocumentPayloadBuilder {
     }
 }
 
-extension WDODocumentFile {
+extension WDODocumentFile: Hashable {
     
     /// We expect only one document per type(+side) in the final payload
     /// so the name is result of such setup.
     fileprivate var filename: String { "\(type.rawValue.lowercased())_\(side.rawValue.lowercased()).jpg" }
-    
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(filename)
+    }
+
+    public static func == (lhs: WDODocumentFile, rhs: WDODocumentFile) -> Bool {
+        lhs.filename == rhs.filename
+    }
+
     fileprivate func toSubmitFile() -> DocumentSubmitFile {
         DocumentSubmitFile(
             filename: filename,
