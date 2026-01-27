@@ -210,8 +210,8 @@ struct VerifyOTPResponse: Codable {
 /// Request for activation finish
 struct ActivationFinishRequest: Encodable {
     private enum Keys: String, CodingKey {
-        case processId = "processId"
-        case userIdentification = "userIdentification"
+        case processId
+        case userIdentification
     }
     /// ID of the process
     let processId: String
