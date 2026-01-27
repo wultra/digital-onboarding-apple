@@ -85,6 +85,10 @@ enum Endpoints {
             typealias EndpointType = WPNEndpointBasic<WPNRequest<VerifyOTPRequest>, WPNResponse<VerifyOTPResponse>>
             static var endpoint: EndpointType { .init(endpointURLPath: "/api/identity/otp/verify", e2ee: .activationScope) }
         }
+        enum ActivationFinish {
+            typealias EndpointType = WPNEndpointSignedWithToken<WPNRequest<ActivationFinishRequest>, WPNResponse<ActivationFinishResponse>>
+            static var endpoint: EndpointType { .init(endpointURLPath: "/api/identity/activation", tokenName: "possession_universal", e2ee: .activationScope) }
+        }
     }
     enum Configuration {
         enum GetConfiguration {
