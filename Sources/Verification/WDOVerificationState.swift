@@ -94,7 +94,7 @@ public enum WDOVerificationState: CustomStringConvertible {
         case clientVerification
         /// Client data were accepted and we're waiting for a process change
         case clientAccepted
-        /// Waiting for onboarding approval. Usually waiting for manual approval in the a backoffice system.
+        /// Waiting for onboarding approval. Usually waiting for manual approval in a backoffice system.
         case onboardingApproval
         
         public var description: String {

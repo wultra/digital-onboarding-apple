@@ -507,7 +507,7 @@ public class WDOVerificationService {
     ///   - validatePassword If set to `true`, the method verifies that the provided `newPassword` matches the password of the original activation.
     ///   - userIdentification Optional user identification object to be sent to the server during the finish activation process.
     ///   - completion Completion with the result.
-    func finishActivation(
+    public func finishActivation(
         newPowerAuthInstance: PowerAuthSDK,
         newActivationName: String,
         newPassword: PowerAuthCorePassword,
@@ -522,65 +522,90 @@ public class WDOVerificationService {
             return
         }
 
-        // Validate password if required
-        validatePasswordIfRequired(
-            required: validatePassword,
-            password: newPassword,
-            onValid: {
-                // Proceed with finish activation API call
-                self.api.identityVerification.finishActivation(processId: processId, userIdentification: userIdentification) { result in
-                    result.onSuccess { response in
-                        
-                        WDOLogger.info("finishActivation success")
-                        
-                        // Create new activation on the new PowerAuth instance with obtained activation code
-                        
-                        do {
-                            let activation = try PowerAuthActivation(
-                                activationCode: response.activationCode,
-                                name: newActivationName
-                            )
-                            
-                            newPowerAuthInstance.createActivation(activation) { _, error in
-                                
-                                var finalError = error
-                                
-                                if error == nil {
-                                    do {
-                                        try newPowerAuthInstance.persistActivation(with: .persistWithPassword(password: newPassword))
-                                        self.markCompleted(.success(.success), completion)
-                                    } catch let e {
-                                        finalError = e
-                                    }
-                                }
-                                
-                                if let finalError {
-                                    
-                                    if newPowerAuthInstance.canStartActivation() == false {
-                                        newPowerAuthInstance.removeActivationLocal()
-                                    }
-                                    
-                                    WDOLogger.error("finishActivation failed - failed to create activation: \(finalError.localizedDescription)")
-                                    self.markCompleted(.failure(.init(.wrap(.wdo_activation_failed, error))), completion)
-                                }
-                                
-                            }
-                        } catch let e {
-                            self.markCompleted(.failure(.init(.wrap(.wdo_activation_failed, e))), completion)
+        // Validate the password first (if required)
+        validatePasswordIfRequired(required: validatePassword, password: newPassword) { [weak self] validateError in
+            
+            guard let self else {
+                completion(.failure(.init(.init(reason: .unknown))))
+                return
+            }
+            
+            // // Password validation failed -> report and return
+            if let validateError {
+                WDOLogger.error("finishActivation - password validation failed : \(validateError)")
+                self.markCompleted(WPNError(reason: .wdo_password_invalid, error: validateError), completion)
+                return
+            }
+            
+            // Proceed with finish activation API call to retrieve the activation code
+            self.api.identityVerification.finishActivation(processId: processId, userIdentification: userIdentification) { [weak self] result in
+                
+                guard let self else {
+                    completion(.failure(.init(.init(reason: .unknown))))
+                    return
+                }
+                
+                // make sure we recieved the activation code
+                guard let response = result.success else {
+                    
+                    let error = result.error ?? WPNError(reason: .unknown)
+                    
+                    // Finish activation API call failed
+                    WDOLogger.error("finishActivation failed : \(error)")
+                    self.markCompleted(error, completion)
+                    return
+                }
+                    
+                WDOLogger.info("finishActivation call was successful.")
+                
+                // Prepare PowerAuth activation with retrieved activation code
+                let activation: PowerAuthActivation
+                do {
+                    activation = try PowerAuthActivation(
+                        activationCode: response.activationCode,
+                        name: newActivationName
+                    )
+                } catch let e {
+                    // failed to create PowerAuthActivation object
+                    self.markCompleted(.failure(.init(.wrap(.wdo_activation_failed, e))), completion)
+                    return
+                }
+                
+                // Create new activation on the new (fresh) instance
+                newPowerAuthInstance.createActivation(activation) { [weak self] _, error in
+                    
+                    guard let self else {
+                        completion(.failure(.init(.init(reason: .unknown))))
+                        return
+                    }
+                    
+                    // handleError helper function
+                    func handleError(_ error: Error, reason: String) {
+                        // clean the new instance in case the activation is in progress
+                        if newPowerAuthInstance.canStartActivation() == false {
+                            newPowerAuthInstance.removeActivationLocal()
                         }
-                    }.onError {
-                        // Finish activation API call failed
-                        WDOLogger.error("finishActivation failed : \($0)")
-                        self.markCompleted($0, completion)
+                        // report the error
+                        WDOLogger.error("finishActivation failed - \(reason): \(error.localizedDescription)")
+                        self.markCompleted(.failure(.init(.wrap(.wdo_activation_failed, error))), completion)
+                    }
+                    
+                    // in case of error (probably server/networking), report error
+                    guard error == nil else {
+                        handleError(error!, reason: "failed to create activation")
+                        return
+                    }
+                    
+                    // persist the activation with the provided password
+                    do {
+                        try newPowerAuthInstance.persistActivation(with: .persistWithPassword(password: newPassword))
+                        self.markCompleted(.success(.success), completion)
+                    } catch let e {
+                        handleError(e, reason: "failed to persist activation")
                     }
                 }
-            },
-            onInvalid: { error in
-                // Password validation failed
-                WDOLogger.error("finishActivation - password validation failed : \(error)")
-                self.markCompleted(WPNError(reason: .wdo_password_invalid, error: error), completion)
             }
-        )
+        }
     }
 
     ///  Validates password if required. If not required, calls onValid callback immediately.
@@ -588,26 +613,19 @@ public class WDOVerificationService {
     /// - Parameters:
     ///   - required Whether the password validation is required.
     ///   - password Password to validate.
-    ///   - onValid Callback called when the password is valid or validation is not required.
-    ///   - onInvalid Callback called when the password is invalid.
+    ///   - completion Callback called when the password is valid or validation is not required.
     private func validatePasswordIfRequired(
         required: Bool,
         password: PowerAuthCorePassword,
-        onValid: @escaping () -> Void,
-        onInvalid: @escaping (Error) -> Void
+        completion: @escaping (Error?) -> Void
     ) {
         if required {
             api.networking.powerAuth.validatePassword(password: password) { error in
-                if let error {
-                    WDOLogger.error("Password validation failed.")
-                    onInvalid(error)
-                } else {
-                    onValid()
-                }
+                completion(error)
             }
         } else {
             // Password validation not required
-            onValid()
+            completion(nil)
         }
     }
     

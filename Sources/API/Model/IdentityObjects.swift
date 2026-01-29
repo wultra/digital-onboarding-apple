@@ -215,14 +215,14 @@ struct ActivationFinishRequest: Encodable {
     }
     /// ID of the process
     let processId: String
-    /// OTP code
+    /// Optional user identification data sent during activation finish.
     let userIdentification: Encodable?
     
     func encode(to encoder: any Encoder) throws {
         var c = encoder.container(keyedBy: Keys.self)
         try c.encode(processId, forKey: .processId)
         if let userIdentification {
-            try c.encode(userIdentification, forKey: .userIdentification)
+            try c.encode(WDOAnyEncodable(userIdentification), forKey: .userIdentification)
         }
     }
 }
