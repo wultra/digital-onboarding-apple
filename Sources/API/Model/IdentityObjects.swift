@@ -222,7 +222,7 @@ struct ActivationFinishRequest: Encodable {
         var c = encoder.container(keyedBy: Keys.self)
         try c.encode(processId, forKey: .processId)
         if let userIdentification {
-            try c.encode(WDOAnyEncodable(userIdentification), forKey: .userIdentification)
+            try c.encode(userIdentification, forKey: .userIdentification)
         }
     }
 }

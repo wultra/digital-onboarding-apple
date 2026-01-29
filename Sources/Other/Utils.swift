@@ -283,17 +283,3 @@ extension Document {
         }
     }
 }
-
-/// To support encoding of any `Encodable` type, we use this wrapper.
-internal struct WDOAnyEncodable: Encodable {
-    
-    let original: Encodable
-
-    init<T: Encodable>(_ wrapped: T) {
-        original = wrapped
-    }
-
-    func encode(to encoder: Encoder) throws {
-        try original.encode(to: encoder)
-    }
-}

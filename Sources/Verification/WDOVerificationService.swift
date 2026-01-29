@@ -521,6 +521,12 @@ public class WDOVerificationService {
         guard let processId = guardProcessId(completion) else {
             return
         }
+        
+        guard newPowerAuthInstance.canStartActivation() else {
+            WDOLogger.error("finishActivation - cannot activate, the `newPowerAuthInstance` is not in a state that allows it")
+            completion(.failure(.init(.init(reason: .wdo_cannot_activate))))
+            return
+        }
 
         // Validate the password first (if required)
         validatePasswordIfRequired(required: validatePassword, password: newPassword) { [weak self] validateError in
@@ -545,7 +551,7 @@ public class WDOVerificationService {
                     return
                 }
                 
-                // make sure we recieved the activation code
+                // make sure we received the activation code
                 guard let response = result.success else {
                     
                     let error = result.error ?? WPNError(reason: .unknown)
@@ -608,7 +614,7 @@ public class WDOVerificationService {
         }
     }
 
-    ///  Validates password if required. If not required, calls onValid callback immediately.
+    ///  Validates password if required. If not required, calls completion immediately.
     ///
     /// - Parameters:
     ///   - required Whether the password validation is required.
@@ -861,6 +867,8 @@ public extension WPNErrorReason {
     static let wdo_password_invalid = WPNErrorReason(rawValue: "wdo_password_invalid")
     /// Failed to create activation during the activation finish
     static let wdo_activation_failed = WPNErrorReason(rawValue: "wdo_activation_failed")
+    /// Cannot finish the activation - given powerauth instance cannot start activation
+    static let wdo_cannot_activate = WPNErrorReason(rawValue: "wdo_cannot_activate")
 }
 
 // MARK: - Private extensions and other
