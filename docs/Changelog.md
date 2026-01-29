@@ -11,6 +11,9 @@
     - Removed `WDOVerificationState.consent` state.
     - `consentGet(completion:)` renamed to `getConsent(completion:)`.
     - `consentApprove(completion:)` replaced by `start(consentApprovedByUser:completion:)`.
+- added `onboardingApproval` process type constant, which signals that the onboarding requires an approval step.
+- new `activationFinish` state
+  -  when this status is reached, the activation needs to be finalized by calling the `WDOVerificationService.finishActivation` method.
 
 ## 1.3.0 (October, 2024)
 
