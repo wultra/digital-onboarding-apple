@@ -225,7 +225,7 @@ struct SDKInitRequestAttributes: Codable {
         var c = encoder.container(keyedBy: Keys.self)
         try c.encode(challengeToken, forKey: .challengeToken)
         try c.encode("ios", forKey: .platform)
-        try c.encode(Bundle.main.bundleIdentifier, forKey: .origin)
+        try c.encodeIfPresent(Bundle.main.bundleIdentifier, forKey: .origin)
     }
 }
 
