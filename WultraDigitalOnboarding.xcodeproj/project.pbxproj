@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DC316C5A2F2CD9EB0046F169 /* WultraDigitalOnboarding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; };
 		DC75BBAF2A1521B0009C2901 /* WDOLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9B2A1521B0009C2901 /* WDOLogger.swift */; };
 		DC75BBB02A1521B0009C2901 /* KeychainWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9C2A1521B0009C2901 /* KeychainWrapper.swift */; };
 		DC75BBB12A1521B0009C2901 /* WDOVerificationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9E2A1521B0009C2901 /* WDOVerificationState.swift */; };
@@ -32,7 +33,18 @@
 		EABE7CBD2F0E6B5A006D1232 /* ConsentObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = EABE7CBC2F0E6B5A006D1232 /* ConsentObjects.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		DC316C5B2F2CD9EB0046F169 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC75BB852A151FEB009C2901 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC75BB8D2A151FEB009C2901;
+			remoteInfo = WultraDigitalOnboarding;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WultraDigitalOnboardingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WultraDigitalOnboarding.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC75BB9B2A1521B0009C2901 /* WDOLogger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WDOLogger.swift; sourceTree = "<group>"; };
 		DC75BB9C2A1521B0009C2901 /* KeychainWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainWrapper.swift; sourceTree = "<group>"; };
@@ -59,7 +71,19 @@
 		EABE7CBC2F0E6B5A006D1232 /* ConsentObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentObjects.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		DC316C572F2CD9EB0046F169 /* WultraDigitalOnboardingTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = WultraDigitalOnboardingTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		DC316C532F2CD9EB0046F169 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC316C5A2F2CD9EB0046F169 /* WultraDigitalOnboarding.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DC75BB8B2A151FEB009C2901 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -77,6 +101,7 @@
 			isa = PBXGroup;
 			children = (
 				DC75BB9A2A1521B0009C2901 /* Sources */,
+				DC316C572F2CD9EB0046F169 /* WultraDigitalOnboardingTests */,
 				DC75BB8F2A151FEB009C2901 /* Products */,
 				DC75BBBF2A152344009C2901 /* Frameworks */,
 			);
@@ -86,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */,
+				DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -204,6 +230,29 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		DC316C552F2CD9EB0046F169 /* WultraDigitalOnboardingTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC316C5F2F2CD9EB0046F169 /* Build configuration list for PBXNativeTarget "WultraDigitalOnboardingTests" */;
+			buildPhases = (
+				DC316C522F2CD9EB0046F169 /* Sources */,
+				DC316C532F2CD9EB0046F169 /* Frameworks */,
+				DC316C542F2CD9EB0046F169 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DC316C5C2F2CD9EB0046F169 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DC316C572F2CD9EB0046F169 /* WultraDigitalOnboardingTests */,
+			);
+			name = WultraDigitalOnboardingTests;
+			packageProductDependencies = (
+			);
+			productName = WultraDigitalOnboardingTests;
+			productReference = DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		DC75BB8D2A151FEB009C2901 /* WultraDigitalOnboarding */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DC75BB952A151FEB009C2901 /* Build configuration list for PBXNativeTarget "WultraDigitalOnboarding" */;
@@ -230,8 +279,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					DC316C552F2CD9EB0046F169 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 					DC75BB8D2A151FEB009C2901 = {
 						CreatedOnToolsVersion = 14.3;
 					};
@@ -251,11 +304,19 @@
 			projectRoot = "";
 			targets = (
 				DC75BB8D2A151FEB009C2901 /* WultraDigitalOnboarding */,
+				DC316C552F2CD9EB0046F169 /* WultraDigitalOnboardingTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		DC316C542F2CD9EB0046F169 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DC75BB8C2A151FEB009C2901 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -288,6 +349,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DC316C522F2CD9EB0046F169 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DC75BB8A2A151FEB009C2901 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -317,7 +385,64 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		DC316C5C2F2CD9EB0046F169 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC75BB8D2A151FEB009C2901 /* WultraDigitalOnboarding */;
+			targetProxy = DC316C5B2F2CD9EB0046F169 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		DC316C5D2F2CD9EB0046F169 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KTT9G859MR;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wultra.WultraDigitalOnboardingTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DC316C5E2F2CD9EB0046F169 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KTT9G859MR;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wultra.WultraDigitalOnboardingTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		DC75BB932A151FEB009C2901 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -452,6 +577,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -483,6 +609,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -503,6 +630,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		DC316C5F2F2CD9EB0046F169 /* Build configuration list for PBXNativeTarget "WultraDigitalOnboardingTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC316C5D2F2CD9EB0046F169 /* Debug */,
+				DC316C5E2F2CD9EB0046F169 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		DC75BB882A151FEB009C2901 /* Build configuration list for PBXProject "WultraDigitalOnboarding" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
