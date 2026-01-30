@@ -215,6 +215,7 @@ struct SDKInitRequestAttributes: Codable {
     private enum Keys: String, CodingKey {
         case challengeToken = "sdk-init-token"
         case platform = "platform"
+        case origin = "origin"
     }
     
     /// Challenge value 'sdk-init-token'
@@ -224,6 +225,7 @@ struct SDKInitRequestAttributes: Codable {
         var c = encoder.container(keyedBy: Keys.self)
         try c.encode(challengeToken, forKey: .challengeToken)
         try c.encode("ios", forKey: .platform)
+        try c.encode(Bundle.main.bundleIdentifier, forKey: .origin)
     }
 }
 

@@ -11,6 +11,7 @@
     - Removed `WDOVerificationState.consent` state.
     - `consentGet(completion:)` renamed to `getConsent(completion:)`.
     - `consentApprove(completion:)` replaced by `start(consentApprovedByUser:completion:)`.
+- SDK now supports a server that is configured to support multiple BlinkID applications (bundle IDs/Package Names). The `origin` parameter is now sent to the server to identify the application.
 
 ## 1.3.0 (October, 2024)
 
