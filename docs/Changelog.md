@@ -2,7 +2,7 @@
 
 ## TBA
 
-- `SDKInitRequestAttributes` now contains `platform` property (mainly to support BlinkID SDK).
+- `SDKInitRequestAttributes` now contains `platform` and `origin` properties (mainly to support BlinkID SDK).
 - `WDOConfigurationService` allows to fetch Wultra Digital Onboarding configuration from the server. 
 - Added support for `processType` and `activationCode` in `WDOActivationService`
 - Refactored document upload to use the new v2 API.
@@ -11,7 +11,6 @@
     - Removed `WDOVerificationState.consent` state.
     - `consentGet(completion:)` renamed to `getConsent(completion:)`.
     - `consentApprove(completion:)` replaced by `start(consentApprovedByUser:completion:)`.
-- SDK now supports a server that is configured to support multiple BlinkID applications (bundle IDs/Package Names). The `origin` parameter is now sent to the server to identify the application.
 
 ## 1.3.0 (October, 2024)
 
