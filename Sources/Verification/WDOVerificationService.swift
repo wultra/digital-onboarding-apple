@@ -523,7 +523,7 @@ public class WDOVerificationService {
         }
         
         guard newPowerAuthInstance.canStartActivation() else {
-            WDOLogger.error("finishActivation - cannot activate, the `newPowerAuthInstance` is not in a state that allows it")
+            D.error("finishActivation - cannot activate, the `newPowerAuthInstance` is not in a state that allows it")
             completion(.failure(.init(.init(reason: .wdo_cannot_activate))))
             return
         }
@@ -536,9 +536,9 @@ public class WDOVerificationService {
                 return
             }
             
-            // // Password validation failed -> report and return
+            // Password validation failed -> report and return
             if let validateError {
-                WDOLogger.error("finishActivation - password validation failed : \(validateError)")
+                D.error("finishActivation - password validation failed : \(validateError)")
                 self.markCompleted(WPNError(reason: .wdo_password_invalid, error: validateError), completion)
                 return
             }
@@ -557,12 +557,12 @@ public class WDOVerificationService {
                     let error = result.error ?? WPNError(reason: .unknown)
                     
                     // Finish activation API call failed
-                    WDOLogger.error("finishActivation failed : \(error)")
+                    D.error("finishActivation failed : \(error)")
                     self.markCompleted(error, completion)
                     return
                 }
                     
-                WDOLogger.info("finishActivation call was successful.")
+                D.info("finishActivation call was successful.")
                 
                 // Prepare PowerAuth activation with retrieved activation code
                 let activation: PowerAuthActivation
@@ -592,7 +592,7 @@ public class WDOVerificationService {
                             newPowerAuthInstance.removeActivationLocal()
                         }
                         // report the error
-                        WDOLogger.error("finishActivation failed - \(reason): \(error.localizedDescription)")
+                        D.error("finishActivation failed - \(reason): \(error.localizedDescription)")
                         self.markCompleted(.failure(.init(.wrap(.wdo_activation_failed, error))), completion)
                     }
                     
@@ -951,19 +951,15 @@ enum VerificationStatus: CustomStringConvertible {
         case (.onboardingApproval, .inProgress):          return .statusCheck(.onboardingApproval)
         case (.onboardingApproval, .verificationPending): return .statusCheck(.onboardingApproval)
         case (.onboardingApproval, .notInitialized):      return .statusCheck(.onboardingApproval)
+        case (.activationFinish, _):                      return .activationFinish // special case where we dont care about the status...
         case (.completed, .accepted):                     return .success
         case (.completed, .failed):                       return .failed
         case (.completed, .rejected):                     return .rejected
         default:
-            // special case where we dont care about the status...
-            if response.phase == .activationFinish {
-                return .activationFinish
-            } else {
-                throw WPNError(
-                    reason: WPNErrorReason.unknown,
-                    error: WDOError(message: "Unknown phase/status combo: \(response.phase?.rawValue ?? "nil"), \(response.status.rawValue)")
-                )
-            }
+            throw WPNError(
+                reason: WPNErrorReason.unknown,
+                error: WDOError(message: "Unknown phase/status combo: \(response.phase?.rawValue ?? "nil"), \(response.status.rawValue)")
+            )
         }
     }
     
