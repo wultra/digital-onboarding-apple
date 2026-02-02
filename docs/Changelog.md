@@ -2,7 +2,7 @@
 
 ## TBA
 
-- `SDKInitRequestAttributes` now contains `platform` property (mainly to support BlinkID SDK).
+- `SDKInitRequestAttributes` now contains `platform` and `origin` properties (mainly to support BlinkID SDK).
 - `WDOConfigurationService` allows to fetch Wultra Digital Onboarding configuration from the server. 
 - Added support for `processType` and `activationCode` in `WDOActivationService`
 - Refactored document upload to use the new v2 API.
