@@ -16,6 +16,7 @@
 
 import Foundation
 import PowerAuth2
+import PowerAuthCore
 import WultraPowerAuthNetworking
 
 /// Service that can verify previously activated PowerAuthSDK instance.
@@ -205,6 +206,8 @@ public class WDOVerificationService {
                     self.markCompleted(.success(.processing(.from(reason))), completion)
                 case .otp:
                     self.markCompleted(.success(.otp(nil)), completion)
+                case .activationFinish:
+                    self.markCompleted(.success(.activationFinish), completion)
                 case .failed:
                     self.markCompleted(.success(.failed), completion)
                 case .rejected:
@@ -354,24 +357,19 @@ public class WDOVerificationService {
         }
         
         DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let data = try DocumentPayloadBuilder.build(processId: processId, files: files)
-                self.api.identityVerification.submitDocuments(data: data, progressCallback: progressCallback) { [weak self] result in
-                    guard let self else {
-                        completion(.failure(.init(.init(reason: .unknown))))
-                        return
-                    }
-                    result.onSuccess {
-                        D.info("Documents submitted")
-                        self.markCompleted(.success(.processing(.documentUpload)), completion)
-                    }.onError {
-                        D.error($0)
-                        self.markCompleted($0, completion)
-                    }
+            let data = DocumentPayloadBuilder.build(processId: processId, files: files)
+            self.api.identityVerification.submitDocuments(data: data, progressCallback: progressCallback) { [weak self] result in
+                guard let self else {
+                    completion(.failure(.init(.init(reason: .unknown))))
+                    return
                 }
-            } catch {
-                D.error(error)
-                self.markCompleted(.wrap(.unknown, error), completion)
+                result.onSuccess {
+                    D.info("Documents submitted")
+                    self.markCompleted(.success(.processing(.documentUpload)), completion)
+                }.onError {
+                    D.error($0)
+                    self.markCompleted($0, completion)
+                }
             }
         }
     }
@@ -446,7 +444,17 @@ public class WDOVerificationService {
             }
             result.onSuccess {
                 D.info("Verification process restarted.")
-                self.markCompleted(.success(.intro()), completion)
+                self.status { [weak self] statusResult in
+                    guard let self else {
+                        completion(.failure(.init(.init(reason: .unknown))))
+                        return
+                    }
+                    statusResult.onSuccess {
+                        self.markCompleted(.success($0), completion)
+                    }.onError {
+                        self.markCompleted(.failure($0), completion)
+                    }
+                }
             }.onError {
                 D.error($0)
                 self.markCompleted($0, completion)
@@ -477,6 +485,153 @@ public class WDOVerificationService {
                 D.error($0)
                 self.markCompleted($0, completion)
             }
+        }
+    }
+    
+    /// Finishes verification by creating a new PowerAuth activation on given `newPowerAuthInstance`.
+    ///
+    /// Needs to be called when `activationFinish` next step is returned from the `status()` call.
+    ///
+    /// The method verifies that the provided `password` is the same as used in the original activation
+    /// (if `validatePassword` is set to `true`), then it calls the server API to finish
+    /// the verification and obtain the activation code for the new activation. Finally, it creates
+    /// a new activation on the `newPowerAuthInstance` using the obtained activation code and persists it
+    /// with the provided `newPassword`.
+    ///
+    /// After successful completion, the original PowerAuth instance becomes invalid (`removed` state) and cannot be used anymore.
+    ///
+    /// - Parameters:
+    ///   - newPowerAuthInstance PowerAuth instance where to create new activation. This instance must not have an existing activation.
+    ///   - newActivationName Name of the new activation to be created on `newPowerAuthInstance`.
+    ///   - newPassword Password to protect the new activation. In case `validatePassword` is `true`, this password must match the password of the original activation.
+    ///   - validatePassword If set to `true`, the method verifies that the provided `newPassword` matches the password of the original activation.
+    ///   - userIdentification Optional user identification object to be sent to the server during the finish activation process.
+    ///   - completion Completion with the result.
+    public func finishActivation(
+        newPowerAuthInstance: PowerAuthSDK,
+        newActivationName: String,
+        newPassword: PowerAuthCorePassword,
+        validatePassword: Bool,
+        userIdentification: Encodable?,
+        completion: @escaping (Result<Success, Fail>) -> Void
+    ) {
+
+        D.debug("Finishing activation.")
+        
+        guard let processId = guardProcessId(completion) else {
+            return
+        }
+        
+        guard newPowerAuthInstance.canStartActivation() else {
+            D.error("finishActivation - cannot activate, the `newPowerAuthInstance` is not in a state that allows it")
+            completion(.failure(.init(.init(reason: .wdo_cannot_activate))))
+            return
+        }
+
+        // Validate the password first (if required)
+        validatePasswordIfRequired(required: validatePassword, password: newPassword) { [weak self] validateError in
+            
+            guard let self else {
+                completion(.failure(.init(.init(reason: .unknown))))
+                return
+            }
+            
+            // Password validation failed -> report and return
+            if let validateError {
+                D.error("finishActivation - password validation failed : \(validateError)")
+                self.markCompleted(WPNError(reason: .wdo_password_invalid, error: validateError), completion)
+                return
+            }
+            
+            // Proceed with finish activation API call to retrieve the activation code
+            self.api.identityVerification.finishActivation(processId: processId, userIdentification: userIdentification) { [weak self] result in
+                
+                guard let self else {
+                    completion(.failure(.init(.init(reason: .unknown))))
+                    return
+                }
+                
+                // make sure we received the activation code
+                guard let response = result.success else {
+                    
+                    let error = result.error ?? WPNError(reason: .unknown)
+                    
+                    // Finish activation API call failed
+                    D.error("finishActivation failed : \(error)")
+                    self.markCompleted(error, completion)
+                    return
+                }
+                    
+                D.info("finishActivation call was successful.")
+                
+                // Prepare PowerAuth activation with retrieved activation code
+                let activation: PowerAuthActivation
+                do {
+                    activation = try PowerAuthActivation(
+                        activationCode: response.activationCode,
+                        name: newActivationName
+                    )
+                } catch let e {
+                    // failed to create PowerAuthActivation object
+                    self.markCompleted(.failure(.init(.wrap(.wdo_activation_failed, e))), completion)
+                    return
+                }
+                
+                // Create new activation on the new (fresh) instance
+                newPowerAuthInstance.createActivation(activation) { [weak self] _, error in
+                    
+                    guard let self else {
+                        completion(.failure(.init(.init(reason: .unknown))))
+                        return
+                    }
+                    
+                    // handleError helper function
+                    func handleError(_ error: Error, reason: String) {
+                        // clean the new instance in case the activation is in progress
+                        if newPowerAuthInstance.canStartActivation() == false {
+                            newPowerAuthInstance.removeActivationLocal()
+                        }
+                        // report the error
+                        D.error("finishActivation failed - \(reason): \(error.localizedDescription)")
+                        self.markCompleted(.failure(.init(.wrap(.wdo_activation_failed, error))), completion)
+                    }
+                    
+                    // in case of error (probably server/networking), report error
+                    guard error == nil else {
+                        handleError(error!, reason: "failed to create activation")
+                        return
+                    }
+                    
+                    // persist the activation with the provided password
+                    do {
+                        try newPowerAuthInstance.persistActivation(with: .persistWithPassword(password: newPassword))
+                        self.markCompleted(.success(.success), completion)
+                    } catch let e {
+                        handleError(e, reason: "failed to persist activation")
+                    }
+                }
+            }
+        }
+    }
+
+    ///  Validates password if required. If not required, calls completion immediately.
+    ///
+    /// - Parameters:
+    ///   - required Whether the password validation is required.
+    ///   - password Password to validate.
+    ///   - completion Callback called when the password is valid or validation is not required.
+    private func validatePasswordIfRequired(
+        required: Bool,
+        password: PowerAuthCorePassword,
+        completion: @escaping (Error?) -> Void
+    ) {
+        if required {
+            api.networking.powerAuth.validatePassword(password: password) { error in
+                completion(error)
+            }
+        } else {
+            // Password validation not required
+            completion(nil)
         }
     }
     
@@ -708,6 +863,12 @@ public extension WPNErrorReason {
     static let wdo_verification_missingStatus = WPNErrorReason(rawValue: "wdo_verification_missingStatus")
     /// Wultra Digital Onboarding OTP failed to verify.
     static let wdo_verification_otpFailed = WPNErrorReason(rawValue: "wdo_verification_otpFailed")
+    /// Failed to validate password when finishing activation
+    static let wdo_password_invalid = WPNErrorReason(rawValue: "wdo_password_invalid")
+    /// Failed to create activation during the activation finish
+    static let wdo_activation_failed = WPNErrorReason(rawValue: "wdo_activation_failed")
+    /// Cannot finish the activation - given powerauth instance cannot start activation
+    static let wdo_cannot_activate = WPNErrorReason(rawValue: "wdo_cannot_activate")
 }
 
 // MARK: - Private extensions and other
@@ -729,6 +890,7 @@ enum VerificationStatus: CustomStringConvertible {
         case documentsCrossVerification
         case clientVerification
         case clientAccepted
+        case onboardingApproval
         case verifyingPresence
         
         var description: String {
@@ -741,6 +903,7 @@ enum VerificationStatus: CustomStringConvertible {
             case .clientVerification: "clientVerification"
             case .clientAccepted: "clientAccepted"
             case .verifyingPresence: "verifyingPresence"
+            case .onboardingApproval: "onboardingApproval"
             }
         }
     }
@@ -750,6 +913,7 @@ enum VerificationStatus: CustomStringConvertible {
     case statusCheck(_ reason: Reason)
     case presenceCheck
     case otp
+    case activationFinish
     case failed
     case rejected
     case success
@@ -758,32 +922,39 @@ enum VerificationStatus: CustomStringConvertible {
     static func from(status response: IdentityStatusResponse) throws -> VerificationStatus {
         let consentRequired = response.consentRequired ?? true // on native platforms we assume consent to be required by default
         switch (response.phase, response.status) {
-        case (nil, .notInitialized):                    return .intro(consentRequired: consentRequired)
-        case (nil, .failed):                            return .failed
-        case (.documentUpload, .inProgress):            return .documentScan
-        case (.documentUpload, .verificationPending):   return .statusCheck(.documentVerification)
-        case (.documentUpload, .failed):                return .failed
-        case (.documentVerification, .accepted):        return .statusCheck(.documentAccepted)
-        case (.documentVerification, .inProgress):      return .statusCheck(.documentVerification)
-        case (.documentVerification, .failed):          return .failed
-        case (.documentVerification, .rejected):        return .rejected
-        case (.documentVerificationFinal, .accepted):   return .statusCheck(.documentsCrossVerification)
-        case (.documentVerificationFinal, .inProgress): return .statusCheck(.documentsCrossVerification)
-        case (.documentVerificationFinal, .failed):     return .failed
-        case (.documentVerificationFinal, .rejected):   return .rejected
-        case (.clientEvaluation, .inProgress):          return .statusCheck(.clientVerification)
-        case (.clientEvaluation, .accepted):            return .statusCheck(.clientAccepted)
-        case (.clientEvaluation, .rejected):            return .rejected
-        case (.clientEvaluation, .failed):              return .failed
-        case (.presenceCheck, .notInitialized):         return .presenceCheck
-        case (.presenceCheck, .inProgress):             return .presenceCheck
-        case (.presenceCheck, .verificationPending):    return .statusCheck(.verifyingPresence)
-        case (.presenceCheck, .failed):                 return .failed
-        case (.presenceCheck, .rejected):               return .rejected
-        case (.otp, .verificationPending):              return .otp
-        case (.completed, .accepted):                   return .success
-        case (.completed, .failed):                     return .failed
-        case (.completed, .rejected):                   return .rejected
+        case (nil, .notInitialized):                      return .intro(consentRequired: consentRequired)
+        case (nil, .failed):                              return .failed
+        case (.documentUpload, .inProgress):              return .documentScan
+        case (.documentUpload, .verificationPending):     return .statusCheck(.documentVerification)
+        case (.documentUpload, .failed):                  return .failed
+        case (.documentVerification, .accepted):          return .statusCheck(.documentAccepted)
+        case (.documentVerification, .inProgress):        return .statusCheck(.documentVerification)
+        case (.documentVerification, .failed):            return .failed
+        case (.documentVerification, .rejected):          return .rejected
+        case (.documentVerificationFinal, .accepted):     return .statusCheck(.documentsCrossVerification)
+        case (.documentVerificationFinal, .inProgress):   return .statusCheck(.documentsCrossVerification)
+        case (.documentVerificationFinal, .failed):       return .failed
+        case (.documentVerificationFinal, .rejected):     return .rejected
+        case (.clientEvaluation, .inProgress):            return .statusCheck(.clientVerification)
+        case (.clientEvaluation, .accepted):              return .statusCheck(.clientAccepted)
+        case (.clientEvaluation, .rejected):              return .rejected
+        case (.clientEvaluation, .failed):                return .failed
+        case (.presenceCheck, .notInitialized):           return .presenceCheck
+        case (.presenceCheck, .inProgress):               return .presenceCheck
+        case (.presenceCheck, .verificationPending):      return .statusCheck(.verifyingPresence)
+        case (.presenceCheck, .failed):                   return .failed
+        case (.presenceCheck, .rejected):                 return .rejected
+        case (.otp, .verificationPending):                return .otp
+        case (.onboardingApproval, .rejected):            return .rejected
+        case (.onboardingApproval, .failed):              return .failed
+        case (.onboardingApproval, .accepted):            return .statusCheck(.onboardingApproval)
+        case (.onboardingApproval, .inProgress):          return .statusCheck(.onboardingApproval)
+        case (.onboardingApproval, .verificationPending): return .statusCheck(.onboardingApproval)
+        case (.onboardingApproval, .notInitialized):      return .statusCheck(.onboardingApproval)
+        case (.activationFinish, _):                      return .activationFinish // special case where we dont care about the status...
+        case (.completed, .accepted):                     return .success
+        case (.completed, .failed):                       return .failed
+        case (.completed, .rejected):                     return .rejected
         default:
             throw WPNError(
                 reason: WPNErrorReason.unknown,
@@ -802,6 +973,7 @@ enum VerificationStatus: CustomStringConvertible {
         case .failed: "failed"
         case .rejected: "rejected"
         case .success: "success"
+        case .activationFinish: "activationFinish"
         }
         return "VerificationStatus.\(name)"
     }

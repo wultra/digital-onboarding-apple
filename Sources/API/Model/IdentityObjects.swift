@@ -74,6 +74,10 @@ enum IdentityVerificationPhase: String, Decodable {
     case documentVerification = "DOCUMENT_VERIFICATION"
     /// Cross check on documents is in progress
     case documentVerificationFinal = "DOCUMENT_VERIFICATION_FINAL"
+    /// Pending onboarding approval
+    case onboardingApproval = "ONBOARDING_APPROVAL"
+    /// Waiting for activation finish
+    case activationFinish = "ACTIVATION_FINISH"
     /// OTP verification needed
     case otp = "OTP_VERIFICATION"
     /// Completed
@@ -201,6 +205,32 @@ struct VerifyOTPResponse: Codable {
     let expired: Bool
     /// How many attempts are remaining
     let remainingAttempts: Int
+}
+
+/// Request for activation finish
+struct ActivationFinishRequest: Encodable {
+    private enum Keys: String, CodingKey {
+        case processId
+        case userIdentification
+    }
+    /// ID of the process
+    let processId: String
+    /// Optional user identification data sent during activation finish.
+    let userIdentification: Encodable?
+    
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: Keys.self)
+        try c.encode(processId, forKey: .processId)
+        if let userIdentification {
+            try c.encode(userIdentification, forKey: .userIdentification)
+        }
+    }
+}
+
+/// Activation finish response
+struct ActivationFinishResponse: Codable {
+    /// Activation code for the new instance
+    let activationCode: String
 }
 
 struct SDKInitRequest: Codable {

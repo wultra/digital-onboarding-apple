@@ -259,7 +259,7 @@ public class WDOActivationService {
     
     /// OTP resend request.
     ///
-    /// This is intended to be displayed for the user to use in case of the OTP is not recieved.
+    /// This is intended to be displayed for the user to use in case of the OTP is not received.
     /// For example, when the user does not recieve SMS after some time, there should be a button to "send again".
     ///
     /// - Parameter completion: Callback with the result.
