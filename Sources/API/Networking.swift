@@ -560,7 +560,7 @@ class Networking {
         ///   - completion: Result completion.
         /// - Returns: Operation to observe.
         @discardableResult
-        func getConfiguration(request: ConfigurationRequest, completion: @escaping (Result<ConfigurationResponse, WPNError>) -> Void ) -> Operation? {
+        func getConfiguration(request: WDOConfigurationRequest, completion: @escaping (Result<WDOConfigurationResponse, WPNError>) -> Void ) -> Operation? {
             
             typealias Endpoint = Endpoints.Configuration.GetConfiguration
             

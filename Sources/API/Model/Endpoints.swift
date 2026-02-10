@@ -92,7 +92,7 @@ enum Endpoints {
     }
     enum Configuration {
         enum GetConfiguration {
-            typealias EndpointType = WPNEndpointBasic<WPNRequest<ConfigurationRequest>, WPNResponse<ConfigurationResponse>>
+            typealias EndpointType = WPNEndpointBasic<WPNRequest<WDOConfigurationRequest>, WPNResponse<WDOConfigurationResponse>>
             static var endpoint: EndpointType { .init(endpointURLPath: "/api/configuration", e2ee: .applicationScope) }
         }
     }
