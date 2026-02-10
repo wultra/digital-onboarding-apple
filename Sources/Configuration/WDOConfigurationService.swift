@@ -57,7 +57,7 @@ public class WDOConfigurationService {
     ///   - completion: Configuration response from the server.
     public func getConfiguration(
         processType: String,
-        completion: @escaping (Result<ConfigurationResponse, WPNError>) -> Void
+        completion: @escaping (Result<WDOConfigurationResponse, WPNError>) -> Void
     ) {
         D.debug("Get configuration for process type: \(processType)")
         
