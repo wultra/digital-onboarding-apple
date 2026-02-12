@@ -14,7 +14,7 @@
 - added `onboardingApproval` process type constant, which signals that the onboarding requires an approval step.
 - new `activationFinish` state
   -  when this status is reached, the activation needs to be finalized by calling the `WDOVerificationService.finishActivation` method.
-- removed `WDODocumentType` and `DocumentSubmitFileType` types and use `String` type instead to better accomodate dynamic configuration of document scan.
+- removed `WDODocumentType` and `DocumentSubmitFileType` types and use `String` type instead to better accommodate dynamic configuration of document scan.
 
 ## 1.3.0 (October, 2024)
 
