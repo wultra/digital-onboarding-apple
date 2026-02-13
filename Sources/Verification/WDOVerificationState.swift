@@ -54,6 +54,11 @@ public enum WDOVerificationState: CustomStringConvertible {
     /// The OTP is usually SMS or email.
     case otp(_ remainingAttempts: Int?)
     
+    /// Show "finish activation" with PIN prompt screen.
+    ///
+    /// The next step should be calling the `finishActivation` with user entered PIN.
+    case activationFinish
+    
     /// Verification failed and can be restarted
     ///
     /// The next step should be calling the `restartVerification` or `cancelWholeProcess` based on
@@ -75,7 +80,6 @@ public enum WDOVerificationState: CustomStringConvertible {
         
         /// Reason cannot be specified - show generic "Loading" text or similar.
         case other
-        
         /// Documents are being uploaded to a internal systems
         case documentUpload
         /// Documents are being verified
@@ -90,6 +94,8 @@ public enum WDOVerificationState: CustomStringConvertible {
         case clientVerification
         /// Client data were accepted and we're waiting for a process change
         case clientAccepted
+        /// Waiting for onboarding approval. Usually waiting for manual approval in a backoffice system.
+        case onboardingApproval
         
         public var description: String {
             let prefix = "WDOVerificationState.ProcessingItem"
@@ -102,6 +108,7 @@ public enum WDOVerificationState: CustomStringConvertible {
             case .clientVerification: return "\(prefix).clientVerification"
             case .clientAccepted: return "\(prefix).clientAccepted"
             case .verifyingPresence: return "\(prefix).verifyingPresence"
+            case .onboardingApproval: return "\(prefix).onboardingApproval"
                 
             }
         }
@@ -145,6 +152,7 @@ public enum WDOVerificationState: CustomStringConvertible {
         case .failed: return "\(prefix).failed"
         case .endstate: return "\(prefix).endstate"
         case .success: return "\(prefix).success"
+        case .activationFinish: return "\(prefix).activationFinish"
         }
     }
 }
@@ -160,6 +168,7 @@ extension WDOVerificationState.ProcessingItem {
         case .clientVerification: return .clientVerification
         case .clientAccepted: return .clientAccepted
         case .verifyingPresence: return .verifyingPresence
+        case .onboardingApproval: return .onboardingApproval
         }
     }
 }

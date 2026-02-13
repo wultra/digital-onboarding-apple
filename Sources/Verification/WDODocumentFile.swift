@@ -82,26 +82,7 @@ public extension WDOScannedDocument {
 }
 
 /// Type of the document.
-public enum WDODocumentType: String {
-    /// National ID card
-    case idCard
-    /// Passport
-    case passport
-    // Drivers license
-    case driversLicense
-    
-    /// Available sides of the document
-    ///
-    /// Front and back for ID card.
-    /// For passport and drivers license front only.
-    public var sides: [WDODocumentSide] {
-        switch self {
-        case .idCard: return [.front, .back]
-        case .passport: return [.front]
-        case .driversLicense: return [.front]
-        }
-    }
-}
+public typealias WDODocumentType = String
 
 /// Side of the document
 public enum WDODocumentSide: String {

@@ -101,14 +101,13 @@ extension WDOVerificationScanProcess {
             return nil
         }
         
-        let types = split[1].split(separator: ",").compactMap { WDODocumentType(rawValue: String($0)) }
-        
+        let types = split[1].split(separator: ",").compactMap(String.init)
         self.init(types: types)
     }
     
     func feed(_ serverData: [Document]) {
         for group in Dictionary(grouping: serverData, by: { $0.type }) {
-            if let document = documents.first(where: { $0.type.apiType == group.key }) {
+            if let document = documents.first(where: { $0.type == group.key }) {
                 document.processServerData(documents: group.value)
             }
         }
@@ -119,6 +118,6 @@ extension WDOVerificationScanProcess {
     }
     
     func dataForCache() -> String {
-        return "\(CacheVersion.v1.rawValue):\(documents.map { $0.type.rawValue }.joined(separator: ","))"
+        return "\(CacheVersion.v1.rawValue):\(documents.map { $0.type }.joined(separator: ","))"
     }
 }

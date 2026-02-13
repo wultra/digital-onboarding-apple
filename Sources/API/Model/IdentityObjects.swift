@@ -74,6 +74,10 @@ enum IdentityVerificationPhase: String, Decodable {
     case documentVerification = "DOCUMENT_VERIFICATION"
     /// Cross check on documents is in progress
     case documentVerificationFinal = "DOCUMENT_VERIFICATION_FINAL"
+    /// Pending onboarding approval
+    case onboardingApproval = "ONBOARDING_APPROVAL"
+    /// Waiting for activation finish
+    case activationFinish = "ACTIVATION_FINISH"
     /// OTP verification needed
     case otp = "OTP_VERIFICATION"
     /// Completed
@@ -95,25 +99,13 @@ struct DocumentSubmitFile: Codable {
     /// Name of the file
     let filename: String
     /// Type of the document
-    let type: DocumentSubmitFileType
+    let type: String
     /// Side of the document (for example front side of the ID card)
     let side: DocumentSubmitFileSide?
     /// Original document ID in case of re-upload
     let originalDocumentId: String?
     /// Data of the document
     let data: String
-}
-
-/// Types of available documents
-enum DocumentSubmitFileType: String, Codable {
-    /// National ID card
-    case idCard = "ID_CARD"
-    /// Passport
-    case passport = "PASSPORT"
-    /// Driving license
-    case driversLicense = "DRIVING_LICENSE"
-    /// Selfie photo
-    case selfiePhoto = "SELFIE_PHOTO"
 }
 
 /// Side of the file
@@ -131,7 +123,7 @@ struct Document: Codable {
     /// Unique ID of the file
     let id: String
     /// Type of the file
-    let type: DocumentSubmitFileType
+    let type: String
     /// Side of the file
     let side: DocumentSubmitFileSide
     /// Status of the processing
@@ -203,6 +195,32 @@ struct VerifyOTPResponse: Codable {
     let remainingAttempts: Int
 }
 
+/// Request for activation finish
+struct ActivationFinishRequest: Encodable {
+    private enum Keys: String, CodingKey {
+        case processId
+        case userIdentification
+    }
+    /// ID of the process
+    let processId: String
+    /// Optional user identification data sent during activation finish.
+    let userIdentification: Encodable?
+    
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: Keys.self)
+        try c.encode(processId, forKey: .processId)
+        if let userIdentification {
+            try c.encode(userIdentification, forKey: .userIdentification)
+        }
+    }
+}
+
+/// Activation finish response
+struct ActivationFinishResponse: Codable {
+    /// Activation code for the new instance
+    let activationCode: String
+}
+
 struct SDKInitRequest: Codable {
     /// ID of the process
     let processId: String
@@ -215,6 +233,7 @@ struct SDKInitRequestAttributes: Codable {
     private enum Keys: String, CodingKey {
         case challengeToken = "sdk-init-token"
         case platform = "platform"
+        case origin = "origin"
     }
     
     /// Challenge value 'sdk-init-token'
@@ -224,6 +243,7 @@ struct SDKInitRequestAttributes: Codable {
         var c = encoder.container(keyedBy: Keys.self)
         try c.encode(challengeToken, forKey: .challengeToken)
         try c.encode("ios", forKey: .platform)
+        try c.encodeIfPresent(Bundle.main.bundleIdentifier, forKey: .origin)
     }
 }
 

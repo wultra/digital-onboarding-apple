@@ -2,7 +2,7 @@
 
 ## TBA
 
-- `SDKInitRequestAttributes` now contains `platform` property (mainly to support BlinkID SDK).
+- `SDKInitRequestAttributes` now contains `platform` and `origin` properties (mainly to support BlinkID SDK).
 - `WDOConfigurationService` allows to fetch Wultra Digital Onboarding configuration from the server. 
 - Added support for `processType` and `activationCode` in `WDOActivationService`
 - Refactored document upload to use the new v2 API.
@@ -11,6 +11,10 @@
     - Removed `WDOVerificationState.consent` state.
     - `consentGet(completion:)` renamed to `getConsent(completion:)`.
     - `consentApprove(completion:)` replaced by `start(consentApprovedByUser:completion:)`.
+- added `onboardingApproval` process type constant, which signals that the onboarding requires an approval step.
+- new `activationFinish` state
+  -  when this status is reached, the activation needs to be finalized by calling the `WDOVerificationService.finishActivation` method.
+- removed `WDODocumentType` and `DocumentSubmitFileType` types and use `String` type instead to better accommodate dynamic configuration of document scan.
 
 ## 1.3.0 (October, 2024)
 

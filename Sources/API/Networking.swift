@@ -515,6 +515,33 @@ class Networking {
                 }
             )
         }
+        
+        /// Finish activation
+        ///
+        /// - Parameters:
+        ///   - processId: ID of the process.
+        ///   - userIdentification: Custom User identification
+        ///   - completion: Result completion.
+        /// - Returns: Operation to observe.
+        @discardableResult
+        func finishActivation(processId: String, userIdentification: Encodable?, completion: @escaping (Result<ActivationFinishResponse, WPNError>) -> Void) -> Operation? {
+            
+            typealias Endpoint = Endpoints.Identification.ActivationFinish
+            
+            return networking.post(
+                data: Endpoint.EndpointType.RequestData(.init(processId: processId, userIdentification: userIdentification)),
+                signedWith: .possession(),
+                to: Endpoint.endpoint,
+                completion: { result, error in
+                    assert(Thread.isMainThread)
+                    if let data = result?.responseObject {
+                        completion(.success(data))
+                    } else {
+                        completion(.failure(error ?? WPNError(reason: .unknown)))
+                    }
+                }
+            )
+        }
     }
     
     /// Class for all necessary communication for Configuration
@@ -533,7 +560,7 @@ class Networking {
         ///   - completion: Result completion.
         /// - Returns: Operation to observe.
         @discardableResult
-        func getConfiguration(request: ConfigurationRequest, completion: @escaping (Result<ConfigurationResponse, WPNError>) -> Void ) -> Operation? {
+        func getConfiguration(request: WDOConfigurationRequest, completion: @escaping (Result<WDOConfigurationResponse, WPNError>) -> Void ) -> Operation? {
             
             typealias Endpoint = Endpoints.Configuration.GetConfiguration
             

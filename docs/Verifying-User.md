@@ -2,13 +2,15 @@
 
 If your PowerAuthSDK instance was activated with the `WDOActivationService`, it will be in the state that needs additional verification. Without such verification, it won't be able to properly sign requests.
 
-Additional verification means that the user will need to scan his face and documents like ID and/or passport.
+Additional verification means that the user will need to scan their face and documents like ID and/or passport.
 
 ## When is the verification needed?
 
 Verification is needed if the `activationFlags` in the `PowerAuthActivationStatus` contains `VERIFICATION_PENDING` or `VERIFICATION_IN_PROGRESS` value.
 
-These values can be accessed via the extension methods `verificationPending` and `verificationInProgress` or just simply `needVerification` if one of them is true.
+<!-- begin box info -->
+These values can be accessed via the extension methods `verificationPending` and `verificationInProgress`, or simply `needVerification` if one of them is true.
+<!-- end -->
 
 Example:
 
@@ -93,6 +95,11 @@ enum WDOVerificationState {
     /// The next step should be calling the `verifyOTP` with user-entered OTP.
     /// The OTP is usually SMS or email.
     case otp(_ remainingAttempts: Int?)
+    
+    /// Show "finish activation" with PIN prompt screen.
+    ///
+    /// The next step should be calling the `finishActivation` with user entered PIN.
+    case activationFinish
     
     /// Verification failed and can be restarted
     ///
@@ -401,6 +408,41 @@ verification.verifyOTP(otp: userOTP) { result in
     case .failure(let error):
         // handle error
         break
+    }
+}
+```
+
+## Finalizing the verification (optional)
+
+When the state `activationFinish` is received, prompt the user for a PIN code.
+
+This PIN code is then used to activate a new `PowerAuthSDK` object that will be used for signing requests.
+
+Once the new `PowerAuthSDK` instance is activated, the verification process is finished, and the user can proceed to the main app flow *with the new `PowerAuthSDK` instance*.
+
+<!-- begin box info -->
+If the user's PIN used for the original activation should be equal to the one used for the new activation, then set the `validatePassword` parameter to `true` in the `finishActivation` call.
+<!-- end -->
+
+Example:
+
+```swift
+let verification: WDOVerificationService // configured instance
+val newPaInstance: PowerAuthSDK // new PowerAuth instance to be activated and then used in the app
+let password = PowerAuthCorePassword(string: "1234") // user entered PIN code
+verification.finishActivation(
+    newPowerAuthInstance: newPaInstance, 
+    newActivationName: "my-new-activation-name", 
+    newPassword: password, 
+    validatePassword: true, 
+    userIdentification: nil
+) { result in
+    switch result {
+    case .success(let data):
+        // When here, the newPaInstance is activated and ready to use (to sign requests and so on).
+        // The original PowerAuthSDK instance used for the verification will be in the `REMOVED` state and the `verification` instance can't be used anymore.
+    case .failure(let error):
+        // handle error
     }
 }
 ```
