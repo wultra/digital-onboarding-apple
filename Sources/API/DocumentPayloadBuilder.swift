@@ -38,7 +38,7 @@ extension WDODocumentFile: Hashable {
     
     /// We expect only one document per type(+side) in the final payload
     /// so the name is result of such setup.
-    fileprivate var filename: String { "\(type.rawValue.lowercased())_\(side.rawValue.lowercased()).jpg" }
+    fileprivate var filename: String { "\(type.lowercased())_\(side.rawValue.lowercased()).jpg" }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(filename)
@@ -51,21 +51,11 @@ extension WDODocumentFile: Hashable {
     fileprivate func toSubmitFile() -> DocumentSubmitFile {
         DocumentSubmitFile(
             filename: filename,
-            type: type.apiType,
+            type: type,
             side: side.apiType,
             originalDocumentId: originalDocumentId,
             data: data.base64EncodedString(options: [])
         )
-    }
-}
-
-extension WDODocumentType {
-    var apiType: DocumentSubmitFileType {
-        switch self {
-        case .idCard: return .idCard
-        case .passport: return .passport
-        case .driversLicense: return .driversLicense
-        }
     }
 }
 

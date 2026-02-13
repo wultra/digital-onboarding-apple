@@ -99,25 +99,13 @@ struct DocumentSubmitFile: Codable {
     /// Name of the file
     let filename: String
     /// Type of the document
-    let type: DocumentSubmitFileType
+    let type: String
     /// Side of the document (for example front side of the ID card)
     let side: DocumentSubmitFileSide?
     /// Original document ID in case of re-upload
     let originalDocumentId: String?
     /// Data of the document
     let data: String
-}
-
-/// Types of available documents
-enum DocumentSubmitFileType: String, Codable {
-    /// National ID card
-    case idCard = "ID_CARD"
-    /// Passport
-    case passport = "PASSPORT"
-    /// Driving license
-    case driversLicense = "DRIVING_LICENSE"
-    /// Selfie photo
-    case selfiePhoto = "SELFIE_PHOTO"
 }
 
 /// Side of the file
@@ -135,7 +123,7 @@ struct Document: Codable {
     /// Unique ID of the file
     let id: String
     /// Type of the file
-    let type: DocumentSubmitFileType
+    let type: String
     /// Side of the file
     let side: DocumentSubmitFileSide
     /// Status of the processing
