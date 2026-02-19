@@ -84,7 +84,7 @@ public extension WDOConfigurationService {
     /// - Returns: Configuration response from the server
     ///
     /// - Throws: Networking or PowerAuth error
-    func getConfiguration(processType: String) async throws -> ConfigurationResponse {
+    func getConfiguration(processType: String) async throws -> WDOConfigurationResponse {
         try await withCheckedThrowingContinuation { cont in
             getConfiguration(processType: processType) { result in
                 cont.resume(with: result)

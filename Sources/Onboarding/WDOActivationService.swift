@@ -59,10 +59,14 @@ public class WDOActivationService {
             dataFromCache(cached: KeychainWrapper.standard.string(forKey: keychainKey) ?? "")
         }
         set {
+            let result: Bool
             if let newValue {
-                KeychainWrapper.standard.set(dataToCache(processData: newValue), forKey: keychainKey)
+                result = KeychainWrapper.standard.set(dataToCache(processData: newValue), forKey: keychainKey)
             } else {
-                KeychainWrapper.standard.removeObject(forKey: keychainKey)
+                result = KeychainWrapper.standard.removeObject(forKey: keychainKey)
+            }
+            if result == false {
+                D.error("Failed to store/remove process data in Keychain")
             }
         }
     }
@@ -131,9 +135,6 @@ public class WDOActivationService {
             guard let processId = self.processId else {
                 D.error("Cannot call for status = process not started (processId not available).")
                 completion(.failure(.init(reason: .wdo_activation_notRunning)))
-                return
-            }
-            guard self.verifyCanStartProcess(completion) else {
                 return
             }
             self.api.onboarding.getStatus(processId: processId) { result in
@@ -501,4 +502,89 @@ private func dataFromCache(cached: String) -> ProcessData? {
         // empty string of activation code is considered as nil
         activationCode: activationCodePart.isEmpty ? nil : activationCodePart
     )
+}
+
+// -- MARK: Async API
+
+public extension WDOActivationService {
+    
+    /// Retrieves status of the onboarding activation.
+    func status() async throws -> Status {
+        return try await withCheckedThrowingContinuation { cont in
+            status { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Start onboarding activation with user credentials.
+    ///
+    /// For example, when you require email and birth date, your struct would look like this:
+    /// ```
+    /// struct Credentials: Codable {
+    ///     let email: String
+    ///     let birthdate: String
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - credentials: Codable object with credentials. Which credentials are needed should be provided by a system/backend provider.
+    ///   - processType: The process type identification. If not specified, the default process type will be used.
+    func start<T: Codable>(credentials: T, processType: String? = nil) async throws {
+        return try await withCheckedThrowingContinuation { cont in
+            start(credentials: credentials, processType: processType) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Cancel the activation process.
+    ///
+    /// - Parameters:
+    ///   - forceCancel: When true, the process will be canceled in the SDK even when fails on backend. `true` by default.
+    func cancel(forceCancel: Bool = true) async throws {
+        return try await withCheckedThrowingContinuation { cont in
+            cancel { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// OTP resend request.
+    ///
+    /// This is intended to be displayed for the user to use in case of the OTP is not received.
+    /// For example, when the user does not recieve SMS after some time, there should be a button to "send again".
+    func resendOTP() async throws {
+        return try await withCheckedThrowingContinuation { cont in
+            resendOTP { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Activate the PowerAuthSDK instance that was passed in the initializer.
+    ///
+    /// - Parameters:
+    ///   - otp: OTP provided by user. Optional when not required by backend.
+    ///   - activationName: Name of the activation. Device name by default (usually something like John's iPhone or similar). `UIDevice.current.name` is recommended
+    func activate(otp: String?, activationName: String) async throws -> PowerAuthActivationResult {
+        return try await withCheckedThrowingContinuation { cont in
+            activate(otp: otp, activationName: activationName) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    #if ENABLE_ONBOARDING_DEMO
+    /// Demo endpoint available only in Wultra Demo systems
+    ///
+    /// If the app is running against our demo server, you can retrieve the OTP without needing to send SMS or emails.
+    func getOTP() async throws -> String {
+        try await withCheckedThrowingContinuation { cont in
+            getOTP { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    #endif
 }

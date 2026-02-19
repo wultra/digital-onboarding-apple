@@ -978,3 +978,219 @@ enum VerificationStatus: CustomStringConvertible {
         return "VerificationStatus.\(name)"
     }
 }
+
+// -- MARK: Async API
+
+public extension WDOVerificationService {
+    
+    /// Status of the verification.
+    ///
+    ///  - returns: String with HTML or plain text consent.
+    ///  - throws: `WDOVerificationService.Fail`
+    func status() async throws -> WDOVerificationState {
+        return try await withCheckedThrowingContinuation { cont in
+            status { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Returns consent text for user to approve. The content of the text depends on the server configuration and might be plain text or HTML.
+    ///
+    /// Consent text explains how the service will handle his document photos or selfie scans.
+    ///
+    ///  - returns: String with HTML or plain text consent.
+    ///  - throws: `WDOVerificationService.Fail`
+    func getConsent() async throws -> String {
+        return try await withCheckedThrowingContinuation { cont in
+            getConsent { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Start the identity verification after user approved the consent (if required)
+    ///
+    /// - Parameters:
+    ///   - consentApprovedByUser: Response of the user to the consent.
+    ///
+    ///  - returns: Success with "next state" to show
+    ///  - throws: `WDOVerificationService.Fail`
+    func start(consentApprovedByUser: ConsentResponse) async throws -> Success {
+        return try await withCheckedThrowingContinuation { cont in
+            start(consentApprovedByUser: consentApprovedByUser) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Set which documents will be scanned.
+    ///
+    /// Note that this needs to be in sync what server expects based on the configuration.
+    ///
+    /// - Parameters:
+    ///   - types: Types of documents to scan.
+    ///
+    ///  - returns: Success with "next state" to show
+    ///  - throws: `WDOVerificationService.Fail`
+    func documentsSetSelectedTypes(types: [WDODocumentType]) async throws -> Success {
+        return try await withCheckedThrowingContinuation { cont in
+            documentsSetSelectedTypes(types: types) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded document are reasonable size so you're not uploading large files.
+    ///
+    /// If you're uploading the same document file again, you need to include the `originalDocumentId` otherwise it will be rejected by the server.
+    ///
+    /// - Parameters:
+    ///   - files: Document files to upload.
+    ///   - progressCallback: Upload progress callback.
+    ///
+    ///  - returns: Success with "next state" to show
+    ///  - throws: `WDOVerificationService.Fail`
+    func documentsSubmit(files: [WDODocumentFile], progressCallback: ((Double) -> Void)? = nil) async throws -> Success {
+        return try await withCheckedThrowingContinuation { cont in
+            documentsSubmit(
+                files: files,
+                progressCallback: progressCallback ?? { _ in }
+            ) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Initiates the presence check. This returns attributes that are needed to start the 3rd party SDK (if needed).
+    ///
+    ///  - returns: Map of attributes required for presence check init.
+    ///  - throws: `WDOVerificationService.Fail`
+    func presenceCheckInit() async throws -> [String: Any] {
+        return try await withCheckedThrowingContinuation { cont in
+            presenceCheckInit { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Call when presence check was finished in the 3rd party SDK.
+    ///
+    ///  - returns: Success with "next state" to show
+    ///  - throws: `WDOVerificationService.Fail`
+    func presenceCheckSubmit() async throws -> Success {
+        return try await withCheckedThrowingContinuation { cont in
+            presenceCheckSubmit { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Verification restart. When sucessfully called, intro screen should be presented.
+    ///
+    ///  - returns: Success with "next state" to show
+    ///  - throws: `WDOVerificationService.Fail`
+    func restartVerification() async throws -> Success {
+        return try await withCheckedThrowingContinuation { cont in
+            restartVerification { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Cancel the whole activation/verification. After this it's no longer possible to call any API of this library and PowerAuth activation should be removed and activation started again.
+    ///
+    ///  - throws: `WDOVerificationService.Fail`
+    func cancelWholeProcess() async throws {
+        return try await withCheckedThrowingContinuation { cont in
+            cancelWholeProcess { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Finishes verification by creating a new PowerAuth activation on given `newPowerAuthInstance`.
+    ///
+    /// Needs to be called when `activationFinish` next step is returned from the `status()` call.
+    ///
+    /// The method verifies that the provided `password` is the same as used in the original activation
+    /// (if `validatePassword` is set to `true`), then it calls the server API to finish
+    /// the verification and obtain the activation code for the new activation. Finally, it creates
+    /// a new activation on the `newPowerAuthInstance` using the obtained activation code and persists it
+    /// with the provided `newPassword`.
+    ///
+    /// After successful completion, the original PowerAuth instance becomes invalid (`removed` state) and cannot be used anymore.
+    ///
+    /// - Parameters:
+    ///   - newPowerAuthInstance PowerAuth instance where to create new activation. This instance must not have an existing activation.
+    ///   - newActivationName Name of the new activation to be created on `newPowerAuthInstance`.
+    ///   - newPassword Password to protect the new activation. In case `validatePassword` is `true`, this password must match the password of the original activation.
+    ///   - validatePassword If set to `true`, the method verifies that the provided `newPassword` matches the password of the original activation.
+    ///   - userIdentification Optional user identification object to be sent to the server during the finish activation process.
+    ///
+    ///  - returns: Success with "next state" to show
+    ///  - throws: `WDOVerificationService.Fail`
+    func finishActivation(
+        newPowerAuthInstance: PowerAuthSDK,
+        newActivationName: String,
+        newPassword: PowerAuthCorePassword,
+        validatePassword: Bool,
+        userIdentification: Encodable?
+    ) async throws -> Success {
+        return try await withCheckedThrowingContinuation { cont in
+            finishActivation(
+                newPowerAuthInstance: newPowerAuthInstance,
+                newActivationName: newActivationName,
+                newPassword: newPassword,
+                validatePassword: validatePassword,
+                userIdentification: userIdentification
+            ) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Verify OTP that user entered as a last step of the verification.
+    ///
+    /// - Parameters:
+    ///   - otp: OTP that user obtained via other channel (usually SMS or email).
+    ///
+    ///  - returns: Success with "next state" to show
+    ///  - throws: `WDOVerificationService.Fail`
+    func verifyOTP(otp: String) async throws -> Success {
+        return try await withCheckedThrowingContinuation { cont in
+            verifyOTP(otp: otp) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Request OTP resend.
+    ///
+    /// Since SMS or emails can fail to deliver, use this to send the OTP again.
+    ///
+    ///  - throws: `WDOVerificationService.Fail`
+    func resendOTP() async throws {
+        return try await withCheckedThrowingContinuation { cont in
+            resendOTP { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    #if ENABLE_ONBOARDING_DEMO
+    /// Demo endpoint available only in Wultra Demo systems.
+    ///
+    /// If the app is running against our demo server, you can retrieve the OTP without needing to send SMS or emails.
+    ///
+    ///  - returns: OTP
+    ///  - throws: `WDOVerificationService.Fail`
+    func getOTP() async throws -> String {
+        return try await withCheckedThrowingContinuation { cont in
+            getOTP { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    #endif
+}
