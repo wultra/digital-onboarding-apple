@@ -51,7 +51,7 @@ echo "${CONFIG_JSON}" > "WultraDigitalOnboardingTests/config.json"
 xcrun xcodebuild \
 	-derivedDataPath "build" \
     -project "WultraDigitalOnboarding.xcodeproj" \
-    -scheme "WultraDigitalOnboarding" \
+    -scheme "WultraDigitalOnboardingTests" \
     -destination "${DESTINATION}" \
     -configuration "Debug" \
     -verbose \
