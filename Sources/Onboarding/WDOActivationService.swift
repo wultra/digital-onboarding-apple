@@ -261,7 +261,7 @@ public class WDOActivationService {
     /// OTP resend request.
     ///
     /// This is intended to be displayed for the user to use in case of the OTP is not received.
-    /// For example, when the user does not recieve SMS after some time, there should be a button to "send again".
+    /// For example, when the user does not receive SMS after some time, there should be a button to "send again".
     ///
     /// - Parameter completion: Callback with the result.
     public func resendOTP(completion: @escaping (Result<Void, WPNError>) -> Void) {
@@ -544,7 +544,7 @@ public extension WDOActivationService {
     ///   - forceCancel: When true, the process will be canceled in the SDK even when fails on backend. `true` by default.
     func cancel(forceCancel: Bool = true) async throws {
         return try await withCheckedThrowingContinuation { cont in
-            cancel { result in
+            cancel(forceCancel: forceCancel) { result in
                 cont.resume(with: result)
             }
         }
@@ -553,7 +553,7 @@ public extension WDOActivationService {
     /// OTP resend request.
     ///
     /// This is intended to be displayed for the user to use in case of the OTP is not received.
-    /// For example, when the user does not recieve SMS after some time, there should be a button to "send again".
+    /// For example, when the user does not receive SMS after some time, there should be a button to "send again".
     func resendOTP() async throws {
         return try await withCheckedThrowingContinuation { cont in
             resendOTP { result in

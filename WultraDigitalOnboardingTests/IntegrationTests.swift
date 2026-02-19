@@ -15,7 +15,6 @@
 //
 
 import Testing
-import System
 import PowerAuth2
 @testable import WultraDigitalOnboarding
 internal import WultraPowerAuthNetworking
@@ -75,7 +74,7 @@ class IntegrationTests: BaseTestClass {
         }
     }
     
-    // we test as far as we can (untill we hit server mocking limits)
+    // we test as far as we can (until we hit server mocking limits)
     @Test(arguments: ServerEnvironment.loaded)
     func `full onboarding flow`(env: ServerEnvironment) async throws {
         
@@ -88,8 +87,8 @@ class IntegrationTests: BaseTestClass {
             
             // try to get consent when required
             if consentRequired {
-                let consetContent = try await x.verification.getConsent()
-                #expect(consetContent.isEmpty == false)
+                let consentContent = try await x.verification.getConsent()
+                #expect(consentContent.isEmpty == false)
             }
             
             // if consent is required, first reject it
@@ -109,8 +108,8 @@ class IntegrationTests: BaseTestClass {
             #expect(selectResult.shadowState == .scanDocument)
             try await x.assertVerificationState(.scanDocument)
             
-            // this is where the test ends for now, because there is no mock service for documents or presece check
-            // that whould accept fake or invalid documents
+            // this is where the test ends for now, because there is no mock service for documents or presence check
+            // that would accept fake or invalid documents
         }
     }
     

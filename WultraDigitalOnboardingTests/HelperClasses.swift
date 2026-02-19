@@ -16,7 +16,6 @@
 
 import UIKit
 import Testing
-import System
 import PowerAuth2
 @testable import WultraDigitalOnboarding
 internal import WultraPowerAuthNetworking
@@ -39,7 +38,7 @@ class TestHelper {
                 configuration: environment.mobileConfig
             )
         ) else {
-            throw SimpleError("Faield to create PowerAuthSDK")
+            throw SimpleError("Failed to create PowerAuthSDK")
         }
         
         self.powerAuth = pa
@@ -85,7 +84,7 @@ class TestHelper {
     func startAndActivate(credentials: SampleCredentials = .demo()) async throws -> (config: WDOConfigurationResponse, consentRequired: Bool)? {
         
         let config = try await getConfig()
-        try await start()
+        try await start(credentials: credentials)
         
         if config.otpForIdentification && environment.getOTPsupported == false {
             print("Cannot test OTP flow as OTP retrieval it is not supported by the backend")
@@ -215,7 +214,7 @@ extension ServerEnvironment {
             let configContent = try String(contentsOfFile: configPath, encoding: .utf8)
             return try JSONDecoder().decode(ServerEnvironmentData.self, from: configContent.data(using: .utf8)!).environments
         } catch {
-            fatalError("Config file config.json cannot be parsed.")
+            fatalError("Config file config.json at path \(configPath) cannot be parsed: \(error)")
         }
     }()
 }

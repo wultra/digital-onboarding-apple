@@ -426,7 +426,7 @@ public class WDOVerificationService {
         }
     }
     
-    /// Verification restart. When sucessfully called, intro screen should be presented.
+    /// Verification restart. When successfully called, intro screen should be presented.
     ///
     /// - Parameter completion: Callback with the result.
     public func restartVerification(completion: @escaping (Result<Success, Fail>) -> Void) {
@@ -985,7 +985,7 @@ public extension WDOVerificationService {
     
     /// Status of the verification.
     ///
-    ///  - returns: String with HTML or plain text consent.
+    ///  - returns: Current verification status represented by `WDOVerificationState`.
     ///  - throws: `WDOVerificationService.Fail`
     func status() async throws -> WDOVerificationState {
         return try await withCheckedThrowingContinuation { cont in
@@ -1086,7 +1086,7 @@ public extension WDOVerificationService {
         }
     }
     
-    /// Verification restart. When sucessfully called, intro screen should be presented.
+    /// Verification restart. When successfully called, intro screen should be presented.
     ///
     ///  - returns: Success with "next state" to show
     ///  - throws: `WDOVerificationService.Fail`
