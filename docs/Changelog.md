@@ -15,6 +15,7 @@
 - new `activationFinish` state
   -  when this status is reached, the activation needs to be finalized by calling the `WDOVerificationService.finishActivation` method.
 - removed `WDODocumentType` and `DocumentSubmitFileType` types and use `String` type instead to better accommodate dynamic configuration of document scan.
+- added `async` variants for all asynchronous methods
 
 ## 1.3.0 (October, 2024)
 
