@@ -124,7 +124,7 @@ class IntegrationTests: BaseTestClass {
             
             _ = try await x.verification.start(consentApprovedByUser: .notRequired) // for simplicity not required
             
-            // se should now be in document to scan select state
+            // we should now be in document to scan select state
             try await x.assertVerificationState(.documentsToScanSelect)
             
             // restart and verify the state
@@ -143,7 +143,7 @@ class IntegrationTests: BaseTestClass {
             // cancel whole process, after that, the onboarding should be finished
             try await x.verification.cancelWholeProcess()
             
-            // after the process is canceled, the powerauth status hsould be removed
+            // after the process is canceled, the powerauth status should be removed
             let paStatus = try await x.powerAuth.fetchActivationStatus()
             #expect(paStatus.state == .removed)
         }

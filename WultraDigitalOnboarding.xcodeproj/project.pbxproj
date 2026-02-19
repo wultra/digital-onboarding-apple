@@ -8,6 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		DC316C5A2F2CD9EB0046F169 /* WultraDigitalOnboarding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; };
+		DC40301D2F47C038007755BE /* PowerAuth2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; };
+		DC40301E2F47C038007755BE /* PowerAuth2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DC40301F2F47C038007755BE /* PowerAuthCore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */; };
+		DC4030202F47C038007755BE /* PowerAuthCore.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DC4030212F47C038007755BE /* WultraDigitalOnboarding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; };
+		DC4030222F47C038007755BE /* WultraDigitalOnboarding.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DC4030252F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */; };
+		DC4030262F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DC75BBAF2A1521B0009C2901 /* WDOLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9B2A1521B0009C2901 /* WDOLogger.swift */; };
 		DC75BBB02A1521B0009C2901 /* KeychainWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9C2A1521B0009C2901 /* KeychainWrapper.swift */; };
 		DC75BBB12A1521B0009C2901 /* WDOVerificationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9E2A1521B0009C2901 /* WDOVerificationState.swift */; };
@@ -47,7 +55,31 @@
 			remoteGlobalIDString = DC402FEE2F45C247007755BE;
 			remoteInfo = WDOHostApp;
 		};
+		DC4030232F47C038007755BE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC75BB852A151FEB009C2901 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC75BB8D2A151FEB009C2901;
+			remoteInfo = WultraDigitalOnboarding;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DC4030272F47C038007755BE /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				DC4030222F47C038007755BE /* WultraDigitalOnboarding.framework in Embed Frameworks */,
+				DC4030202F47C038007755BE /* PowerAuthCore.xcframework in Embed Frameworks */,
+				DC4030262F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Embed Frameworks */,
+				DC40301E2F47C038007755BE /* PowerAuth2.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WultraDigitalOnboardingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -95,6 +127,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC4030212F47C038007755BE /* WultraDigitalOnboarding.framework in Frameworks */,
+				DC40301F2F47C038007755BE /* PowerAuthCore.xcframework in Frameworks */,
+				DC4030252F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Frameworks */,
+				DC40301D2F47C038007755BE /* PowerAuth2.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -276,10 +312,12 @@
 				DC402FEB2F45C247007755BE /* Sources */,
 				DC402FEC2F45C247007755BE /* Frameworks */,
 				DC402FED2F45C247007755BE /* Resources */,
+				DC4030272F47C038007755BE /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				DC4030242F47C038007755BE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				DC402FF02F45C247007755BE /* WDOHostApp */,
@@ -452,6 +490,11 @@
 			target = DC402FEE2F45C247007755BE /* WDOHostApp */;
 			targetProxy = DC402FFA2F45C250007755BE /* PBXContainerItemProxy */;
 		};
+		DC4030242F47C038007755BE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC75BB8D2A151FEB009C2901 /* WultraDigitalOnboarding */;
+			targetProxy = DC4030232F47C038007755BE /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -461,11 +504,11 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = KTT9G859MR;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wultra.WultraDigitalOnboardingTests;
@@ -487,11 +530,11 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = KTT9G859MR;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wultra.WultraDigitalOnboardingTests;
@@ -514,17 +557,18 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = KTT9G859MR;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = WDOHostApp;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -552,17 +596,18 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = KTT9G859MR;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = WDOHostApp;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -704,10 +749,11 @@
 		DC75BB962A151FEB009C2901 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = KTT9G859MR;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -736,10 +782,11 @@
 		DC75BB972A151FEB009C2901 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = KTT9G859MR;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
