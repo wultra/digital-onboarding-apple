@@ -34,3 +34,6 @@ Carthage
 swiftlint
 
 Package.resolved
+
+# Ignore test config
+WultraDigitalOnboardingTests/config.json
