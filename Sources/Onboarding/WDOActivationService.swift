@@ -56,14 +56,14 @@ public class WDOActivationService {
     // MARK: - Private properties
     private var processData: ProcessData? {
         get {
-            dataFromCache(cached: KeychainWrapper.standard.string(forKey: keychainKey) ?? "")
+            dataFromCache(cached: storage.string(key: keychainKey) ?? "")
         }
         set {
             let result: Bool
             if let newValue {
-                result = KeychainWrapper.standard.set(dataToCache(processData: newValue), forKey: keychainKey)
+                result = storage.set(dataToCache(processData: newValue), key: keychainKey)
             } else {
-                result = KeychainWrapper.standard.removeObject(forKey: keychainKey)
+                result = storage.removeObject(key: keychainKey)
             }
             if result == false {
                 D.error("Failed to store/remove process data in Keychain")
@@ -75,6 +75,8 @@ public class WDOActivationService {
     private var processId: String? {
         processData?.processId
     }
+    
+    private let storage: WDOStorage
     
     // MARK: - Dependencies and constants
     
@@ -111,9 +113,21 @@ public class WDOActivationService {
     
     // MARK: - Internal initializers
     
-    init(api: Networking, canRestoreSession: Bool) {
+    // for test purposes
+    convenience init(powerAuth: PowerAuthSDK, config: WPNConfig, canRestoreSession: Bool = true, storage: WDOStorage) {
+        self.init(
+            api: .init(
+                networking: WPNNetworkingService(powerAuth: powerAuth, config: config, serviceName: "WDOActivationNetworking")
+            ),
+            canRestoreSession: canRestoreSession,
+            storage: storage
+        )
+    }
+    
+    init(api: Networking, canRestoreSession: Bool, storage: WDOStorage = KeychainWrapper.standard) {
         self.api = api
         self.keychainKey = "wdopid_\(api.networking.powerAuth.configuration.instanceId)"
+        self.storage = storage
         if canRestoreSession == false {
             processData = nil
         }

@@ -68,11 +68,6 @@ printLogs() {
 	  echo "XCRESULT: ${bundle}"
 	  xcrun xcresulttool get --path "${bundle}" --format json --legacy
 	done
-
-	for f in ~/Library/Logs/DiagnosticReports/*.crash; do
-	  echo "---- $f ----"
-	  cat "$f"
-	done
 }
 
 # make sure that we search for log files even on exit
@@ -83,7 +78,6 @@ xcrun xcodebuild \
   -project "WultraDigitalOnboarding.xcodeproj" \
   -scheme "WultraDigitalOnboardingTests" \
   -destination "${DESTINATION}" \
-  -configuration "Debug" \
   test
 
 done

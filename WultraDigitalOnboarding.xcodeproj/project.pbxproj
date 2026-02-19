@@ -8,14 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		DC316C5A2F2CD9EB0046F169 /* WultraDigitalOnboarding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; };
-		DC40301D2F47C038007755BE /* PowerAuth2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; };
-		DC40301E2F47C038007755BE /* PowerAuth2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		DC40301F2F47C038007755BE /* PowerAuthCore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */; };
-		DC4030202F47C038007755BE /* PowerAuthCore.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		DC4030212F47C038007755BE /* WultraDigitalOnboarding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; };
-		DC4030222F47C038007755BE /* WultraDigitalOnboarding.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		DC4030252F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */; };
-		DC4030262F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DC75BBAF2A1521B0009C2901 /* WDOLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9B2A1521B0009C2901 /* WDOLogger.swift */; };
 		DC75BBB02A1521B0009C2901 /* KeychainWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9C2A1521B0009C2901 /* KeychainWrapper.swift */; };
 		DC75BBB12A1521B0009C2901 /* WDOVerificationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9E2A1521B0009C2901 /* WDOVerificationState.swift */; };
@@ -48,42 +40,10 @@
 			remoteGlobalIDString = DC75BB8D2A151FEB009C2901;
 			remoteInfo = WultraDigitalOnboarding;
 		};
-		DC402FFA2F45C250007755BE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DC75BB852A151FEB009C2901 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = DC402FEE2F45C247007755BE;
-			remoteInfo = WDOHostApp;
-		};
-		DC4030232F47C038007755BE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DC75BB852A151FEB009C2901 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = DC75BB8D2A151FEB009C2901;
-			remoteInfo = WultraDigitalOnboarding;
-		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		DC4030272F47C038007755BE /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				DC4030222F47C038007755BE /* WultraDigitalOnboarding.framework in Embed Frameworks */,
-				DC4030202F47C038007755BE /* PowerAuthCore.xcframework in Embed Frameworks */,
-				DC4030262F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Embed Frameworks */,
-				DC40301E2F47C038007755BE /* PowerAuth2.xcframework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WultraDigitalOnboardingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC402FEF2F45C247007755BE /* WDOHostApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WDOHostApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WultraDigitalOnboarding.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC75BB9B2A1521B0009C2901 /* WDOLogger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WDOLogger.swift; sourceTree = "<group>"; };
 		DC75BB9C2A1521B0009C2901 /* KeychainWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeychainWrapper.swift; sourceTree = "<group>"; };
@@ -111,7 +71,6 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DC316C572F2CD9EB0046F169 /* WultraDigitalOnboardingTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = WultraDigitalOnboardingTests; sourceTree = "<group>"; };
-		DC402FF02F45C247007755BE /* WDOHostApp */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = WDOHostApp; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,17 +79,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC316C5A2F2CD9EB0046F169 /* WultraDigitalOnboarding.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DC402FEC2F45C247007755BE /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DC4030212F47C038007755BE /* WultraDigitalOnboarding.framework in Frameworks */,
-				DC40301F2F47C038007755BE /* PowerAuthCore.xcframework in Frameworks */,
-				DC4030252F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Frameworks */,
-				DC40301D2F47C038007755BE /* PowerAuth2.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -152,7 +100,6 @@
 			children = (
 				DC75BB9A2A1521B0009C2901 /* Sources */,
 				DC316C572F2CD9EB0046F169 /* WultraDigitalOnboardingTests */,
-				DC402FF02F45C247007755BE /* WDOHostApp */,
 				DC75BB8F2A151FEB009C2901 /* Products */,
 				DC75BBBF2A152344009C2901 /* Frameworks */,
 			);
@@ -163,7 +110,6 @@
 			children = (
 				DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */,
 				DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */,
-				DC402FEF2F45C247007755BE /* WDOHostApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -293,7 +239,6 @@
 			);
 			dependencies = (
 				DC316C5C2F2CD9EB0046F169 /* PBXTargetDependency */,
-				DC402FFB2F45C250007755BE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				DC316C572F2CD9EB0046F169 /* WultraDigitalOnboardingTests */,
@@ -304,30 +249,6 @@
 			productName = WultraDigitalOnboardingTests;
 			productReference = DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		DC402FEE2F45C247007755BE /* WDOHostApp */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = DC402FF92F45C248007755BE /* Build configuration list for PBXNativeTarget "WDOHostApp" */;
-			buildPhases = (
-				DC402FEB2F45C247007755BE /* Sources */,
-				DC402FEC2F45C247007755BE /* Frameworks */,
-				DC402FED2F45C247007755BE /* Resources */,
-				DC4030272F47C038007755BE /* Embed Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				DC4030242F47C038007755BE /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				DC402FF02F45C247007755BE /* WDOHostApp */,
-			);
-			name = WDOHostApp;
-			packageProductDependencies = (
-			);
-			productName = WDOHostApp;
-			productReference = DC402FEF2F45C247007755BE /* WDOHostApp.app */;
-			productType = "com.apple.product-type.application";
 		};
 		DC75BB8D2A151FEB009C2901 /* WultraDigitalOnboarding */ = {
 			isa = PBXNativeTarget;
@@ -360,10 +281,6 @@
 				TargetAttributes = {
 					DC316C552F2CD9EB0046F169 = {
 						CreatedOnToolsVersion = 26.2;
-						TestTargetID = DC402FEE2F45C247007755BE;
-					};
-					DC402FEE2F45C247007755BE = {
-						CreatedOnToolsVersion = 26.2;
 					};
 					DC75BB8D2A151FEB009C2901 = {
 						CreatedOnToolsVersion = 14.3;
@@ -385,20 +302,12 @@
 			targets = (
 				DC75BB8D2A151FEB009C2901 /* WultraDigitalOnboarding */,
 				DC316C552F2CD9EB0046F169 /* WultraDigitalOnboardingTests */,
-				DC402FEE2F45C247007755BE /* WDOHostApp */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		DC316C542F2CD9EB0046F169 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DC402FED2F45C247007755BE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -444,13 +353,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		DC402FEB2F45C247007755BE /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		DC75BB8A2A151FEB009C2901 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -485,16 +387,6 @@
 			target = DC75BB8D2A151FEB009C2901 /* WultraDigitalOnboarding */;
 			targetProxy = DC316C5B2F2CD9EB0046F169 /* PBXContainerItemProxy */;
 		};
-		DC402FFB2F45C250007755BE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = DC402FEE2F45C247007755BE /* WDOHostApp */;
-			targetProxy = DC402FFA2F45C250007755BE /* PBXContainerItemProxy */;
-		};
-		DC4030242F47C038007755BE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = DC75BB8D2A151FEB009C2901 /* WultraDigitalOnboarding */;
-			targetProxy = DC4030232F47C038007755BE /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -520,7 +412,6 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WDOHostApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WDOHostApp";
 			};
 			name = Debug;
 		};
@@ -542,84 +433,6 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WDOHostApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WDOHostApp";
-			};
-			name = Release;
-		};
-		DC402FF72F45C248007755BE /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KTT9G859MR;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = WDOHostApp;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.wultra.WDOHostApp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited) ENABLE_ONBOARDING_DEMO";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		DC402FF82F45C248007755BE /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KTT9G859MR;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = WDOHostApp;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.wultra.WDOHostApp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -820,15 +633,6 @@
 			buildConfigurations = (
 				DC316C5D2F2CD9EB0046F169 /* Debug */,
 				DC316C5E2F2CD9EB0046F169 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		DC402FF92F45C248007755BE /* Build configuration list for PBXNativeTarget "WDOHostApp" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				DC402FF72F45C248007755BE /* Debug */,
-				DC402FF82F45C248007755BE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

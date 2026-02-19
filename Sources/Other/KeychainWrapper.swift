@@ -16,6 +16,10 @@
 
 import Foundation
 
+protocol KeychainProtocol {
+    
+}
+
 class KeychainWrapper {
     
     /// Default keychain wrapper access
