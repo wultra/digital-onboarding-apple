@@ -11,8 +11,14 @@ IOS_VERSION=$(xcrun simctl list | grep "\-\- iOS" | tail -1 | tr -d - | tr -d " 
 # find the first simulator for this sdk
 SIMULATOR=$(xcrun simctl list | grep "\-\- iOS ${IOS_VERSION} \-\-" -A 1 | tail -1 | sed -E 's/^[[:space:]]+//; s/\(.*//; s/[[:space:]]+$//')
 DESTINATION="platform=iOS Simulator,OS=${IOS_VERSION},name=${SIMULATOR}"
+SIM_ID=$(xcrun simctl list devices available | grep "${SIMULATOR}" | head -n 1 | grep -oE '[A-F0-9-]{36}')
 
-echo "Default destination: ${DESTINATION}"
+echo "Default destination: ${DESTINATION} with id ${SIM_ID}"
+
+echo "Booting iOS Simulator with ID: $SIM_ID"
+# open the Simulator app and boot the simulator
+open -a Simulator
+xcrun simctl boot "${SIM_ID}"
 
 CONFIG_JSON=""
 
