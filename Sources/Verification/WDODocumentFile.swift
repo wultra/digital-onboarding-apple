@@ -25,6 +25,10 @@ public class WDODocumentFile {
     /// Optional, use only when the scan SDK supports this.
     public var dataSignature: String?
     /// Type of the document.
+    /// Expected values like: `ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`.
+    /// All possible values can be found at backend implementation:
+    /// https://github.com/wultra/enrollment-server/blob/develop/enrollment-server-onboarding-domain-model/src/main/java/com/wultra/app/enrollmentserver/model/enumeration/DocumentType.java
+    /// Expected/possible values can be obtained from `WDOConfigurationService.getConfiguration()`.
     public let type: WDODocumentType
     /// Side of the document (`front` if the document is one-sided or only one side is expected).
     public let side: WDODocumentSide
