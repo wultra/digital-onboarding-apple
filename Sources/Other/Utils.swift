@@ -283,24 +283,3 @@ extension Document {
         }
     }
 }
-
-protocol WDOStorage {
-    func string(key: String) -> String?
-    func set(_ value: String, key: String) -> Bool
-    func removeObject(key: String) -> Bool
-}
-
-extension KeychainWrapper: WDOStorage {
-    
-    func string(key: String) -> String? {
-        return string(forKey: key)
-    }
-    
-    func set(_ value: String, key: String) -> Bool {
-        return set(value, forKey: key)
-    }
-    
-    func removeObject(key: String) -> Bool {
-        return removeObject(forKey: key)
-    }
-}

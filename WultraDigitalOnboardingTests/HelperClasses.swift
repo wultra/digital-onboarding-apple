@@ -43,8 +43,8 @@ class TestHelper {
         
         self.powerAuth = pa
         let url = URL(string: environment.esoUrl)!
-        self.activation = WDOActivationService(powerAuth: powerAuth, config: .init(baseUrl: url), storage: SimpleStorage())
-        self.verification = WDOVerificationService(powerAuth: powerAuth, wpnConfig: .init(baseUrl: url), storage: SimpleStorage())
+        self.activation = WDOActivationService(powerAuth: powerAuth, config: .init(baseUrl: url))
+        self.verification = WDOVerificationService(powerAuth: powerAuth, wpnConfig: .init(baseUrl: url))
         self.configuration = WDOConfigurationService(powerAuth: powerAuth, config: .init(baseUrl: url))
         self.environment = environment
         self.processType = processType
@@ -252,22 +252,4 @@ enum VerificationStateShadow {
     case failed
     case endstate
     case success
-}
-
-class SimpleStorage: WDOStorage {
-    
-    private var storage = [String: Any]()
-    
-    func string(key: String) -> String? {
-        return storage[key] as? String
-    }
-    
-    func set(_ value: String, key: String) -> Bool {
-        storage[key] = value
-        return true
-    }
-    
-    func removeObject(key: String) -> Bool {
-        return storage.removeValue(forKey: key) != nil
-    }
 }

@@ -14,11 +14,6 @@ DESTINATION="platform=iOS Simulator,OS=${IOS_VERSION},name=${SIMULATOR}"
 
 echo "Default destination: ${DESTINATION}"
 
-# now boot it and stream logs..
-
-# xcrun simctl boot "${SIMULATOR}"
-# xcrun simctl bootstatus "${SIMULATOR}" -b
-
 CONFIG_JSON=""
 
 # Parse parameters of this script
@@ -78,8 +73,7 @@ xcrun xcodebuild \
   -project "WultraDigitalOnboarding.xcodeproj" \
   -scheme "WultraDigitalOnboardingTests" \
   -destination "${DESTINATION}" \
+  -configuration "Debug" \
   test
-
-done
 
 popd

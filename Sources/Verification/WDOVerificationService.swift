@@ -67,7 +67,7 @@ public class WDOVerificationService {
     private var lastStatus: IdentityStatusResponse?
     private var cachedProcess: WDOVerificationScanProcess? {
         get {
-            if let data = storage.string(key: keychainKey) {
+            if let data = KeychainWrapper.standard.string(forKey: keychainKey) {
                 return WDOVerificationScanProcess(cacheData: data)
             } else {
                 return nil
@@ -75,13 +75,12 @@ public class WDOVerificationService {
         }
         set {
             if let newValue {
-                _ = storage.set(newValue.dataForCache(), key: keychainKey)
+                KeychainWrapper.standard.set(newValue.dataForCache(), forKey: keychainKey)
             } else {
-                _ = storage.removeObject(key: keychainKey)
+                KeychainWrapper.standard.removeObject(forKey: keychainKey)
             }
         }
     }
-    private let storage: WDOStorage
     
     // MARK: - Public initializers
     
@@ -105,18 +104,9 @@ public class WDOVerificationService {
     
     // MARK: - Private initializers
     
-    // for test purposes
-    convenience init(powerAuth: PowerAuthSDK, wpnConfig: WPNConfig, storage: WDOStorage) {
-        self.init(
-            api: .init(networking: .init(powerAuth: powerAuth, config: wpnConfig, serviceName: "WDOVerificationNetworking")),
-            storage: storage
-        )
-    }
-    
-    init(api: Networking, storage: WDOStorage = KeychainWrapper.standard) {
+    init(api: Networking) {
         self.api = api
         self.keychainKey = "wdocp_\(api.networking.powerAuth.configuration.instanceId)"
-        self.storage = storage
     }
     
     // MARK: - Public API
