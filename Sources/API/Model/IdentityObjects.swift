@@ -27,6 +27,7 @@ struct IdentityStatusResponse: Decodable {
     
     private enum CodingKeys: String, CodingKey {
         case processId = "processId"
+        case processType = "processType"
         case config = "config"
         case status = "identityVerificationStatus"
         case phase = "identityVerificationPhase"
@@ -34,6 +35,8 @@ struct IdentityStatusResponse: Decodable {
     }
     
     let processId: String
+    /// Configured name of onboarding process type.
+    let processType: String
     let status: IdentityVerificationStatus
     let phase: IdentityVerificationPhase?
     let config: IdentityConfig

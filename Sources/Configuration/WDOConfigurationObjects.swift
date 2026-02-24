@@ -27,6 +27,8 @@ public struct WDOConfigurationResponse: Codable {
     public let otpForIdentification: Bool
     /// Is OTP required for the second part - identity verification.
     public let otpForIdentityVerification: Bool
+    /// Is the onboarding process configured with temporary activation that should be exchanged for the permanent one.
+    public let useTemporaryActivation: Bool
     /// Documents required for identity verification.
     public let documents: WDOConfigurationDocuments
 }
@@ -57,4 +59,6 @@ public struct WDOConfigurationDocument: Codable {
     public let type: String
     /// Number of sides the document has
     public let sideCount: Int
+    /// Country of origin of the document as ISO 3166-1 alpha-3 code
+    public let country: String?
 }

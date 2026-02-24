@@ -15,6 +15,8 @@
 - new `activationFinish` state
   -  when this status is reached, the activation needs to be finalized by calling the `WDOVerificationService.finishActivation` method.
 - removed `WDODocumentType` and `DocumentSubmitFileType` types and use `String` type instead to better accommodate dynamic configuration of document scan.
+- updated `WDOConfigurationObjects`, which now includes the `useTemporaryActivation` flag and the `country` of origin in the scanned document
+- added `processType` to IdentityStatusResponse to better distinguish between configured onboarding processes
 
 ## 1.3.0 (October, 2024)
 
