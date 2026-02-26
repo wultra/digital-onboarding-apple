@@ -291,6 +291,7 @@ class KeychainWrapper {
         } else if status == errSecDuplicateItem {
             return update(value, forKey: key, withAccessibility: accessibility, isSynchronizable: isSynchronizable)
         } else {
+            D.debug("KeychainWrapper: Error saving to keychain: \(status)")
             return false
         }
     }
