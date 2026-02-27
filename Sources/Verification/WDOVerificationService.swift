@@ -49,6 +49,8 @@ public class WDOVerificationService {
     }
     
     /// Time in seconds that user needs to wait between OTP resend calls
+    ///
+    /// The value is available after a successful status call.
     public var otpResendPeriodInSeconds: Int? {
         guard let period = lastStatus?.config.otpResendPeriod else {
             return nil
@@ -59,6 +61,11 @@ public class WDOVerificationService {
         // we're counting time only
         return (components.second ?? 0) + (60 * (components.minute ?? 0)) + (3600 * (components.hour ?? 0))
     }
+    
+    /// Type of the process.
+    ///
+    /// The value is available after a successful status call.
+    public var processType: String? { lastStatus?.processType }
     
     // MARK: - Private properties
     
