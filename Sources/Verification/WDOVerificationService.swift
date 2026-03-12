@@ -48,25 +48,11 @@ public class WDOVerificationService {
         }
     }
     
-    /// Time in seconds that user needs to wait between OTP resend calls
-    ///
-    /// The value is available after a successful status call.
-    public var otpResendPeriodInSeconds: Int? {
-        guard let period = lastStatus?.config.otpResendPeriod else {
-            return nil
-        }
-        guard let components = ISO8601DurationFormatter().dateComponents(from: period) else {
-            return nil
-        }
-        // we're counting time only
-        return (components.second ?? 0) + (60 * (components.minute ?? 0)) + (3600 * (components.hour ?? 0))
-    }
-    
     /// Type of the process.
     ///
     /// The value is available after a successful status call.
     public var processType: String? { lastStatus?.processType }
-    
+
     // MARK: - Private properties
     
     private let api: Networking
@@ -212,13 +198,13 @@ public class WDOVerificationService {
                 case .statusCheck(let reason):
                     self.markCompleted(.success(.processing(.from(reason))), completion)
                 case .otp:
-                    self.markCompleted(.success(.otp(nil)), completion)
+                    self.markCompleted(.success(.otp(remainingAttempts: nil, otpResendPeriodInSeconds: response.config?.otpResendPeriodSeconds)), completion)
                 case .activationFinish:
                     self.markCompleted(.success(.activationFinish), completion)
                 case .failed:
                     self.markCompleted(.success(.failed), completion)
                 case .rejected:
-                    self.markCompleted(.success(.endstate(.rejected)), completion)
+                    self.markCompleted(.success(.endstate(.rejected, rejectReason: response.rejectReason)), completion)
                 case .success:
                     self.markCompleted(.success(.success), completion)
                 }
@@ -669,7 +655,7 @@ public class WDOVerificationService {
                 } else {
                     if data.remainingAttempts > 0 && data.expired == false {
                         D.error("OTP not verified. Try again")
-                        self.markCompleted(.success(.otp(data.remainingAttempts)), completion)
+                        self.markCompleted(.success(.otp(remainingAttempts: data.remainingAttempts, otpResendPeriodInSeconds: self.lastStatus?.config?.otpResendPeriodSeconds)), completion)
                     } else {
                         D.error("OTP not verified.")
                         self.markCompleted(.failure(.init(.init(reason: .wdo_verification_otpFailed))), completion)
@@ -772,11 +758,11 @@ public class WDOVerificationService {
             self.cause = cause
             switch cause.restApiError?.errorCode {
             case .onboardingFailed:
-                state = .endstate(.other)
+                state = .endstate(.other, rejectReason: nil)
             case .identityVerificationFailed:
                 state = .failed
             case .onboardingLimitReached:
-                state = .endstate(.limitReached)
+                state = .endstate(.limitReached, rejectReason: nil)
             case .presenceCheckLimitEached, .identityVerificationLimitReached:
                 state = .failed
             default:

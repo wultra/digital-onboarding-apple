@@ -18,6 +18,8 @@
 - added `async` variants for all asynchronous methods
 - updated `WDOConfigurationObjects`, which now includes the `useTemporaryActivation` flag and the `country` of origin in the scanned document
 - added `processType` to IdentityStatusResponse to better distinguish between configured onboarding processes
+- `WDOVerificationState.otp` now carries `otpResendPeriodInSeconds` as an associated value (previously available as `WDOVerificationService.otpResendPeriodInSeconds` property, which was removed)
+- `WDOVerificationState.endstate` now carries optional `rejectReason` associated value with the server-provided rejection reason
 
 ## 1.3.0 (October, 2024)
 

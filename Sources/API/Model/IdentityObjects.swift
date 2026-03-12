@@ -24,29 +24,30 @@ struct IdentityInitRequest: Codable {
 
 /// Response of the Identity Verification Status
 struct IdentityStatusResponse: Decodable {
-    
+
     private enum CodingKeys: String, CodingKey {
         case processId = "processId"
         case processType = "processType"
+        case rejectReason = "rejectReason"
         case config = "config"
         case status = "identityVerificationStatus"
         case phase = "identityVerificationPhase"
         case consentRequired = "consentRequired"
     }
-    
+
     let processId: String
     /// Configured name of onboarding process type.
     let processType: String
+    /// Reason for rejection. Available when the status is `rejected`.
+    let rejectReason: String?
     let status: IdentityVerificationStatus
     let phase: IdentityVerificationPhase?
-    let config: IdentityConfig
+    let config: IdentityConfig?
     let consentRequired: Bool?
 }
 
-public typealias ISO8601Duration = String
-
 struct IdentityConfig: Decodable {
-    let otpResendPeriod: ISO8601Duration
+    let otpResendPeriodSeconds: Int
 }
 
 /// Status of the current identity verification

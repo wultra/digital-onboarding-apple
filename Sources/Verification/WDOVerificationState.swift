@@ -52,7 +52,10 @@ public enum WDOVerificationState: CustomStringConvertible {
     ///
     /// The next step should be calling the `verifyOTP` with user-entered OTP.
     /// The OTP is usually SMS or email.
-    case otp(_ remainingAttempts: Int?)
+    ///
+    /// - `remainingAttempts`: Number of remaining attempts to enter the correct OTP. Available after a failed OTP attempt.
+    /// - `otpResendPeriodInSeconds`: Time in seconds the user needs to wait between OTP resend calls. `nil` when not provided by the server.
+    case otp(remainingAttempts: Int?, otpResendPeriodInSeconds: Int?)
     
     /// Show "finish activation" with PIN prompt screen.
     ///
@@ -68,7 +71,9 @@ public enum WDOVerificationState: CustomStringConvertible {
     /// Verification is canceled and the user needs to start again with a new PowerAuth activation.
     ///
     /// The next step should be calling the `PowerAuthSDK.removeActivationLocal()` and starting activation from scratch.
-    case endstate(_ reason: EndstateReason)
+    ///
+    /// - `rejectReason`: When the reason is `rejected`, this may contain the rejection reason provided by the server.
+    case endstate(_ reason: EndstateReason, rejectReason: String?)
     
     /// Verification was successfully ended. Continue into your app
     case success
