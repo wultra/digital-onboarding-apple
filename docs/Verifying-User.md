@@ -169,10 +169,12 @@ Getting the state directly:
 
 ```swift
 let verification: WDOVerificationService // configured instance
-verification.status { result in 
+verification.status { result in
     switch result {
-    case .success(let state):
-        // handle `WDOVerificationState` state and navigate to the expected screen
+    case .success(let statusResult):
+        // statusResult.state: WDOVerificationState — navigate to the expected screen
+        // statusResult.serverData.processId: String — unique ID of this verification process
+        // statusResult.serverData.processType: String — configured type of this verification process
         break
     case .failure(let error):
         if let state = error.state {
