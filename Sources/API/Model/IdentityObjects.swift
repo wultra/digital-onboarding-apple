@@ -42,7 +42,7 @@ struct IdentityStatusResponse: Decodable {
     let rejectReason: String?
     let status: IdentityVerificationStatus
     let phase: IdentityVerificationPhase?
-    let config: IdentityConfig?
+    let config: IdentityConfig
     let consentRequired: Bool?
 }
 
