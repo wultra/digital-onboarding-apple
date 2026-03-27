@@ -48,27 +48,13 @@ public class WDOVerificationService {
         }
     }
     
-    /// Time in seconds that user needs to wait between OTP resend calls
-    ///
-    /// The value is available after a successful status call.
-    public var otpResendPeriodInSeconds: Int? {
-        guard let period = lastStatus?.config.otpResendPeriod else {
-            return nil
-        }
-        guard let components = ISO8601DurationFormatter().dateComponents(from: period) else {
-            return nil
-        }
-        // we're counting time only
-        return (components.second ?? 0) + (60 * (components.minute ?? 0)) + (3600 * (components.hour ?? 0))
-    }
-    
     /// Type of the process.
     ///
     /// The value is available after a successful status call.
     public var processType: String? { lastStatus?.processType }
-    
+
     // MARK: - Private properties
-    
+
     private let api: Networking
     private let keychainKey: String
     private var lastStatus: IdentityStatusResponse?
@@ -121,23 +107,23 @@ public class WDOVerificationService {
     /// Status of the verification.
     ///
     /// - Parameter completion: Callback with the result.
-    public func status(completion: @escaping (Result<WDOVerificationState, Fail>) -> Void) {
-        
+    public func status(completion: @escaping (Result<StatusResult, Fail>) -> Void) {
+
         D.debug("Retrieving verification status.")
-        
+
         api.identityVerification.getStatus { [weak self] result in
-            
+
             guard let self else {
                 completion(.failure(.init(.init(reason: .unknown))))
                 return
             }
-            
+
             switch result {
             case .success(let response):
-                
+
                 D.info("Verification status successfully retrieved.")
                 D.debug("\(response)")
-                
+
                 switch response.status {
                 case .failed, .rejected, .notInitialized, .accepted:
                     D.debug("Status \(response.status) - clearing cache.")
@@ -146,7 +132,11 @@ public class WDOVerificationService {
                     break
                 }
                 self.lastStatus = response
-                
+
+                let makeResult = { (state: WDOVerificationState) -> StatusResult in
+                    StatusResult(state: state, serverData: ProcessServerData(processId: response.processId, processType: response.processType))
+                }
+
                 let vf: VerificationStatus
                 do {
                     vf = try VerificationStatus.from(status: response)
@@ -159,11 +149,11 @@ public class WDOVerificationService {
                     }
                     return
                 }
-                
+
                 D.info("Verification status: \(vf)")
                 switch vf {
                 case .intro(let consentRequired):
-                    self.markCompleted(.success(.intro(consentRequired: consentRequired)), completion)
+                    self.markCompleted(.success(makeResult(.intro(consentRequired: consentRequired))), completion)
                 case .documentScan:
                     D.debug("Verifying documents status")
                     self.api.identityVerification.documentsStatus(processId: response.processId) { [weak self] docsResult in
@@ -173,54 +163,54 @@ public class WDOVerificationService {
                         }
                         switch docsResult {
                         case .success(let docsResponse):
-                            
+
                             D.info("Documents status retrieved.")
-                            
+
                             let documents = docsResponse.documents
-                            
+
                             if let cachedProcess = self.cachedProcess {
-    
+
                                 cachedProcess.feed(docsResponse.documents)
                                 if documents.contains(where: { $0.action == .error }) || documents.contains(where: { $0.errors != nil && !$0.errors!.isEmpty }) {
-                                    self.markCompleted(.success(.scanDocument(cachedProcess)), completion)
+                                    self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
                                 } else if documents.allSatisfy({ $0.action == .proceed }) {
-                                    self.markCompleted(.success(.scanDocument(cachedProcess)), completion)
+                                    self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
                                 } else if documents.contains(where: { $0.action == .wait }) {
                                     // TODO: really verification?
-                                    self.markCompleted(.success(.processing(.documentVerification)), completion)
+                                    self.markCompleted(.success(makeResult(.processing(.documentVerification))), completion)
                                 } else if documents.isEmpty {
-                                    self.markCompleted(.success(.scanDocument(cachedProcess)), completion)
+                                    self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
                                 } else {
                                     // TODO: is this ok?
-                                    self.markCompleted(.success(.failed), completion)
+                                    self.markCompleted(.success(makeResult(.failed)), completion)
                                 }
                             } else {
                                 if documents.isEmpty {
-                                    self.markCompleted(.success(.documentsToScanSelect), completion)
+                                    self.markCompleted(.success(makeResult(.documentsToScanSelect)), completion)
                                 } else {
-                                    self.markCompleted(.success(.failed), completion)
+                                    self.markCompleted(.success(makeResult(.failed)), completion)
                                 }
                             }
-                            
+
                         case .failure(let error):
                             D.error(error)
                             self.markCompleted(error, completion)
                         }
                     }
                 case .presenceCheck:
-                    self.markCompleted(.success(.presenceCheck), completion)
+                    self.markCompleted(.success(makeResult(.presenceCheck)), completion)
                 case .statusCheck(let reason):
-                    self.markCompleted(.success(.processing(.from(reason))), completion)
+                    self.markCompleted(.success(makeResult(.processing(.from(reason)))), completion)
                 case .otp:
-                    self.markCompleted(.success(.otp(nil)), completion)
+                    self.markCompleted(.success(makeResult(.otp(remainingAttempts: nil, otpResendPeriodInSeconds: self.lastStatus?.config.otpResendPeriodSeconds))), completion)
                 case .activationFinish:
-                    self.markCompleted(.success(.activationFinish), completion)
+                    self.markCompleted(.success(makeResult(.activationFinish)), completion)
                 case .failed:
-                    self.markCompleted(.success(.failed), completion)
+                    self.markCompleted(.success(makeResult(.failed)), completion)
                 case .rejected:
-                    self.markCompleted(.success(.endstate(.rejected)), completion)
+                    self.markCompleted(.success(makeResult(.endstate(.rejected, rejectReason: response.rejectReason))), completion)
                 case .success:
-                    self.markCompleted(.success(.success), completion)
+                    self.markCompleted(.success(makeResult(.success)), completion)
                 }
             case .failure(let error):
                 D.error(error)
@@ -457,7 +447,7 @@ public class WDOVerificationService {
                         return
                     }
                     statusResult.onSuccess {
-                        self.markCompleted(.success($0), completion)
+                        self.markCompleted(.success(Success($0.state)), completion)
                     }.onError {
                         self.markCompleted(.failure($0), completion)
                     }
@@ -669,7 +659,7 @@ public class WDOVerificationService {
                 } else {
                     if data.remainingAttempts > 0 && data.expired == false {
                         D.error("OTP not verified. Try again")
-                        self.markCompleted(.success(.otp(data.remainingAttempts)), completion)
+                        self.markCompleted(.success(.otp(remainingAttempts: data.remainingAttempts, otpResendPeriodInSeconds: self.lastStatus?.config.otpResendPeriodSeconds)), completion)
                     } else {
                         D.error("OTP not verified.")
                         self.markCompleted(.failure(.init(.init(reason: .wdo_verification_otpFailed))), completion)
@@ -749,13 +739,35 @@ public class WDOVerificationService {
     
     /// Success result with the next screen/state that should be presented to the user.
     public class Success {
-        
+
         init(_ state: WDOVerificationState) {
             self.state = state
         }
-        
+
         /// State of the verification for the app to display.
         public let state: WDOVerificationState
+    }
+
+    /// Server-side process data returned alongside the verification state.
+    public struct ProcessServerData {
+        /// Unique identifier of the verification process.
+        public let processId: String
+        /// Configured type of the verification process.
+        public let processType: String
+    }
+
+    /// Result of the `status` call, containing the current verification state and server process data.
+    public class StatusResult {
+
+        init(state: WDOVerificationState, serverData: ProcessServerData) {
+            self.state = state
+            self.serverData = serverData
+        }
+
+        /// State of the verification for the app to display.
+        public let state: WDOVerificationState
+        /// Server-side data associated with this verification process.
+        public let serverData: ProcessServerData
     }
     
     /// Error result with cause of the error and state that should be presented (if available).
@@ -772,11 +784,11 @@ public class WDOVerificationService {
             self.cause = cause
             switch cause.restApiError?.errorCode {
             case .onboardingFailed:
-                state = .endstate(.other)
+                state = .endstate(.other, rejectReason: nil)
             case .identityVerificationFailed:
                 state = .failed
             case .onboardingLimitReached:
-                state = .endstate(.limitReached)
+                state = .endstate(.limitReached, rejectReason: nil)
             case .presenceCheckLimitEached, .identityVerificationLimitReached:
                 state = .failed
             default:
@@ -842,7 +854,7 @@ public class WDOVerificationService {
     }
     
     private func markCompleted<T>(_ result: Result<T, Fail>, _ completion: (Result<T, Fail>) -> Void) {
-        if let state = (result.success as? Success)?.state ?? result.error?.state {
+        if let state = (result.success as? Success)?.state ?? (result.success as? StatusResult)?.state ?? result.error?.state {
             delegate?.verificationStatusChanged(self, status: state)
         }
         completion(result)
@@ -992,9 +1004,9 @@ public extension WDOVerificationService {
     
     /// Status of the verification.
     ///
-    ///  - returns: Current verification status represented by `WDOVerificationState`.
+    ///  - returns: `StatusResult` containing the current verification state and server process data.
     ///  - throws: `WDOVerificationService.Fail`
-    func status() async throws -> WDOVerificationState {
+    func status() async throws -> StatusResult {
         return try await withCheckedThrowingContinuation { cont in
             status { result in
                 cont.resume(with: result)

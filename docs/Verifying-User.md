@@ -94,7 +94,10 @@ enum WDOVerificationState {
     ///
     /// The next step should be calling the `verifyOTP` with user-entered OTP.
     /// The OTP is usually SMS or email.
-    case otp(_ remainingAttempts: Int?)
+    ///
+    /// - `remainingAttempts`: Number of remaining attempts to enter the correct OTP. Available after a failed OTP attempt.
+    /// - `otpResendPeriodInSeconds`: Time in seconds the user needs to wait between OTP resend calls. `nil` when not provided by the server.
+    case otp(remainingAttempts: Int?, otpResendPeriodInSeconds: Int?)
     
     /// Show "finish activation" with PIN prompt screen.
     ///
@@ -110,7 +113,9 @@ enum WDOVerificationState {
     /// Verification is canceled and the user needs to start again with a new PowerAuth activation.
     ///
     /// The next step should be calling the `PowerAuthSDK.removeActivationLocal()` and starting activation from scratch.
-    case endstate(_ reason: EndstateReason)
+    ///
+    /// - `rejectReason`: When the reason is `rejected`, this may contain the rejection reason provided by the server.
+    case endstate(_ reason: EndstateReason, rejectReason: String?)
     
     /// Verification was successfully ended. Continue into your app
     case success
@@ -164,10 +169,12 @@ Getting the state directly:
 
 ```swift
 let verification: WDOVerificationService // configured instance
-verification.status { result in 
+verification.status { result in
     switch result {
-    case .success(let state):
-        // handle `WDOVerificationState` state and navigate to the expected screen
+    case .success(let statusResult):
+        // statusResult.state: WDOVerificationState — navigate to the expected screen
+        // statusResult.serverData.processId: String — unique ID of this verification process
+        // statusResult.serverData.processType: String — configured type of this verification process
         break
     case .failure(let error):
         if let state = error.state {
@@ -391,7 +398,7 @@ When this state is obtained, the following steps need to be done:
 
 After the presence check is finished, the user will receive an SMS/email OTP and the `otp` state will be reported. When this state is received, prompt the user for the OTP and verify it via `verifyOTP` method.
 
-The `otp` state also contains the number of possible OTP attempts. When attempts are depleted, the error state is returned.
+The `otp` state also contains the number of remaining OTP attempts and the resend period in seconds. When attempts are depleted, the error state is returned.
 
 Example:
 
@@ -459,7 +466,9 @@ When the process fails, a `failed` state is returned. This means that the curren
 
 ## Endstate state
 
-When the activation is no longer able to be verified (for example did several failed attempts or took too long to finish), the `endstate` state is returned. In this state there's nothing the user can do to continue. `cancelWholeProcess` shall be called and `removeActivationLocal` should be called on the PowerAuthSDK object. After that, user should be put inti the "fresh install state".
+When the activation is no longer able to be verified (for example did several failed attempts or took too long to finish), the `endstate` state is returned. In this state there's nothing the user can do to continue. `cancelWholeProcess` shall be called and `removeActivationLocal` should be called on the PowerAuthSDK object. After that, the user should be put into the "fresh install" state.
+
+When the reason is `rejected`, the `rejectReason` field may contain additional details about why the verification was rejected (if provided by the server).
 
 ## Read next
 

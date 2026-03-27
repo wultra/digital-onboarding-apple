@@ -96,7 +96,7 @@ class TestHelper {
         try await activate(otp: otp)
         
         let consent: Bool
-        if case .intro(let consentRequired) = try await verification.status() {
+        if case .intro(let consentRequired) = try await verification.status().state {
             consent = consentRequired
         } else {
             throw SimpleError("Unexpected status")
@@ -107,7 +107,7 @@ class TestHelper {
     
     func assertVerificationState(_ expectedState: VerificationStateShadow) async throws {
         let status = try await verification.status()
-        #expect(status.shadowState == expectedState)
+        #expect(status.state.shadowState == expectedState)
     }
 }
 
