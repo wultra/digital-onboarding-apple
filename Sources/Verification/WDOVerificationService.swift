@@ -174,7 +174,7 @@ public class WDOVerificationService {
                                 if documents.contains(where: { $0.action == .error }) || documents.contains(where: { $0.errors != nil && !$0.errors!.isEmpty }) {
                                     D.debug("At least one document in error state")
                                     self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
-                                } else if documents.allSatisfy({ $0.action == .proceed }) {
+                                } else if !documents.isEmpty && documents.allSatisfy({ $0.action == .proceed }) {
                                     if cachedProcess.nextDocumentToScan != nil {
                                         // All documents on the backend are accepted, but the user has selected more documents to scan
                                         D.debug("All documents accepted, but we are expecting more documents to scan")
@@ -347,7 +347,7 @@ public class WDOVerificationService {
         markCompleted(.success(.scanDocument(process)), completion)
     }
     
-    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded document is a reasonable size so you're not uploading large files.
+    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded documents are a reasonable size so you're not uploading large files.
     ///
     /// If you're uploading the same document file again, you need to include the `originalDocumentId` otherwise it will be rejected by the server.
     ///
@@ -469,7 +469,7 @@ public class WDOVerificationService {
         }
     }
     
-    /// Cancel the whole activation/verification. After this it's no longer possible to call any API of this library, and PowerAuth activation should be removed, and activation started again.
+    /// Cancel the whole activation/verification. After this, it is no longer possible to call any API of this library. The PowerAuth activation should be removed and a new activation started.
     ///
     /// - Parameter completion: Callback with the result.
     public func cancelWholeProcess(completion: @escaping (Result<Void, Fail>) -> Void) {
@@ -1070,7 +1070,7 @@ public extension WDOVerificationService {
         }
     }
     
-    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded document is a reasonable size so you're not uploading large files.
+    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded documents are a reasonable size so you're not uploading large files.
     ///
     /// If you're uploading the same document file again, you need to include the `originalDocumentId` otherwise it will be rejected by the server.
     ///
