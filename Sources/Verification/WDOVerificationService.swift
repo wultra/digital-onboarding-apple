@@ -914,8 +914,8 @@ public class WDOVerificationService {
     #else
     internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)? {
         // no-op for non-debug
-        set { }
         get { nil }
+        set { }
     }
     #endif
 }
