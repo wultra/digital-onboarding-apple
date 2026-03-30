@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "name": "Build SDK",
+            "program": "/usr/bin/true",
+            "preLaunchTask": "Build (Release)",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "name": "Run Tests (Simulator)",
+            "preLaunchTask": "Test",
+        }
+    ]
+}

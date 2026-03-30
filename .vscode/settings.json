@@ -1,0 +1,14 @@
+{
+    "debug.toolBarLocation": "commandCenter",
+    "window.commandCenter": true,
+    "files.exclude": {
+        "**/.DS_Store": true,
+        "**/build/": true,
+        "**/.build/": false
+    },
+    "[swift]": {
+        "editor.formatOnSave": true,
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    }
+}
