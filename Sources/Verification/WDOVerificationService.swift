@@ -131,6 +131,8 @@ public class WDOVerificationService {
                 D.info("Verification status successfully retrieved.")
                 D.debug("\(response)")
 
+                self.lastStatus = response
+
                 switch response.status {
                 case .failed, .rejected, .notInitialized, .accepted:
                     D.debug("Status \(response.status) - clearing cache.")
