@@ -133,6 +133,41 @@ class IntegrationTests: BaseTestClass {
                 }
             }
             
+            // not lets try to upload fake files to test reupload
+            for documentToScan in documentsToScan {
+                
+                if documentToScan.type == "DRIVING_LICENCE" {
+                    // TODO: remove this once fixed on the backend
+                    print("Skipping driving license because there is a bug on the backend (DRIVING_LICENSE is expected...)")
+                    continue
+                }
+                
+                // empty jpeg
+                let dummyJpeg =
+                Data(base64Encoded: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCABkAGQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5/ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA//2Q==")!
+                var documentsToUpload = [WDODocumentFile(data: dummyJpeg, type: documentToScan.type, side: .front, originalDocumentId: nil, dataSignature: nil)]
+                if documentToScan.sideCount == 2 {
+                    documentsToUpload.append(WDODocumentFile(data: dummyJpeg, type: documentToScan.type, side: .back, originalDocumentId: nil, dataSignature: nil))
+                }
+                // upload to server
+                _ = try await x.verification.documentsSubmit(files: documentsToUpload)
+                // wait for processing
+                _ = try await waitForNonProcessingStatus(service: x.verification)
+                // set testing callback to verify that all documents (in second try) have originalDocumentID
+                // that were automatically added by the submit method...
+                x.verification._testing_Callback = { _, data in
+                    guard let files = data as? [WDODocumentFile] else {
+                        D.fatalError("Unexpected type")
+                    }
+                    guard files.allSatisfy({ $0.originalDocumentId != nil }) else {
+                        D.fatalError("All documents should have originalDocumentId")
+                    }
+                }
+                // again
+                _ = try await x.verification.documentsSubmit(files: documentsToUpload)
+                x.verification._testing_Callback = nil
+            }
+            
             // this is where the test ends for now, because there is no mock service for documents or presence check
             // that would accept fake or invalid documents
         }
@@ -173,6 +208,15 @@ class IntegrationTests: BaseTestClass {
             #expect(paStatus.state == .removed)
         }
     }
+    
+    private func waitForNonProcessingStatus(service: WDOVerificationService) async throws -> WDOVerificationState {
+        var state = (try await service.status()).state
+        while state.shadowState == .processing {
+            try await Task.sleep(for: .seconds(2))
+            state = (try await service.status()).state
+        }
+        return state
+    }
 }
 
 struct UnitTests {
@@ -189,7 +233,7 @@ struct UnitTests {
         ])
 
         // Serialize to v2 cache and deserialize
-        let restored = try #require(WDOVerificationScanProcess(cacheData: process.dataForCache()))
+        let restored = try #require(WDOVerificationScanProcess(cacheData: try process.dataForCache()))
 
         // ID_CARD — two sides with correct server IDs and upload states
         let idCard = try #require(restored.documents.first { $0.type == "ID_CARD" })

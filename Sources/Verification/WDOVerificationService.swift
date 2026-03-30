@@ -385,12 +385,15 @@ public class WDOVerificationService {
                     .serverId
                 // if the server ID is not found, just return the file
                 guard let serverId else { return file }
+                D.debug("Document \(file.type) is missing originalDocumentId, using \(serverId) that was found in the cached process.")
                 // now create "copy" of the file
                 return WDODocumentFile(data: file.data, dataSignature: file.dataSignature, type: file.type, side: file.side, originalDocumentId: serverId)
             }
         } else {
             resolvedFiles = files
         }
+        
+        _testing_Callback?("SBMT", resolvedFiles) // send to test to process
 
         DispatchQueue.global(qos: .userInitiated).async {
             let data = DocumentPayloadBuilder.build(processId: processId, files: resolvedFiles)
@@ -900,6 +903,21 @@ public class WDOVerificationService {
         }
         completion(result)
     }
+    
+    // MARK: - Test Features
+    
+    #if DEBUG
+    /// Internal processing callback only for testing purposes!
+    /// This callback can be set only in DEBUG build and is called during the process.
+    /// Use this when some internal testing needs to be done during integration tests.
+    internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)?
+    #else
+    internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)? {
+        // no-op for non-debug
+        set { }
+        get { nil }
+    }
+    #endif
 }
 
 // MARK: - Other public APIs
