@@ -26,7 +26,7 @@ private typealias ProcessData = (processId: String, activationCode: String?)
 /// When the PowerAuthSDK is activated with this service, `PowerAuthActivationStatus.needVerification` will be `true`
 /// and you will need to verify the PowerAuthSDK instance via `WDOVerificationService`.
 ///
-/// This service operates against Wultra Onboarding server (usually ending with `/enrollment-onboarding-server`) and you need to configure networking service with the right URL.
+/// This service operates against Wultra Onboarding server (usually ending with `/enrollment-onboarding-server`) and you need to configure a networking service with the right URL.
 public class WDOActivationService {
     
     // MARK: - Public Properties
@@ -38,11 +38,11 @@ public class WDOActivationService {
     public var hasActiveProcess: Bool { processId != nil }
     
     /// Accept language for the outgoing requests headers.
-    /// Default value is "en".
+    /// The default value is "en".
     ///
     /// Standard RFC "Accept-Language" https://tools.ietf.org/html/rfc7231#section-5.3.5
-    /// Response texts are based on this setting. For example when "de" is set, server
-    /// will return error texts and other in german (if available).
+    /// Response texts are based on this setting. For example, when "de" is set, server
+    /// will return error texts and other in German (if available).
     public var acceptLanguage: String {
         get {
             return api.networking.acceptLanguage
