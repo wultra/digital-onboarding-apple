@@ -12,10 +12,12 @@ disabled_rules:
   - type_body_length
   - nesting
   - inclusive_language
+  - unused_setter_value
 excluded:
   - Carthage
   - Deploy
   - build
+  - .build
 type_name:
   max_length: 50
   excluded:
