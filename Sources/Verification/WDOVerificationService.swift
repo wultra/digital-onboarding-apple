@@ -19,12 +19,12 @@ import PowerAuth2
 import PowerAuthCore
 import WultraPowerAuthNetworking
 
-/// Service that can verify previously activated PowerAuthSDK instance.
+/// Service that can verify a previously activated PowerAuthSDK instance.
 ///
-/// When PowerAuthSDK instance was activated with weak credentials via `WDOActivationService`, user needs to verify his genuine presence.
-/// This can be confirmed in the `PowerAuthActivationStatus.needVerification` which will be `true`.
+/// When a PowerAuthSDK instance was activated with weak credentials via `WDOActivationService`, the user needs to verify his genuine presence.
+/// This can be confirmed in the `PowerAuthActivationStatus.needVerification`, which will be `true`.
 ///
-/// This service operates against Wultra Onboarding server (usually ending with `/enrollment-onboarding-server`) and you need to configure networking service with the right URL.
+/// This service operates against Wultra Onboarding server (usually ending with `/enrollment-onboarding-server`), and you need to configure a networking service with the right URL.
 public class WDOVerificationService {
     
     // MARK: Public Properties
@@ -33,11 +33,11 @@ public class WDOVerificationService {
     public weak var delegate: WDOVerificationServiceDelegate?
     
     /// Accept language for the outgoing requests headers.
-    /// Default value is "en".
+    /// The default value is "en".
     ///
     /// Standard RFC "Accept-Language" https://tools.ietf.org/html/rfc7231#section-5.3.5
-    /// Response texts are based on this setting. For example when "de" is set, server
-    /// will return error texts and other in german (if available).
+    /// Response texts are based on this setting. For example, when "de" is set, server
+    /// will return error texts and other in German (if available).
     public var acceptLanguage: String {
         get {
             return api.networking.acceptLanguage
@@ -172,11 +172,21 @@ public class WDOVerificationService {
 
                                 cachedProcess.feed(docsResponse.documents)
                                 if documents.contains(where: { $0.action == .error }) || documents.contains(where: { $0.errors != nil && !$0.errors!.isEmpty }) {
+                                    D.debug("At least one document in error state")
                                     self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
                                 } else if documents.allSatisfy({ $0.action == .proceed }) {
-                                    self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
+                                    if cachedProcess.nextDocumentToScan != nil {
+                                        // All documents on the backend are accepted, but the user has selected more documents to scan
+                                        D.debug("All documents accepted, but we are expecting more documents to scan")
+                                        self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
+                                    } else {
+                                        // Corner case: verification status returns documentUpload, but all documents are already accepted
+                                        // (the change happens between the two API calls)
+                                        D.debug("All documents accepted, proceeding")
+                                        self.markCompleted(.success(makeResult(.processing(.documentVerification))), completion)
+                                    }
                                 } else if documents.contains(where: { $0.action == .wait }) {
-                                    // TODO: really verification?
+                                    D.debug("At least one document still in progress, moving to processing")
                                     self.markCompleted(.success(makeResult(.processing(.documentVerification))), completion)
                                 } else if documents.isEmpty {
                                     self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
@@ -220,7 +230,7 @@ public class WDOVerificationService {
         }
     }
     
-    /// Returns consent text for user to approve. The content of the text depends on the server configuration and might be plain text or HTML.
+    /// Returns consent text for the user to approve. The content of the text depends on the server configuration and might be plain text or HTML.
     ///
     /// Consent text explains how the service will handle his document photos or selfie scans.
     ///
@@ -241,7 +251,7 @@ public class WDOVerificationService {
         }
     }
     
-    /// Start the identity verification after user approved the consent (if required)
+    /// Start the identity verification after the user approved the consent (if required)
     ///
     /// - Parameters:
     ///   - consentApprovedByUser: Response of the user to the consent.
@@ -294,7 +304,7 @@ public class WDOVerificationService {
     
     /// Get the token for the document scanning SDK, when required.
     ///
-    /// This is needed for example for ZenID provider.
+    /// This is needed, for example, for ZenID provider.
     ///
     /// - Parameters:
     ///   - challenge: SDK generated challenge for the server.
@@ -324,7 +334,7 @@ public class WDOVerificationService {
     
     /// Set which documents will be scanned.
     ///
-    /// Note that this needs to be in sync what server expects based on the configuration.
+    /// Note that this needs to be in sync with what the server expects based on the configuration.
     ///
     /// - Parameters:
     ///   - types: Types of documents to scan.
@@ -337,7 +347,7 @@ public class WDOVerificationService {
         markCompleted(.success(.scanDocument(process)), completion)
     }
     
-    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded document are reasonable size so you're not uploading large files.
+    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded document is a reasonable size so you're not uploading large files.
     ///
     /// If you're uploading the same document file again, you need to include the `originalDocumentId` otherwise it will be rejected by the server.
     ///
@@ -459,7 +469,7 @@ public class WDOVerificationService {
         }
     }
     
-    /// Cancel the whole activation/verification. After this it's no longer possible to call any API of this library and PowerAuth activation should be removed and activation started again.
+    /// Cancel the whole activation/verification. After this it's no longer possible to call any API of this library, and PowerAuth activation should be removed, and activation started again.
     ///
     /// - Parameter completion: Callback with the result.
     public func cancelWholeProcess(completion: @escaping (Result<Void, Fail>) -> Void) {
@@ -485,7 +495,7 @@ public class WDOVerificationService {
         }
     }
     
-    /// Finishes verification by creating a new PowerAuth activation on given `newPowerAuthInstance`.
+    /// Finishes verification by creating a new PowerAuth activation on a given `newPowerAuthInstance`.
     ///
     /// Needs to be called when `activationFinish` next step is returned from the `status()` call.
     ///
@@ -635,7 +645,7 @@ public class WDOVerificationService {
     /// Verify OTP that user entered as a last step of the verification.
     ///
     /// - Parameters:
-    ///   - otp: OTP that user obtained via other channel (usually SMS or email).
+    ///   - otp: OTP that user obtained via another channel (usually SMS or email).
     ///   - completion: Callback with the result.
     public func verifyOTP(otp: String, completion: @escaping (Result<Success, Fail>) -> Void) {
         
@@ -1014,7 +1024,7 @@ public extension WDOVerificationService {
         }
     }
     
-    /// Returns consent text for user to approve. The content of the text depends on the server configuration and might be plain text or HTML.
+    /// Returns consent text for the user to approve. The content of the text depends on the server configuration and might be plain text or HTML.
     ///
     /// Consent text explains how the service will handle his document photos or selfie scans.
     ///
@@ -1028,7 +1038,7 @@ public extension WDOVerificationService {
         }
     }
     
-    /// Start the identity verification after user approved the consent (if required)
+    /// Start the identity verification after the user approved the consent (if required)
     ///
     /// - Parameters:
     ///   - consentApprovedByUser: Response of the user to the consent.
@@ -1045,7 +1055,7 @@ public extension WDOVerificationService {
     
     /// Set which documents will be scanned.
     ///
-    /// Note that this needs to be in sync what server expects based on the configuration.
+    /// Note that this needs to be in sync with what the server expects based on the configuration.
     ///
     /// - Parameters:
     ///   - types: Types of documents to scan.
@@ -1060,7 +1070,7 @@ public extension WDOVerificationService {
         }
     }
     
-    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded document are reasonable size so you're not uploading large files.
+    /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded document is a reasonable size so you're not uploading large files.
     ///
     /// If you're uploading the same document file again, you need to include the `originalDocumentId` otherwise it will be rejected by the server.
     ///
@@ -1117,7 +1127,7 @@ public extension WDOVerificationService {
         }
     }
     
-    /// Cancel the whole activation/verification. After this it's no longer possible to call any API of this library and PowerAuth activation should be removed and activation started again.
+    /// Cancel the whole activation/verification. After this it's no longer possible to call any API of this library, and PowerAuth activation should be removed, and activation started again.
     ///
     ///  - throws: `WDOVerificationService.Fail`
     func cancelWholeProcess() async throws {
@@ -1128,7 +1138,7 @@ public extension WDOVerificationService {
         }
     }
     
-    /// Finishes verification by creating a new PowerAuth activation on given `newPowerAuthInstance`.
+    /// Finishes verification by creating a new PowerAuth activation on a given `newPowerAuthInstance`.
     ///
     /// Needs to be called when `activationFinish` next step is returned from the `status()` call.
     ///
@@ -1172,7 +1182,7 @@ public extension WDOVerificationService {
     /// Verify OTP that user entered as a last step of the verification.
     ///
     /// - Parameters:
-    ///   - otp: OTP that user obtained via other channel (usually SMS or email).
+    ///   - otp: OTP that user obtained via another channel (usually SMS or email).
     ///
     ///  - returns: Success with "next state" to show
     ///  - throws: `WDOVerificationService.Fail`

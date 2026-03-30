@@ -2,6 +2,7 @@
 
 ## TBA
 
+- Document scan flow no longer proceeds to processing when additional documents are still selected locally.
 - `SDKInitRequestAttributes` now contains `platform` and `origin` properties (mainly to support BlinkID SDK).
 - `WDOConfigurationService` allows to fetch Wultra Digital Onboarding configuration from the server. 
 - Added support for `processType` and `activationCode` in `WDOActivationService`
