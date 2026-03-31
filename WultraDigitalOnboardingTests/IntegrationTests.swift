@@ -117,21 +117,21 @@ class IntegrationTests: BaseTestClass {
                 #expect(process.documents.contains { $0.type == documentToScan.type })
             }
             
-            // now make sure that when the app is restarted, the process is the same...
-            try await env.test(customPaInstance: x.powerAuth) { x2 in
-                // fetch status with a new verification service instance (but the same PA instance)
-                let newStatus = try await x2.verification.status()
-                
-                // we should be in the scanDocument status (no document uploaded yet)
-                guard case .scanDocument(let newProcess) = newStatus.state else {
-                    throw SimpleError("Unexpected state: \(startResult.shadowState)")
-                }
-                
-                // make sure all selected document are in the process
-                for documentToScan in documentsToScan {
-                    #expect(newProcess.documents.contains { $0.type == documentToScan.type })
-                }
+            // -- APP RESTART SIMULATION: now make sure that when the app is restarted, the process is the same...
+            let recreatedVerificaiton = try TestHelper(environment: env, processType: x.processType, customPaInstance: x.powerAuth)
+            // fetch status with a new verification service instance (but the same PA instance)
+            let newStatus = try await recreatedVerificaiton.verification.status()
+            
+            // we should be in the scanDocument status (no document uploaded yet)
+            guard case .scanDocument(let newProcess) = newStatus.state else {
+                throw SimpleError("Unexpected state: \(startResult.shadowState)")
             }
+            
+            // make sure all selected document are in the process
+            for documentToScan in documentsToScan {
+                #expect(newProcess.documents.contains { $0.type == documentToScan.type })
+            }
+            // -- end APP RESTART SIMULATION
             
             // not lets try to upload fake files to test reupload
             for documentToScan in documentsToScan {
