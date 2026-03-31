@@ -13,7 +13,7 @@ Example:
 let powerAuth = PowerAuthSDK(configuration: ....)
 let configurationService = WDOConfigurationService(
     powerAuth: powerAuth,
-    config: WPNConfig(baseUrl: "https://server.me/path")
+    networkingConfig: WPNConfig(baseUrl: "https://server.me/path")
 )
 
 let processType = "onboarding" // defined on your server

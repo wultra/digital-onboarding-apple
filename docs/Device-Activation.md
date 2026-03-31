@@ -24,7 +24,7 @@ Example with `PowerAuthSDK` instance:
 let powerAuth = PowerAuthSDK(configuration: ....)
 let activationService = WDOActivationService(
     powerAuth: powerAuth,
-    config: WPNConfig(baseUrl: "https://sever.my/path/"),
+    networkingConfig: WPNConfig(baseUrl: "https://sever.my/path/"),
     canRestoreSession: true
 )
 ```

@@ -1,6 +1,6 @@
 # Language Configuration
 
-The language of content that might be localized can be configured via `acceptLanguage` property on both `WDOActivationService` and `WDOVerificationService`.
+The language of content that might be localized can be configured via `acceptLanguage` property on any service that inherits from `WDOBaseService` (`WDOActivationService`, `WDOVerificationService`, and `WDOConfigurationService`).
 
 The default language is `en`. Availability of languages depends on server configuration and implementation.
 

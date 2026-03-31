@@ -2,6 +2,7 @@
 
 ## TBA
 
+- This release requires Wultra Digital Onboarding server version 2.1 or higher.
 - Document scan flow no longer proceeds to processing when additional documents are still selected locally.
 - `SDKInitRequestAttributes` now contains `platform` and `origin` properties (mainly to support BlinkID SDK).
 - `WDOConfigurationService` allows to fetch Wultra Digital Onboarding configuration from the server. 
@@ -23,6 +24,8 @@
 - `WDOVerificationState.endstate` now carries optional `rejectReason` associated value with the server-provided rejection reason
 - `WDOVerificationService.status` now returns `WDOVerificationService.StatusResult` which includes the verification state alongside `processId` and `processType` server data
 - `WDOVerificationService.documentsSubmit` now automatically resolves `originalDocumentId` for files that don't provide it, based on previously cached process data (temporary workaround until solved on the backend)
+- `WDOActivationService`, `WDOVerificationService`, and `WDOConfigurationService` now inherit from `WDOBaseService`, which consolidates shared functionality (`acceptLanguage`, `networking`).
+- **Breaking:** Init parameter `config:` (on `WDOActivationService` and `WDOConfigurationService`) and `wpnConfig:` (on `WDOVerificationService`) renamed to `networkingConfig:` for consistency.
 
 ## 1.3.0 (October, 2024)
 

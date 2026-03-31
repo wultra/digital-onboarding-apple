@@ -138,7 +138,7 @@ Example with `PowerAuthSDK` instance:
 let powerAuth = PowerAuthSDK(configuration: ....)
 let verification = WDOVerificationService(
     powerAuth: powerAuth,
-    config: WPNConfig(baseUrl: "https://sever.my/path/")
+    networkingConfig: WPNConfig(baseUrl: "https://sever.my/path/")
 )
 ```
 
