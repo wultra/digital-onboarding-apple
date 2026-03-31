@@ -80,6 +80,13 @@ class IntegrationTests: BaseTestClass {
         
         try await env.test { x in
             
+            // expect default language
+            #expect(x.verification.acceptLanguage == "en")
+            
+            // test language change
+            x.verification.acceptLanguage = "cs"
+            #expect(x.verification.acceptLanguage == "cs")
+            
             // start valid onboarding
             guard let (config, consentRequired) = try await x.startAndActivate() else {
                 return
