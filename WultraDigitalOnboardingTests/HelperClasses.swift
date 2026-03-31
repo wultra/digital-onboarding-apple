@@ -30,8 +30,8 @@ class TestHelper {
     
     private let environment: ServerEnvironment
     
-    init(environment: ServerEnvironment, processType: String) throws {
-        guard let pa = PowerAuthSDK(
+    init(environment: ServerEnvironment, processType: String, customPaInstance: PowerAuthSDK? = nil) throws {
+        guard let pa = customPaInstance ?? PowerAuthSDK(
             configuration: .init(
                 instanceId: UUID().uuidString,
                 baseEndpointUrl: environment.esUrl,
@@ -112,10 +112,10 @@ class TestHelper {
 }
 
 extension ServerEnvironment {
-    func test(completion: (TestHelper) async throws -> Void) async throws {
+    func test(customPaInstance: PowerAuthSDK? = nil, completion: (TestHelper) async throws -> Void) async throws {
         for processType in processTypes {
             print("Running test with process type '\(processType)' on the environment '\(name)'.")
-            try await completion(try TestHelper(environment: self, processType: processType))
+            try await completion(try TestHelper(environment: self, processType: processType, customPaInstance: customPaInstance))
         }
     }
 }

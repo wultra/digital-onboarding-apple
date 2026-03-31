@@ -56,21 +56,32 @@ public class WDOVerificationService {
     // MARK: - Private properties
 
     private let api: Networking
-    private let keychainKey: String
     private var lastStatus: IdentityStatusResponse?
+    // Cache key is scoped to the current process ID for isolation between processes.
+    private var keychainKey: String? {
+        guard let processId = lastStatus?.processId else { return nil }
+        return "wdocp_\(processId)"
+    }
     private var cachedProcess: WDOVerificationScanProcess? {
         get {
-            if let data = KeychainWrapper.standard.string(forKey: keychainKey) {
-                return WDOVerificationScanProcess(cacheData: data)
-            } else {
+            guard
+                let key = keychainKey,
+                let data = KeychainWrapper.standard.string(forKey: key) else
+            {
                 return nil
             }
+            return WDOVerificationScanProcess(cacheData: data)
         }
         set {
+            guard let key = keychainKey else { return }
             if let newValue {
-                KeychainWrapper.standard.set(newValue.dataForCache(), forKey: keychainKey)
+                if let cacheData = try? newValue.dataForCache() {
+                    KeychainWrapper.standard.set(cacheData, forKey: key)
+                } else {
+                    D.error("Failed to encode cache v2 - process will not be cached")
+                }
             } else {
-                KeychainWrapper.standard.removeObject(forKey: keychainKey)
+                KeychainWrapper.standard.removeObject(forKey: key)
             }
         }
     }
@@ -90,16 +101,12 @@ public class WDOVerificationService {
     ///   - networking: Networking service for the onboarding server with configured PowerAuthSDK instance that needs to have a valid activation.
     public convenience init(networking: WPNNetworkingService) {
         self.init(api: .init(networking: networking))
-        if networking.powerAuth.hasValidActivation() == false {
-            cachedProcess = nil
-        }
     }
     
     // MARK: - Private initializers
     
     init(api: Networking) {
         self.api = api
-        self.keychainKey = "wdocp_\(api.networking.powerAuth.configuration.instanceId)"
     }
     
     // MARK: - Public API
@@ -123,6 +130,8 @@ public class WDOVerificationService {
 
                 D.info("Verification status successfully retrieved.")
                 D.debug("\(response)")
+
+                self.lastStatus = response
 
                 switch response.status {
                 case .failed, .rejected, .notInitialized, .accepted:
@@ -171,6 +180,7 @@ public class WDOVerificationService {
                             if let cachedProcess = self.cachedProcess {
 
                                 cachedProcess.feed(docsResponse.documents)
+                                self.cachedProcess = cachedProcess // Persist updated server IDs to cache
                                 if documents.contains(where: { $0.action == .error }) || documents.contains(where: { $0.errors != nil && !$0.errors!.isEmpty }) {
                                     D.debug("At least one document in error state")
                                     self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
@@ -224,7 +234,6 @@ public class WDOVerificationService {
                 }
             case .failure(let error):
                 D.error(error)
-                self.lastStatus = nil
                 self.markCompleted(error, completion)
             }
         }
@@ -363,8 +372,31 @@ public class WDOVerificationService {
             return
         }
         
+        // Temp: auto-assign originalDocumentId from cached process data when not provided.
+        // This is a workaround until the backend resolves the originalDocumentId automatically.
+        let resolvedFiles: [WDODocumentFile]
+        if let cached = cachedProcess {
+            resolvedFiles = files.map { file in
+                // only process files without originalDocumentId
+                guard file.originalDocumentId == nil else { return file }
+                let serverId = cached.documents
+                    .first { $0.type == file.type }?
+                    .sides.first { $0.type == file.side }?
+                    .serverId
+                // if the server ID is not found, just return the file
+                guard let serverId else { return file }
+                D.debug("Document \(file.type) is missing originalDocumentId, using \(serverId) that was found in the cached process.")
+                // now create "copy" of the file
+                return WDODocumentFile(data: file.data, dataSignature: file.dataSignature, type: file.type, side: file.side, originalDocumentId: serverId)
+            }
+        } else {
+            resolvedFiles = files
+        }
+        
+        _testing_Callback?("SBMT", resolvedFiles) // send to test to process
+
         DispatchQueue.global(qos: .userInitiated).async {
-            let data = DocumentPayloadBuilder.build(processId: processId, files: files)
+            let data = DocumentPayloadBuilder.build(processId: processId, files: resolvedFiles)
             self.api.identityVerification.submitDocuments(data: data, progressCallback: progressCallback) { [weak self] result in
                 guard let self else {
                     completion(.failure(.init(.init(reason: .unknown))))
@@ -487,6 +519,7 @@ public class WDOVerificationService {
             }
             result.onSuccess {
                 D.info("Verification process was canceled.")
+                self.cachedProcess = nil
                 self.markCompleted(.success(()), completion)
             }.onError {
                 D.error($0)
@@ -822,6 +855,7 @@ public class WDOVerificationService {
             }
             startResult.onSuccess {
                 D.info("Verification process started")
+                self.cachedProcess = nil // we just started the process, so just clear the cache
                 self.markCompleted(.success(.documentsToScanSelect), completion)
             }.onError {
                 D.error($0)
@@ -869,6 +903,21 @@ public class WDOVerificationService {
         }
         completion(result)
     }
+    
+    // MARK: - Test Features
+    
+    #if DEBUG
+    /// Internal processing callback only for testing purposes!
+    /// This callback can be set only in DEBUG build and is called during the process.
+    /// Use this when some internal testing needs to be done during integration tests.
+    internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)?
+    #else
+    internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)? {
+        // no-op for non-debug
+        get { nil }
+        set { }
+    }
+    #endif
 }
 
 // MARK: - Other public APIs
