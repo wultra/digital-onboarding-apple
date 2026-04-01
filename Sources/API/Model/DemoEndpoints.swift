@@ -23,6 +23,24 @@ import WultraPowerAuthNetworking
  THIS FILE CONTAINS STUFF THAT WE NEED FOR DEMO TEST PURPOSES
 */
 
+/// Strategy where `getOTP` endpoint is located
+public enum WDOGetOTPEndpointStrategy {
+    
+    /// Part of the enrollment-onboarding-server
+    case eso
+    
+    /// Mock server - automatic.
+    ///
+    /// For example, when `deployement-mtoken-eso-dev.test.com` is the url of the ESO server
+    /// Then path to the mock API is `deployement-mtoken-eso-mock-dev.test.com/otp/detail`.
+    ///
+    /// This is a convention by wultra DevOps. If the deployment is different, use `custom` for the exact url
+    case automaticMock
+    
+    /// Exact url of the OTP endpoint (path including!).
+    case custom(url: URL)
+}
+
 extension Endpoints {
     // this endpoint is available only in our own implementation and should be available only for debug
     enum GetOTP {

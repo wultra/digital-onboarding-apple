@@ -359,14 +359,14 @@ public class WDOActivationService: WDOBaseService {
     /// If the app is running against our demo server, you can retrieve the OTP without needing to send SMS or emails.
     ///
     /// - Parameter completion: Callback with the result.
-    public func getOTP(completion: @escaping (Result<String, WPNError>) -> Void) {
+    public func getOTP(strategy: WDOGetOTPEndpointStrategy = .automaticMock, completion: @escaping (Result<String, WPNError>) -> Void) {
         D.debug("Getting OTP (non-production endpoint)")
         guard let processId else {
             D.error("Cannot retrieve OTP - process not started")
             completion(.failure(WPNError(reason: .wdo_activation_notRunning)))
             return
         }
-        api.onboarding.getOTP(processId: processId, type: .activation) { result in
+        api.onboarding.getOTP(strategy: strategy, processId: processId, type: .activation) { result in
             switch result {
             case .success(let otp):
                 D.info("OTP retrieved.")
@@ -568,9 +568,9 @@ public extension WDOActivationService {
     /// Demo endpoint available only in Wultra Demo systems
     ///
     /// If the app is running against our demo server, you can retrieve the OTP without needing to send SMS or emails.
-    func getOTP() async throws -> String {
+    func getOTP(strategy: WDOGetOTPEndpointStrategy = .automaticMock) async throws -> String {
         try await withCheckedThrowingContinuation { cont in
-            getOTP { result in
+            getOTP(strategy: strategy) { result in
                 cont.resume(with: result)
             }
         }

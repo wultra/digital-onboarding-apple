@@ -586,28 +586,74 @@ extension Networking.Onboarding {
     /// Retrieves OTP needed for Onboarding Process.
     ///
     /// Note that this method is available only in demo Wultra implementation.
-    /// Encrypted with the ECIES activation scope.
     /// - Parameters:
-    ///   - processId: ID of the onboarding process
+    ///   - strategy: Which endpoint strategy should be used for the OTP retrieval.
+    ///   - processId: ID of the onboarding process.
+    ///   - type: Type of the OTP (activation or user verification).
     ///   - completion: Result completion.
-    /// - Returns: Operation to observe
+    /// - Returns: Operation to observe (only for `.eso` strategy).
     @discardableResult
-    func getOTP(processId: String, type: OTPDetailType, completion: @escaping (Result<String, WPNError>) -> Void) -> Operation? {
+    func getOTP(strategy: WDOGetOTPEndpointStrategy, processId: String, type: OTPDetailType, completion: @escaping (Result<String, WPNError>) -> Void) -> Operation? {
         
-        typealias Endpoint = Endpoints.GetOTP
+        let mockURL: URL
+        let data = OTPDetailRequest(processId: processId, otpType: type)
         
-        return networking.post(
-            data: Endpoint.EndpointType.RequestData(.init(processId: processId, otpType: type)),
-            to: Endpoint.endpoint,
-            completion: { result, error in
-                assert(Thread.isMainThread)
-                if let data = result?.responseObject {
-                    completion(.success(data.otpCode))
-                } else {
-                    completion(.failure(error ?? WPNError(reason: .unknown)))
+        switch strategy {
+        case .eso:
+            // In this case, just call regular endpoint in the ESO server.
+            // This is available for example in a wultra DEV server.
+            D.info("Get OTP endpoint will be called by defined ESO strategy")
+            typealias Endpoint = Endpoints.GetOTP
+            return networking.post(
+                data: Endpoint.EndpointType.RequestData(data),
+                to: Endpoint.endpoint,
+                completion: { result, error in
+                    assert(Thread.isMainThread)
+                    if let data = result?.responseObject {
+                        completion(.success(data.otpCode))
+                    } else {
+                        completion(.failure(error ?? WPNError(reason: .unknown)))
+                    }
                 }
+            )
+        case .automaticMock:
+            // Try to modify the given server URL to a mock URL. This is based on a convention used by Wultra DEVOPS.
+            // This is available for example on Wultra stage or stable servers.
+            let baseUrl = "\(networking.config.baseUrl.scheme ?? "")://\(networking.config.baseUrl.host ?? "")"
+            let newBaseUrl = baseUrl.replacingOccurrences(of: "-eso", with: "-eso-mock")
+            D.info("Get OTP endpoint will be called on the \(newBaseUrl) server by defined AUTO strategy")
+            mockURL = URL(string: "\(newBaseUrl)/otp/detail")!
+        case .custom(let url):
+            // Completely custom URL (with a path)
+            mockURL = url
+        }
+        
+        var request = URLRequest(url: mockURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONEncoder().encode(data)
+        let urlSession = URLSession(configuration: .ephemeral)
+        urlSession.dataTask(with: request) { responseData, _, error in
+
+            DispatchQueue.main.async {
+                guard let responseData else {
+                    completion(.failure(.init(reason: .network_generic, error: error)))
+                    return
+                }
+
+                guard let result = try? JSONDecoder().decode(OTPDetailResponse.self, from: responseData) else {
+                    D.error("Failed to decode OTP response: \(String(data: responseData, encoding: .utf8) ?? "")")
+                    completion(.failure(.init(reason: .network_badServerResponse)))
+                    return
+                }
+
+                D.debug("Retrieved OTP code \(result.otpCode) from a MOCK service")
+                completion(.success(result.otpCode))
             }
-        )
+        }.resume()
+        
+        return nil // no operation for mock endpoint
     }
 }
+
 #endif

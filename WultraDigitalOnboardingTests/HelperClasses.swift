@@ -86,13 +86,8 @@ class TestHelper {
         let config = try await getConfig()
         try await start(credentials: credentials)
         
-        if config.otpForIdentification && environment.getOTPsupported == false {
-            print("Cannot test OTP flow as OTP retrieval it is not supported by the backend")
-            return nil
-        }
-        
         // get otp when required
-        let otp = config.otpForIdentification ? try await activation.getOTP() : nil
+        let otp = config.otpForIdentification ? try await activation.getOTP(strategy: environment.otpGetDetailStrategy) : nil
         try await activate(otp: otp)
         
         let consent: Bool
@@ -187,15 +182,30 @@ struct ServerEnvironment: Decodable {
     let esUrl: String
     let esoUrl: String
     let mobileConfig: String
-    let getOTPsupported: Bool
+    let otpMock: String
+    let servicesMock: Bool
     
-    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, getOTPsupported: Bool) {
+    var otpGetDetailStrategy: WDOGetOTPEndpointStrategy {
+        if otpMock.uppercased() == "ESO" {
+            return .eso
+        } else if otpMock.uppercased() == "AUTO" {
+            return .automaticMock
+        } else {
+            guard let url = URL(string: otpMock) else {
+                D.fatalError("Invalid URL set to otpMock")
+            }
+            return .custom(url: url)
+        }
+    }
+    
+    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool) {
         self.name = name
         self.processTypes = processTypes
         self.esUrl = esUrl
         self.esoUrl = esoUrl
         self.mobileConfig = config
-        self.getOTPsupported = getOTPsupported
+        self.otpMock = otpMock
+        self.servicesMock = servicesMock
     }
 }
 
