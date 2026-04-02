@@ -95,9 +95,7 @@ public class WDOVerificationService: WDOBaseService {
                         }
                         switch docsResult {
                         case .success(let docsResponse):
-
-                            D.info("Documents status retrieved.")
-
+                            D.info("Documents status retrieved - overall status: \(docsResponse.status.rawValue).")
                             self.markCompleted(.success(makeResult(.scanDocument(.init(response: docsResponse)))), completion)
 
                         case .failure(let error):
