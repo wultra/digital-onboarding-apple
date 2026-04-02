@@ -341,13 +341,13 @@ public class WDOVerificationService: WDOBaseService {
                 guard file.originalDocumentId == nil else { return file }
                 let serverId = cached.documents
                     .first { $0.type == file.type }?
-                    .sides.first { $0.type == file.side }?
+                    .sides.first { $0.type == file.side && $0.country == file.country }?
                     .serverId
                 // if the server ID is not found, just return the file
                 guard let serverId else { return file }
                 D.debug("Document \(file.type) is missing originalDocumentId, using \(serverId) that was found in the cached process.")
                 // now create "copy" of the file
-                return WDODocumentFile(data: file.data, dataSignature: file.dataSignature, type: file.type, side: file.side, originalDocumentId: serverId)
+                return WDODocumentFile(data: file.data, dataSignature: file.dataSignature, type: file.type, side: file.side, country: file.country, originalDocumentId: serverId)
             }
         } else {
             resolvedFiles = files

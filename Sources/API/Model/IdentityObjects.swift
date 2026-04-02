@@ -106,6 +106,8 @@ struct DocumentSubmitFile: Codable {
     let type: String
     /// Side of the document (for example front side of the ID card)
     let side: DocumentSubmitFileSide?
+    /// Document country as an ISO 3166-1 alpha-3 code (e.g. "CZE")
+    let country: String?
     /// Original document ID in case of re-upload
     let originalDocumentId: String?
     /// Data of the document
@@ -130,6 +132,8 @@ struct Document: Codable {
     let type: String
     /// Side of the file
     let side: DocumentSubmitFileSide
+    /// Document country as an ISO 3166-1 alpha-3 code (e.g. "CZE")
+    let country: String?
     /// Status of the processing
     let status: DocumentStatus
     /// Possible errors

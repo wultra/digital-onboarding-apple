@@ -53,6 +53,7 @@ extension WDODocumentFile: Hashable {
             filename: filename,
             type: type,
             side: side.apiType,
+            country: country,
             originalDocumentId: originalDocumentId,
             data: data.base64EncodedString(options: [])
         )

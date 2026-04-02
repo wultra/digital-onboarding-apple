@@ -28,9 +28,9 @@ struct ScanProcessCacheTests {
 
         // Feed server data: ID_CARD with front (accepted) + back (rejected), PASSPORT with front (accepted)
         process.feed([
-            Document(filename: "id_front.jpg", id: "srv-1", type: "ID_CARD", side: .front, status: .accepted, errors: nil),
-            Document(filename: "id_back.jpg", id: "srv-2", type: "ID_CARD", side: .back, status: .rejected, errors: ["blur"]),
-            Document(filename: "pp_front.jpg", id: "srv-3", type: "PASSPORT", side: .front, status: .accepted, errors: nil)
+            Document(filename: "id_front.jpg", id: "srv-1", type: "ID_CARD", side: .front, country: nil, status: .accepted, errors: nil),
+            Document(filename: "id_back.jpg", id: "srv-2", type: "ID_CARD", side: .back, country: nil, status: .rejected, errors: ["blur"]),
+            Document(filename: "pp_front.jpg", id: "srv-3", type: "PASSPORT", side: .front, country: nil, status: .accepted, errors: nil)
         ])
 
         // Serialize to v2 cache and deserialize
@@ -114,8 +114,8 @@ struct ScannedDocumentStateTests {
     func `upload state is accepted when all sides accepted`() {
         let process = WDOVerificationScanProcess(types: ["ID_CARD"])
         process.feed([
-            Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, status: .accepted, errors: nil),
-            Document(filename: "b.jpg", id: "2", type: "ID_CARD", side: .back, status: .accepted, errors: nil)
+            Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, country: nil, status: .accepted, errors: nil),
+            Document(filename: "b.jpg", id: "2", type: "ID_CARD", side: .back, country: nil, status: .accepted, errors: nil)
         ])
         #expect(process.documents[0].uploadState == .accepted)
     }
@@ -124,8 +124,8 @@ struct ScannedDocumentStateTests {
     func `upload state is rejected when any side has errors`() {
         let process = WDOVerificationScanProcess(types: ["ID_CARD"])
         process.feed([
-            Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, status: .accepted, errors: nil),
-            Document(filename: "b.jpg", id: "2", type: "ID_CARD", side: .back, status: .rejected, errors: ["blur"])
+            Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, country: nil, status: .accepted, errors: nil),
+            Document(filename: "b.jpg", id: "2", type: "ID_CARD", side: .back, country: nil, status: .rejected, errors: ["blur"])
         ])
         #expect(process.documents[0].uploadState == .rejected)
     }
@@ -139,14 +139,14 @@ struct ScannedDocumentStateTests {
 
         // accept ID_CARD
         process.feed([
-            Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, status: .accepted, errors: nil)
+            Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, country: nil, status: .accepted, errors: nil)
         ])
         #expect(process.nextDocumentToScan?.type == "PASSPORT")
 
         // accept PASSPORT, reject DRIVING_LICENSE
         process.feed([
-            Document(filename: "f.jpg", id: "2", type: "PASSPORT", side: .front, status: .accepted, errors: nil),
-            Document(filename: "f.jpg", id: "3", type: "DRIVING_LICENSE", side: .front, status: .rejected, errors: ["blur"])
+            Document(filename: "f.jpg", id: "2", type: "PASSPORT", side: .front, country: nil, status: .accepted, errors: nil),
+            Document(filename: "f.jpg", id: "3", type: "DRIVING_LICENSE", side: .front, country: nil, status: .rejected, errors: ["blur"])
         ])
         // rejected is not accepted, so it should be next
         #expect(process.nextDocumentToScan?.type == "DRIVING_LICENSE")
@@ -156,7 +156,7 @@ struct ScannedDocumentStateTests {
     func `nextDocumentToScan is nil when all accepted`() {
         let process = WDOVerificationScanProcess(types: ["PASSPORT"])
         process.feed([
-            Document(filename: "f.jpg", id: "1", type: "PASSPORT", side: .front, status: .accepted, errors: nil)
+            Document(filename: "f.jpg", id: "1", type: "PASSPORT", side: .front, country: nil, status: .accepted, errors: nil)
         ])
         #expect(process.nextDocumentToScan == nil)
     }
@@ -165,7 +165,7 @@ struct ScannedDocumentStateTests {
     func `feed ignores documents with unknown types`() {
         let process = WDOVerificationScanProcess(types: ["ID_CARD"])
         process.feed([
-            Document(filename: "f.jpg", id: "1", type: "UNKNOWN_DOC", side: .front, status: .accepted, errors: nil)
+            Document(filename: "f.jpg", id: "1", type: "UNKNOWN_DOC", side: .front, country: nil, status: .accepted, errors: nil)
         ])
         // ID_CARD should remain untouched
         #expect(process.documents[0].sides.isEmpty)
@@ -176,8 +176,8 @@ struct ScannedDocumentStateTests {
     func `feed groups multiple sides per document type`() {
         let process = WDOVerificationScanProcess(types: ["ID_CARD"])
         process.feed([
-            Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, status: .accepted, errors: nil),
-            Document(filename: "b.jpg", id: "2", type: "ID_CARD", side: .back, status: .accepted, errors: nil)
+            Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, country: nil, status: .accepted, errors: nil),
+            Document(filename: "b.jpg", id: "2", type: "ID_CARD", side: .back, country: nil, status: .accepted, errors: nil)
         ])
         #expect(process.documents[0].sides.count == 2)
         #expect(process.documents[0].sides[0].type == .front)
@@ -239,6 +239,22 @@ struct DocumentPayloadBuilderTests {
         let request = DocumentPayloadBuilder.build(processId: "p", files: [front, back])
         #expect(request.documents[0].filename == "driving_license_front.jpg")
         #expect(request.documents[1].filename == "driving_license_back.jpg")
+    }
+
+    @Test
+    func `country is passed through to submit file`() {
+        let file = WDODocumentFile(data: sampleData, type: "ID_CARD", side: .front, originalDocumentId: nil, country: "CZE")
+        let request = DocumentPayloadBuilder.build(processId: "p", files: [file])
+
+        #expect(request.documents[0].country == "CZE")
+    }
+
+    @Test
+    func `nil country is passed through to submit file`() {
+        let file = WDODocumentFile(data: sampleData, type: "ID_CARD", side: .front, originalDocumentId: nil)
+        let request = DocumentPayloadBuilder.build(processId: "p", files: [file])
+
+        #expect(request.documents[0].country == nil)
     }
 }
 
@@ -542,14 +558,14 @@ struct DocumentActionTests {
 
     @Test
     func `accepted status maps to proceed`() {
-        let doc = Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, status: .accepted, errors: nil)
+        let doc = Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, country: nil, status: .accepted, errors: nil)
         #expect(doc.action == .proceed)
     }
 
     @Test
     func `rejected and failed status map to error`() {
-        let rejected = Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, status: .rejected, errors: ["blur"])
-        let failed = Document(filename: "f.jpg", id: "2", type: "ID_CARD", side: .front, status: .failed, errors: nil)
+        let rejected = Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, country: nil, status: .rejected, errors: ["blur"])
+        let failed = Document(filename: "f.jpg", id: "2", type: "ID_CARD", side: .front, country: nil, status: .failed, errors: nil)
         #expect(rejected.action == .error)
         #expect(failed.action == .error)
     }
@@ -558,7 +574,7 @@ struct DocumentActionTests {
     func `in-progress statuses map to wait`() {
         let waitStatuses: [DocumentStatus] = [.uploadInProgress, .inProgress, .verificationPending, .verificationInProgress]
         for status in waitStatuses {
-            let doc = Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, status: status, errors: nil)
+            let doc = Document(filename: "f.jpg", id: "1", type: "ID_CARD", side: .front, country: nil, status: status, errors: nil)
             #expect(doc.action == .wait, "Status \(status) should map to wait")
         }
     }
@@ -782,7 +798,7 @@ struct CodableModelTests {
             processId: "p-1",
             resubmit: true,
             documents: [
-                DocumentSubmitFile(filename: "id_card_front.jpg", type: "ID_CARD", side: .front, originalDocumentId: "orig-1", data: "base64data")
+                DocumentSubmitFile(filename: "id_card_front.jpg", type: "ID_CARD", side: .front, country: nil, originalDocumentId: "orig-1", data: "base64data")
             ]
         )
         let data = try JSONEncoder().encode(request)
@@ -868,8 +884,8 @@ struct DocumentFileInitTests {
     func `convenience init with scanned document extracts originalDocumentId from matching side`() {
         let process = WDOVerificationScanProcess(types: ["ID_CARD"])
         process.feed([
-            Document(filename: "f.jpg", id: "server-id-front", type: "ID_CARD", side: .front, status: .rejected, errors: ["blur"]),
-            Document(filename: "b.jpg", id: "server-id-back", type: "ID_CARD", side: .back, status: .accepted, errors: nil)
+            Document(filename: "f.jpg", id: "server-id-front", type: "ID_CARD", side: .front, country: nil, status: .rejected, errors: ["blur"]),
+            Document(filename: "b.jpg", id: "server-id-back", type: "ID_CARD", side: .back, country: nil, status: .accepted, errors: nil)
         ])
 
         let scannedDoc = process.documents[0]
@@ -886,7 +902,7 @@ struct DocumentFileInitTests {
         let process = WDOVerificationScanProcess(types: ["PASSPORT"])
         // only front uploaded
         process.feed([
-            Document(filename: "f.jpg", id: "srv-1", type: "PASSPORT", side: .front, status: .accepted, errors: nil)
+            Document(filename: "f.jpg", id: "srv-1", type: "PASSPORT", side: .front, country: nil, status: .accepted, errors: nil)
         ])
 
         let scannedDoc = process.documents[0]
@@ -898,7 +914,7 @@ struct DocumentFileInitTests {
     func `createFileForUpload on scanned document`() {
         let process = WDOVerificationScanProcess(types: ["ID_CARD"])
         process.feed([
-            Document(filename: "f.jpg", id: "srv-1", type: "ID_CARD", side: .front, status: .rejected, errors: ["blur"])
+            Document(filename: "f.jpg", id: "srv-1", type: "ID_CARD", side: .front, country: nil, status: .rejected, errors: ["blur"])
         ])
 
         let scannedDoc = process.documents[0]
@@ -908,6 +924,47 @@ struct DocumentFileInitTests {
         #expect(file.side == .front)
         #expect(file.originalDocumentId == "srv-1")
         #expect(file.data == Data([0xFF]))
+    }
+
+    @Test
+    func `country is preserved through cache serialization`() throws {
+        let process = WDOVerificationScanProcess(types: ["ID_CARD"])
+        process.feed([
+            Document(filename: "f.jpg", id: "srv-1", type: "ID_CARD", side: .front, country: "CZE", status: .accepted, errors: nil),
+            Document(filename: "b.jpg", id: "srv-2", type: "ID_CARD", side: .back, country: "CZE", status: .accepted, errors: nil)
+        ])
+
+        let restored = try #require(WDOVerificationScanProcess(cacheData: try process.dataForCache()))
+        let idCard = try #require(restored.documents.first { $0.type == "ID_CARD" })
+        #expect(idCard.sides[0].country == "CZE")
+        #expect(idCard.sides[1].country == "CZE")
+    }
+
+    @Test
+    func `nil country is preserved through cache serialization`() throws {
+        let process = WDOVerificationScanProcess(types: ["PASSPORT"])
+        process.feed([
+            Document(filename: "f.jpg", id: "srv-1", type: "PASSPORT", side: .front, country: nil, status: .accepted, errors: nil)
+        ])
+
+        let restored = try #require(WDOVerificationScanProcess(cacheData: try process.dataForCache()))
+        let passport = try #require(restored.documents.first { $0.type == "PASSPORT" })
+        #expect(passport.sides[0].country == nil)
+    }
+
+    @Test
+    func `createFileForUpload preserves country parameter`() {
+        let process = WDOVerificationScanProcess(types: ["ID_CARD"])
+        process.feed([
+            Document(filename: "f.jpg", id: "srv-1", type: "ID_CARD", side: .front, country: "CZE", status: .rejected, errors: ["blur"])
+        ])
+
+        let scannedDoc = process.documents[0]
+        let file = scannedDoc.createFileForUpload(side: .front, data: Data([0xFF]), country: "CZE")
+
+        #expect(file.country == "CZE")
+        #expect(file.type == "ID_CARD")
+        #expect(file.side == .front)
     }
 }
 

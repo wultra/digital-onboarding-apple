@@ -66,6 +66,7 @@ public class WDOScannedDocument {
         sides = documents.map {
             .init(
                 type: .from(apiType: $0.side), serverId: $0.id,
+                country: $0.country,
                 uploadState: $0.errors?.isEmpty == false ? .rejected : .accepted)
         }
     }
@@ -92,6 +93,9 @@ public class WDOScannedDocument {
         /// ID on the server. Use this ID in case of an reupload
         public let serverId: String
 
+        /// Document country as an ISO 3166-1 alpha-3 code (e.g. "CZE"). Optional.
+        public let country: String?
+
         /// Upload state of the document
         public let uploadState: UploadState
     }
@@ -113,6 +117,7 @@ extension WDOVerificationScanProcess {
                         WDOScannedDocument.Side(
                             type: cachedSide.side == .front ? .front : .back,
                             serverId: cachedSide.serverId,
+                            country: cachedSide.country,
                             uploadState: cachedSide.uploadState == .accepted ? .accepted : .rejected
                         )
                     }
@@ -168,6 +173,7 @@ extension WDOVerificationScanProcess {
         struct CachedSide: Codable {
             let side: Side
             let serverId: String
+            let country: String?
             let uploadState: UploadState
 
             enum Side: String, Codable {
@@ -192,6 +198,7 @@ extension WDOVerificationScanProcess {
                         CacheV2.CachedSide(
                             side: side.type == .front ? .front : .back,
                             serverId: side.serverId,
+                            country: side.country,
                             uploadState: side.uploadState == .accepted ? .accepted : .rejected
                         )
                     }

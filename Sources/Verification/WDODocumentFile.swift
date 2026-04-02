@@ -32,6 +32,9 @@ public class WDODocumentFile {
     public let type: WDODocumentType
     /// Side of the document (`front` if the document is one-sided or only one side is expected).
     public let side: WDODocumentSide
+    /// Document country as an ISO 3166-1 alpha-3 code (e.g. "CZE"). Optional.
+    /// Expected/possible values can be obtained from `WDOConfigurationService.getConfiguration()`.
+    public let country: String?
     /// For image reuploading when the previous file of the same document was rejected.
     ///
     /// Without specifying this value, the document side won't be overwritten.
@@ -43,10 +46,11 @@ public class WDODocumentFile {
     ///   - scannedDocument: Document to upload.
     ///   - data: Raw image data.  Make sure that the data aren't too big, hundreds of kbs should be enough.
     ///   - side: The side of the document that the image captures.
+    ///   - country: Document country as an ISO 3166-1 alpha-3 code (e.g. "CZE"). Optional, `nil` by default.
     ///   - dataSignature: Signature of the image data. Optional, use only when the scan SDK supports this. `nil` by default.
-    public convenience init(scannedDocument: WDOScannedDocument, data: Data, side: WDODocumentSide, dataSignature: String? = nil) {
+    public convenience init(scannedDocument: WDOScannedDocument, data: Data, side: WDODocumentSide, country: String? = nil, dataSignature: String? = nil) {
         let originalDocumentId = scannedDocument.sides.first { $0.type == side }?.serverId
-        self.init(data: data, dataSignature: dataSignature, type: scannedDocument.type, side: side, originalDocumentId: originalDocumentId)
+        self.init(data: data, dataSignature: dataSignature, type: scannedDocument.type, side: side, country: country, originalDocumentId: originalDocumentId)
     }
     
     /// Image of a document that can be sent to the backend for Identity Verification.
@@ -56,17 +60,19 @@ public class WDODocumentFile {
     ///   - type: The type of the document.
     ///   - side: The side of the document the the image captures
     ///   - originalDocumentId: Original document ID In case of a reupload. If you've previously uploaded this type and side and won't specify the previous ID, the image won't be overwritten.
+    ///   - country: Document country as an ISO 3166-1 alpha-3 code (e.g. "CZE"). Optional, `nil` by default.
     ///   - dataSignature: Signature of the image data. Optional, use only when the scan SDK supports this. `nil` by default.
-    public convenience init(data: Data, type: WDODocumentType, side: WDODocumentSide, originalDocumentId: String?, dataSignature: String? = nil) {
-        self.init(data: data, dataSignature: dataSignature, type: type, side: side, originalDocumentId: originalDocumentId)
+    public convenience init(data: Data, type: WDODocumentType, side: WDODocumentSide, originalDocumentId: String?, country: String? = nil, dataSignature: String? = nil) {
+        self.init(data: data, dataSignature: dataSignature, type: type, side: side, country: country, originalDocumentId: originalDocumentId)
     }
     
     // internal init
-    init(data: Data, dataSignature: String?, type: WDODocumentType, side: WDODocumentSide, originalDocumentId: String?) {
+    init(data: Data, dataSignature: String?, type: WDODocumentType, side: WDODocumentSide, country: String?, originalDocumentId: String?) {
         self.data = data
         self.dataSignature = dataSignature
         self.type = type
         self.side = side
+        self.country = country
         self.originalDocumentId = originalDocumentId
     }
 }
@@ -78,10 +84,11 @@ public extension WDOScannedDocument {
     /// - Parameters:
     ///   - side: The side of the document that the image captures.
     ///   - data: Raw image data.  Make sure that the data aren't too big, hundreds of kbs should be enough.
+    ///   - country: Document country as an ISO 3166-1 alpha-3 code (e.g. "CZE"). Optional, `nil` by default.
     ///   - dataSignature: Signature of the image data. Optional, use only when the scan SDK supports this. `nil` by default.
     /// - Returns: A document file for upload.
-    func createFileForUpload(side: WDODocumentSide, data: Data, dataSignature: String? = nil) -> WDODocumentFile {
-        return WDODocumentFile(scannedDocument: self, data: data, side: side, dataSignature: dataSignature)
+    func createFileForUpload(side: WDODocumentSide, data: Data, country: String? = nil, dataSignature: String? = nil) -> WDODocumentFile {
+        return WDODocumentFile(scannedDocument: self, data: data, side: side, country: country, dataSignature: dataSignature)
     }
 }
 
