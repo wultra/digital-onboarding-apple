@@ -239,7 +239,6 @@ extension WDOVerificationState {
     var shadowState: VerificationStateShadow {
         switch self {
         case .intro: return .intro
-        case .documentsToScanSelect: return .documentsToScanSelect
         case .scanDocument: return .scanDocument
         case .processing: return .processing
         case .presenceCheck: return .presenceCheck
@@ -258,7 +257,6 @@ extension WDOVerificationService.Success {
 
 enum VerificationStateShadow {
     case intro
-    case documentsToScanSelect
     case scanDocument
     case processing
     case presenceCheck

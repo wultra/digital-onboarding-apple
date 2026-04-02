@@ -108,23 +108,17 @@ class IntegrationTests: BaseTestClass {
             
             // start the verification
             let startResult = try await x.verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
-            #expect(startResult.shadowState == .documentsToScanSelect) // returned state should be document to scan select
-            try await x.assertVerificationState(.documentsToScanSelect) // now verify that it's the same on the server
-            
-            // select documents to scan
-            let documentsToScan = config.getDocumentsToScan()
-            let selectResult = try await x.verification.documentsSetSelectedTypes(types: documentsToScan.map({ $0.type }))
-            #expect(selectResult.shadowState == .scanDocument)
+            #expect(startResult.shadowState == .scanDocument)
             try await x.assertVerificationState(.scanDocument)
-            
-            guard case .scanDocument(let process) = selectResult.state else {
+
+            let documentsToScan = config.getDocumentsToScan()
+
+            guard case .scanDocument(let statusSnapshot) = startResult.state else {
                 throw SimpleError("Unexpected state: \(startResult.shadowState)")
             }
-            
-            // make sure all selected document are in the process
-            for documentToScan in documentsToScan {
-                #expect(process.documents.contains { $0.type == documentToScan.type })
-            }
+
+            // No document was uploaded yet, so the status should be empty.
+            #expect(statusSnapshot.documents.isEmpty)
             
              func waitForNonProcessingStatus() async throws -> WDOVerificationState {
                  var statusResult = try await x.verification.status()
@@ -154,14 +148,11 @@ class IntegrationTests: BaseTestClass {
             let newStatus = try await recreatedVerificaiton.verification.status()
             
             // we should be in the scanDocument status (no document uploaded yet)
-            guard case .scanDocument(let newProcess) = newStatus.state else {
+            guard case .scanDocument(let newStatusSnapshot) = newStatus.state else {
                 throw SimpleError("Unexpected state: \(startResult.shadowState)")
             }
-            
-            // make sure all selected document are in the process
-            for documentToScan in documentsToScan {
-                #expect(newProcess.documents.contains { $0.type == documentToScan.type })
-            }
+
+            #expect(newStatusSnapshot.documents.isEmpty)
             
             // empty jpeg used for document uploads
             let dummyJpeg =
@@ -287,8 +278,8 @@ class IntegrationTests: BaseTestClass {
             
             _ = try await x.verification.start(consentApprovedByUser: .notRequired) // for simplicity not required
             
-            // we should now be in document to scan select state
-            try await x.assertVerificationState(.documentsToScanSelect)
+            // we should now be in scan document state
+            try await x.assertVerificationState(.scanDocument)
             
             // restart and verify the state
             let restartResult = try await x.verification.restartVerification()
@@ -300,8 +291,8 @@ class IntegrationTests: BaseTestClass {
             // start again
             _ = try await x.verification.start(consentApprovedByUser: .notRequired)
             
-            // We should now be in document to scan select state
-            try await x.assertVerificationState(.documentsToScanSelect)
+            // We should now be in scan document state
+            try await x.assertVerificationState(.scanDocument)
             
             // cancel whole process, after that, the onboarding should be finished
             try await x.verification.cancelWholeProcess()
