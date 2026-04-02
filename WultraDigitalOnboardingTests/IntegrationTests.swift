@@ -213,15 +213,15 @@ class IntegrationTests: BaseTestClass {
             // handle document re-scan if documents were rejected
             // (with mocked services this shouldn't happen, but handle it for robustness)
             if state.shadowState == .scanDocument {
-                guard case .scanDocument(let process) = state else {
+                guard case .scanDocument = state else {
                     throw SimpleError("Unexpected state: \(state.shadowState)")
                 }
-                for doc in process.documents {
-                    var filesToReupload = [WDODocumentFile(data: dummyJpeg, type: doc.type, side: .front, originalDocumentId: nil)]
-                    if doc.sides.count == 2 {
-                        filesToReupload.append(WDODocumentFile(data: dummyJpeg, type: doc.type, side: .back, originalDocumentId: nil))
+                for doc in documentsToScan {
+                    var filesToUpload = [WDODocumentFile(data: dummyJpeg, type: doc.type, side: .front, originalDocumentId: nil)]
+                    if doc.sideCount == 2 {
+                        filesToUpload.append(WDODocumentFile(data: dummyJpeg, type: doc.type, side: .back, originalDocumentId: nil))
                     }
-                    _ = try await x.verification.documentsSubmit(files: filesToReupload)
+                    _ = try await x.verification.documentsSubmit(files: filesToUpload)
                     state = try await waitForNonProcessingStatus()
                 }
             }
