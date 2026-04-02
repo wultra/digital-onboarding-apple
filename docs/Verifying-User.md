@@ -67,16 +67,10 @@ enum WDOVerificationState {
     /// Otherwise the next step should be calling the `start`.
     case intro(consentRequired: Bool)
     
-    /// Show document selection to the user. Which documents are available and how many
-    /// can the user select is up to your backend configuration.
-    ///
-    /// The next step should be calling the `documentsSetSelectedTypes`.
-    case documentsToScanSelect
-    
     /// User should scan documents - display UI for the user to scan all necessary documents.
     ///
     /// The next step should be calling the `documentsSubmit`.
-    case scanDocument(_ process: WDOVerificationScanProcess)
+    case scanDocument(_ status: WDODocumentsStatus)
     
     /// The system is processing data - show loading with text hint from provided `ProcessingItem`.
     ///
@@ -119,6 +113,24 @@ enum WDOVerificationState {
     
     /// Verification was successfully ended. Continue into your app
     case success
+}
+```
+
+`scanDocument` carries a snapshot of document processing data:
+
+```swift
+public struct WDODocumentsStatus {
+    public let status: WDODocumentStatus
+    public let documents: [WDODocument]
+}
+
+public struct WDODocument {
+    public let filename: String
+    public let id: String
+    public let type: WDODocumentType
+    public let side: WDODocumentSide
+    public let status: WDODocumentStatus
+    public let errors: [String]?
 }
 ```
 
@@ -209,18 +221,18 @@ verification.getConsent { result in
 
 ## Approving the user consent
 
-When the state is `consent`, you should display the consent text to the user to approve or reject.
+When the current state is `intro(consentRequired: true)`, display consent text to the user and then continue by calling `start(consentApprovedByUser:)`.
 
 If the user __declines the consent__, call `start(consentApprovedByUser: .declined, ...)` which will return the user to the intro screen.
 
-If the user chooses to __accept the consent__, call `start(consentApprovedByUser: .approved, ...)` function. If successful, `documentsToScanSelect` state will be returned.
+If the user chooses to __accept the consent__, call `start(consentApprovedByUser: .approved, ...)`. If successful, `scanDocument` state will be returned.
 
 ```swift
 let verification: WDOVerificationService // configured instance
 verification.start(consentApprovedByUser: .approved) { result in 
     switch result {
     case .success(let state):
-        // state will be in the `documentsToScanSelect` case here - display the document selector
+        // state will be in the `scanDocument` case here
         break
     case .failure(let error):
         if let state = error.state {
@@ -233,30 +245,11 @@ verification.start(consentApprovedByUser: .approved) { result in
 }
 ```
 
-## Set document types to scan
+## Selecting document types in your app
 
-After the user approves the consent, present a document selector for documents which will be scanned. The number and types of documents (or other rules like 1 type required) are completely dependent on your backend system integration, frontend SDK does not provide any hint for this configuration.
+Document selection is fully controlled by the integrator app.
 
-For example, your system might require a national ID and one additional document like a driver's license, passport, or any other government-issued personal document.
-
-```swift
-let verification: WDOVerificationService // configured instance
-let documentsToScan: [WDODocumentType] = [.idCard, .driversLicense]
-verification.documentsSetSelectedTypes(types: documentsToScan) { result in 
-    switch result {
-    case .success(let state):
-        // state will be in the `scanDocument` case here - display the document scanner
-        break
-    case .failure(let error):
-        if let state = error.state {
-            // show expected screen based on the state
-        } else {
-            // navigate to the error screen and show the error in
-            // error.cause
-        }
-    }
-}
-```
+Use your configuration (`WDOConfigurationService`) and project-specific rules to decide which document types the user should scan. 
 
 ## Configuring the "Document Scan SDK"
 
@@ -272,27 +265,21 @@ ZenID RecogLib_iOS integration example:
 
 ```swift
 let verification: WDOVerificationService // configured instance
-
-let documentsToScan = [WDODocumentType.idCard, .driversLicense]
-    
-verification.documentsSetSelectedTypes(types: documentsToScan) { result in
-    switch result {
-    case .success(let result):
-        // state will be in the `scanDocument` case here - tell the user to start scanning required documents
-        // in the `scanDocument` case, process object `WDOVerificationScanProcess` is present which will
-        // tell you the status of each document and also provide you `nextDocumentToScan` - the document that should be scanned next
-        break
-    case .failure(let error):
-        // handle error
-        break
-    }
+let sdkChallenge = "challenge-from-scan-sdk"
+verification.documentsInitSDK(challenge: sdkChallenge) { result in
+    // handle result token for your scan SDK
 }
 ```
 
 ## Scanning a document
 
-When the state of the process is `scanDocument` with the `WDOVerificationScanProcess` parameter, you need to present a document scan UI to the user. This UI needs
-to guide through the scanning process - scanning one document after another and both sides (if the document requires so).
+When the state of the process is `scanDocument`, you need to present a document scan UI to the user. This UI needs to guide through the scanning process according to your integration rules (for example document order and required sides).
+
+The associated `WDODocumentsStatus` value contains server-side information about already uploaded files. You can use it to:
+
+1. Show progress for already processed files.
+2. Detect which file needs re-upload (for example rejected side).
+3. Retrieve a previous server file `id` and pass it as `originalDocumentId` during re-upload.
 
 The whole UI and document scanning process is up to you and the 3rd party library you choose to use.
 
@@ -321,12 +308,12 @@ let passportToUpload = WDODocumentFile(
     data: Data(...), // raw image data from the document scanning library/photo camera
     type: WDODocumentType.passport,
     side: WDODocumentSide.front, // passport has only front side
-    originalDocumentId: nil, // use only when re-uploading the file (for example when first upload was rejected because of a blur)
+    originalDocumentId: nil, // set this when re-uploading an existing file
     dataSignature: nil // optional, use when provided by the document scanning library
 )
 
 verification.documentsSubmit(
-    types: [passportToUpload],
+    files: [passportToUpload],
     progressCallback: { percentUploadProgress in
         // report upload progress
     }
@@ -362,15 +349,6 @@ class WDODocumentFile {
     /// Image of a document that can be sent to the backend for Identity Verification.
     ///
     /// - Parameters:
-    ///   - scannedDocument: Document to upload.
-    ///   - data: Raw image data.  Make sure that the data aren't too big, hundreds of kbs should be enough.
-    ///   - side: The side of the document that the image captures.
-    ///   - dataSignature: Signature of the image data. Optional, use only when the scan SDK supports this. `nil` by default.
-    public convenience init(scannedDocument: WDOScannedDocument, data: Data, side: WDODocumentSide, dataSignature: String? = nil)
-    
-    /// Image of a document that can be sent to the backend for Identity Verification.
-    ///
-    /// - Parameters:
     ///   - data: Raw image data.  Make sure that the data aren't too big, hundreds of kbs should be enough.
     ///   - type: The type of the document.
     ///   - side: The side of the document the the image captures
@@ -381,7 +359,7 @@ class WDODocumentFile {
 ```
 
 <!-- begin box info -->
-To create an instance of the `WDODocumentFile`, you can use `WDOScannedDocument.createFileForUpload`. The `WDOScannedDocument` is returned in the process status as a "next document to scan".
+When re-uploading a file, use the matching document `id` from `WDOVerificationState.scanDocument` payload as `originalDocumentId`.
 <!-- end -->
 
 ## Presence check
