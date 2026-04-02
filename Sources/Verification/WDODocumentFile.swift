@@ -62,7 +62,7 @@ public class WDODocumentFile {
     }
     
     // internal init
-    init(data: Data, dataSignature: String? = nil, type: WDODocumentType, side: WDODocumentSide, originalDocumentId: String?) {
+    init(data: Data, dataSignature: String?, type: WDODocumentType, side: WDODocumentSide, originalDocumentId: String?) {
         self.data = data
         self.dataSignature = dataSignature
         self.type = type

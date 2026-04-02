@@ -126,6 +126,28 @@ class IntegrationTests: BaseTestClass {
                 #expect(process.documents.contains { $0.type == documentToScan.type })
             }
             
+             func waitForNonProcessingStatus() async throws -> WDOVerificationState {
+                 var statusResult = try await x.verification.status()
+                 while statusResult.state.shadowState == .processing {
+                     // handle onboarding approval when processing is waiting for manual approval
+                     if case .processing(let item) = statusResult.state, item == .onboardingApproval {
+                         if let userId = x.lastCredentials.map({ "mockuser_\($0.clientNumber)" }) {
+                             print("Process is waiting for onboarding approval, approving...")
+                             try await approveOnboarding(
+                                env: env,
+                                processId: statusResult.serverData.processId,
+                                userId: userId
+                            )
+                         } else {
+                             print("Process is waiting for onboarding approval but no env/userId provided — waiting...")
+                         }
+                     }
+                     try await Task.sleep(for: .seconds(3))
+                     statusResult = try await x.verification.status()
+                }
+                return statusResult.state
+            }
+            
             // -- APP RESTART SIMULATION: now make sure that when the app is restarted, the process is the same...
             let recreatedVerificaiton = try TestHelper(environment: env, processType: x.processType, customPaInstance: x.powerAuth)
             // fetch status with a new verification service instance (but the same PA instance)
@@ -165,7 +187,7 @@ class IntegrationTests: BaseTestClass {
                     // upload to server
                     _ = try await x.verification.documentsSubmit(files: documentsToUpload)
                     // wait for processing
-                    _ = try await waitForNonProcessingStatus(service: x.verification)
+                    _ = try await waitForNonProcessingStatus()
                     // set testing callback to verify that all documents (in second try) have originalDocumentID
                     // that were automatically added by the submit method...
                     x.verification._testing_Callback = { _, data in
@@ -185,25 +207,22 @@ class IntegrationTests: BaseTestClass {
                 return
             }
 
-            // userId for onboarding approval (mock server prefixes with "mockuser_")
-            let approvalUserId = x.lastCredentials.map { "mockuser_\($0.clientNumber)" }
-
             // wait for document processing to finish
-            var state = try await waitForNonProcessingStatus(service: x.verification, env: env, userId: approvalUserId)
+            var state = try await waitForNonProcessingStatus()
 
             // handle document re-scan if documents were rejected
             // (with mocked services this shouldn't happen, but handle it for robustness)
             if state.shadowState == .scanDocument {
-                guard case .scanDocument(let rejectedProcess) = state else {
+                guard case .scanDocument(let process) = state else {
                     throw SimpleError("Unexpected state: \(state.shadowState)")
                 }
-                for doc in rejectedProcess.documents where doc.uploadState == .rejected {
-                    var filesToReupload = [WDODocumentFile(data: dummyJpeg, type: doc.type, side: .front, originalDocumentId: doc.sides.first?.serverId, dataSignature: nil)]
+                for doc in process.documents {
+                    var filesToReupload = [WDODocumentFile(data: dummyJpeg, type: doc.type, side: .front, originalDocumentId: nil)]
                     if doc.sides.count == 2 {
-                        filesToReupload.append(WDODocumentFile(data: dummyJpeg, type: doc.type, side: .back, originalDocumentId: doc.sides.last?.serverId, dataSignature: nil))
+                        filesToReupload.append(WDODocumentFile(data: dummyJpeg, type: doc.type, side: .back, originalDocumentId: nil))
                     }
                     _ = try await x.verification.documentsSubmit(files: filesToReupload)
-                    state = try await waitForNonProcessingStatus(service: x.verification, env: env, userId: approvalUserId)
+                    state = try await waitForNonProcessingStatus()
                 }
             }
 
@@ -214,7 +233,7 @@ class IntegrationTests: BaseTestClass {
                 // with mocked services, we don't need an actual 3rd party SDK — just submit
                 _ = try await x.verification.presenceCheckSubmit()
                 // wait for processing after presence check
-                state = try await waitForNonProcessingStatus(service: x.verification, env: env, userId: approvalUserId)
+                state = try await waitForNonProcessingStatus()
             }
 
             // OTP verification
@@ -225,7 +244,7 @@ class IntegrationTests: BaseTestClass {
                 state = otpResult.state
                 // wait for processing if needed
                 if state.shadowState == .processing {
-                    state = try await waitForNonProcessingStatus(service: x.verification, env: env, userId: approvalUserId)
+                    state = try await waitForNonProcessingStatus()
                 }
             }
 
@@ -304,32 +323,6 @@ class IntegrationTests: BaseTestClass {
             let paStatus = try await x.powerAuth.fetchActivationStatus()
             #expect(paStatus.state == .removed)
         }
-    }
-    
-    private func waitForNonProcessingStatus(
-        service: WDOVerificationService,
-        env: ServerEnvironment? = nil,
-        userId: String? = nil
-    ) async throws -> WDOVerificationState {
-        var statusResult = try await service.status()
-        while statusResult.state.shadowState == .processing {
-            // handle onboarding approval when processing is waiting for manual approval
-            if case .processing(let item) = statusResult.state, item == .onboardingApproval {
-                if let env, let userId {
-                    print("Process is waiting for onboarding approval, approving...")
-                    try await approveOnboarding(
-                        env: env,
-                        processId: statusResult.serverData.processId,
-                        userId: userId
-                    )
-                } else {
-                    print("Process is waiting for onboarding approval but no env/userId provided — waiting...")
-                }
-            }
-            try await Task.sleep(for: .seconds(3))
-            statusResult = try await service.status()
-        }
-        return statusResult.state
     }
 
     /// Calls private test API to approve the onboarding process (simulates backoffice approval).
