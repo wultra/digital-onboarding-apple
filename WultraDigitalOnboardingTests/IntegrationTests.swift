@@ -188,19 +188,6 @@ class IntegrationTests: BaseTestClass {
                     _ = try await x.verification.documentsSubmit(files: documentsToUpload)
                     // wait for processing
                     _ = try await waitForNonProcessingStatus()
-                    // set testing callback to verify that all documents (in second try) have originalDocumentID
-                    // that were automatically added by the submit method...
-                    x.verification._testing_Callback = { _, data in
-                        guard let files = data as? [WDODocumentFile] else {
-                            D.fatalError("Unexpected type")
-                        }
-                        guard files.allSatisfy({ $0.originalDocumentId != nil }) else {
-                            D.fatalError("All documents should have originalDocumentId")
-                        }
-                    }
-                    // again
-                    _ = try await x.verification.documentsSubmit(files: documentsToUpload)
-                    x.verification._testing_Callback = nil
                 }
                 
                 print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'")

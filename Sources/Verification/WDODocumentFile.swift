@@ -40,18 +40,6 @@ public class WDODocumentFile {
     /// Image of a document that can be sent to the backend for Identity Verification.
     ///
     /// - Parameters:
-    ///   - scannedDocument: Document to upload.
-    ///   - data: Raw image data.  Make sure that the data aren't too big, hundreds of kbs should be enough.
-    ///   - side: The side of the document that the image captures.
-    ///   - dataSignature: Signature of the image data. Optional, use only when the scan SDK supports this. `nil` by default.
-    public convenience init(scannedDocument: WDOScannedDocument, data: Data, side: WDODocumentSide, dataSignature: String? = nil) {
-        let originalDocumentId = scannedDocument.sides.first { $0.type == side }?.serverId
-        self.init(data: data, dataSignature: dataSignature, type: scannedDocument.type, side: side, originalDocumentId: originalDocumentId)
-    }
-    
-    /// Image of a document that can be sent to the backend for Identity Verification.
-    ///
-    /// - Parameters:
     ///   - data: Raw image data.  Make sure that the data aren't too big, hundreds of kbs should be enough.
     ///   - type: The type of the document.
     ///   - side: The side of the document the the image captures
@@ -68,20 +56,6 @@ public class WDODocumentFile {
         self.type = type
         self.side = side
         self.originalDocumentId = originalDocumentId
-    }
-}
-
-public extension WDOScannedDocument {
-    
-    /// Creates an image that can be sent to the backend for Identity Verification.
-    ///
-    /// - Parameters:
-    ///   - side: The side of the document that the image captures.
-    ///   - data: Raw image data.  Make sure that the data aren't too big, hundreds of kbs should be enough.
-    ///   - dataSignature: Signature of the image data. Optional, use only when the scan SDK supports this. `nil` by default.
-    /// - Returns: A document file for upload.
-    func createFileForUpload(side: WDODocumentSide, data: Data, dataSignature: String? = nil) -> WDODocumentFile {
-        return WDODocumentFile(scannedDocument: self, data: data, side: side, dataSignature: dataSignature)
     }
 }
 

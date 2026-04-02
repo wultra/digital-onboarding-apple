@@ -16,6 +16,77 @@
 
 import Foundation
 
+/// Current document verification snapshot for the active process.
+public struct WDODocumentsStatus {
+
+    /// Overall status.
+    public let status: WDODocumentStatus
+
+    /// Status for each uploaded document.
+    public let documents: [WDODocument]
+
+    public init(status: WDODocumentStatus, documents: [WDODocument]) {
+        self.status = status
+        self.documents = documents
+    }
+}
+
+/// Metadata and processing outcome for one uploaded document file.
+public struct WDODocument {
+
+    /// Name of the file.
+    public let filename: String
+
+    /// Unique ID of the file.
+    public let id: String
+
+    /// Type of the file.
+    public let type: WDODocumentType
+
+    /// Side of the file.
+    public let side: WDODocumentSide
+
+    /// Status of the processing.
+    public let status: WDODocumentStatus
+
+    /// Possible errors.
+    public let errors: [String]?
+
+    public init(
+        filename: String,
+        id: String,
+        type: WDODocumentType,
+        side: WDODocumentSide,
+        status: WDODocumentStatus,
+        errors: [String]?
+    ) {
+        self.filename = filename
+        self.id = id
+        self.type = type
+        self.side = side
+        self.status = status
+        self.errors = errors
+    }
+}
+
+/// Processing state of an uploaded verification document.
+public enum WDODocumentStatus: String {
+    /// Document was accepted.
+    case accepted = "ACCEPTED"
+    /// Document is being uploaded to the verification system.
+    case uploadInProgress = "UPLOAD_IN_PROGRESS"
+    /// Document is being processed.
+    case inProgress = "IN_PROGRESS"
+    /// Document is pending verification.
+    case verificationPending = "VERIFICATION_PENDING"
+    /// Document is being verified.
+    case verificationInProgress = "VERIFICATION_IN_PROGRESS"
+    /// Document was rejected.
+    case rejected = "REJECTED"
+    /// Verification of the document failed.
+    case failed = "FAILED"
+}
+
 /// State which should be presented to the user. Each state represents a separate screen UI that should be presented to the user.
 public enum WDOVerificationState: CustomStringConvertible {
     
@@ -25,16 +96,10 @@ public enum WDOVerificationState: CustomStringConvertible {
     /// The next step should be calling the `start`.
     case intro(consentRequired: Bool = true)
     
-    /// Show document selection to the user. Which documents are available and how many
-    /// can the user select is up to your backend configuration.
-    ///
-    /// The next step should be calling the `documentsSetSelectedTypes`.
-    case documentsToScanSelect
-    
     /// User should scan documents - display UI for the user to scan all necessary documents.
     ///
     /// The next step should be calling the `documentsSubmit`.
-    case scanDocument(_ process: WDOVerificationScanProcess)
+    case scanDocument(_ status: WDODocumentsStatus)
     
     /// The system is processing data - show loading with text hint from provided `ProcessingItem`.
     ///
@@ -149,7 +214,6 @@ public enum WDOVerificationState: CustomStringConvertible {
         let prefix = "WDOVerificationState"
         switch self {
         case .intro(let consentRequired): return "\(prefix).intro(consentRequired: \(consentRequired))"
-        case .documentsToScanSelect: return "\(prefix).documentsToScanSelect"
         case .scanDocument: return "\(prefix).scanDocument"
         case .processing(let reason): return "\(prefix).processing:\(reason)"
         case .presenceCheck: return "\(prefix).presenceCheck"

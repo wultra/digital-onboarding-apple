@@ -69,21 +69,6 @@ public class WDOBaseService {
     init(api: Networking) {
         self.api = api
     }
-    
-    // MARK: - Test Features
-    
-    #if DEBUG
-    /// Internal processing callback only for testing purposes!
-    /// This callback can be set only in DEBUG build and is called during the process.
-    /// Use this when some internal testing needs to be done during integration tests.
-    internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)?
-    #else
-    internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)? {
-        // no-op for non-debug
-        get { nil }
-        set { }
-    }
-    #endif
 }
 
 // MARK: - Internal Helpers

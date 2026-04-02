@@ -40,34 +40,6 @@ public class WDOVerificationService: WDOBaseService {
     // MARK: - Private properties
 
     private var lastStatus: IdentityStatusResponse?
-    // Cache key is scoped to the current process ID for isolation between processes.
-    private var keychainKey: String? {
-        guard let processId = lastStatus?.processId else { return nil }
-        return "wdocp_\(processId)"
-    }
-    private var cachedProcess: WDOVerificationScanProcess? {
-        get {
-            guard
-                let key = keychainKey,
-                let data = KeychainWrapper.standard.string(forKey: key) else
-            {
-                return nil
-            }
-            return WDOVerificationScanProcess(cacheData: data)
-        }
-        set {
-            guard let key = keychainKey else { return }
-            if let newValue {
-                if let cacheData = try? newValue.dataForCache() {
-                    KeychainWrapper.standard.set(cacheData, forKey: key)
-                } else {
-                    D.error("Failed to encode cache v2 - process will not be cached")
-                }
-            } else {
-                KeychainWrapper.standard.removeObject(forKey: key)
-            }
-        }
-    }
     
     // MARK: - Public API
     
@@ -91,15 +63,6 @@ public class WDOVerificationService: WDOBaseService {
                 D.info("Verification status successfully retrieved.")
                 D.debug("\(response)")
 
-                self.lastStatus = response
-
-                switch response.status {
-                case .failed, .rejected, .notInitialized, .accepted:
-                    D.debug("Status \(response.status) - clearing cache.")
-                    self.cachedProcess = nil
-                default:
-                    break
-                }
                 self.lastStatus = response
 
                 let makeResult = { (state: WDOVerificationState) -> StatusResult in
@@ -135,42 +98,7 @@ public class WDOVerificationService: WDOBaseService {
 
                             D.info("Documents status retrieved.")
 
-                            let documents = docsResponse.documents
-
-                            if let cachedProcess = self.cachedProcess {
-
-                                cachedProcess.feed(docsResponse.documents)
-                                self.cachedProcess = cachedProcess // Persist updated server IDs to cache
-                                if documents.contains(where: { $0.action == .error }) || documents.contains(where: { $0.errors != nil && !$0.errors!.isEmpty }) {
-                                    D.debug("At least one document in error state")
-                                    self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
-                                } else if !documents.isEmpty && documents.allSatisfy({ $0.action == .proceed }) {
-                                    if cachedProcess.nextDocumentToScan != nil {
-                                        // All documents on the backend are accepted, but the user has selected more documents to scan
-                                        D.debug("All documents accepted, but we are expecting more documents to scan")
-                                        self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
-                                    } else {
-                                        // Corner case: verification status returns documentUpload, but all documents are already accepted
-                                        // (the change happens between the two API calls)
-                                        D.debug("All documents accepted, proceeding")
-                                        self.markCompleted(.success(makeResult(.processing(.documentVerification))), completion)
-                                    }
-                                } else if documents.contains(where: { $0.action == .wait }) {
-                                    D.debug("At least one document still in progress, moving to processing")
-                                    self.markCompleted(.success(makeResult(.processing(.documentVerification))), completion)
-                                } else if documents.isEmpty {
-                                    self.markCompleted(.success(makeResult(.scanDocument(cachedProcess))), completion)
-                                } else {
-                                    // TODO: is this ok?
-                                    self.markCompleted(.success(makeResult(.failed)), completion)
-                                }
-                            } else {
-                                if documents.isEmpty {
-                                    self.markCompleted(.success(makeResult(.documentsToScanSelect)), completion)
-                                } else {
-                                    self.markCompleted(.success(makeResult(.failed)), completion)
-                                }
-                            }
+                            self.markCompleted(.success(makeResult(.scanDocument(.init(response: docsResponse)))), completion)
 
                         case .failure(let error):
                             D.error(error)
@@ -301,21 +229,6 @@ public class WDOVerificationService: WDOBaseService {
         }
     }
     
-    /// Set which documents will be scanned.
-    ///
-    /// Note that this needs to be in sync with what the server expects based on the configuration.
-    ///
-    /// - Parameters:
-    ///   - types: Types of documents to scan.
-    ///   - completion: Callback with the result.
-    public func documentsSetSelectedTypes(types: [WDODocumentType], completion: @escaping (Result<Success, Fail>) -> Void) {
-        // TODO: We should maybe verify that we're in the expected state here?
-        D.debug("Selecting document types - \(types).")
-        let process = WDOVerificationScanProcess(types: types)
-        cachedProcess = process
-        markCompleted(.success(.scanDocument(process)), completion)
-    }
-    
     /// Upload document files to the server. The order of the documents is up to you. Make sure that uploaded documents are a reasonable size so you're not uploading large files.
     ///
     /// If you're uploading the same document file again, you need to include the `originalDocumentId` otherwise it will be rejected by the server.
@@ -331,32 +244,9 @@ public class WDOVerificationService: WDOBaseService {
         guard let processId = guardProcessId(completion) else {
             return
         }
-        
-        // Temp: auto-assign originalDocumentId from cached process data when not provided.
-        // This is a workaround until the backend resolves the originalDocumentId automatically.
-        let resolvedFiles: [WDODocumentFile]
-        if let cached = cachedProcess {
-            resolvedFiles = files.map { file in
-                // only process files without originalDocumentId
-                guard file.originalDocumentId == nil else { return file }
-                let serverId = cached.documents
-                    .first { $0.type == file.type }?
-                    .sides.first { $0.type == file.side }?
-                    .serverId
-                // if the server ID is not found, just return the file
-                guard let serverId else { return file }
-                D.debug("Document \(file.type) is missing originalDocumentId, using \(serverId) that was found in the cached process.")
-                // now create "copy" of the file
-                return WDODocumentFile(data: file.data, dataSignature: file.dataSignature, type: file.type, side: file.side, originalDocumentId: serverId)
-            }
-        } else {
-            resolvedFiles = files
-        }
-        
-        _testing_Callback?("SBMT", resolvedFiles) // send to test to process
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let data = DocumentPayloadBuilder.build(processId: processId, files: resolvedFiles)
+            let data = DocumentPayloadBuilder.build(processId: processId, files: files)
             self.api.identityVerification.submitDocuments(data: data, progressCallback: progressCallback) { [weak self] result in
                 guard let self else {
                     completion(.failure(.init(.init(reason: .unknown))))
@@ -479,7 +369,6 @@ public class WDOVerificationService: WDOBaseService {
             }
             result.onSuccess {
                 D.info("Verification process was canceled.")
-                self.cachedProcess = nil
                 self.markCompleted(.success(()), completion)
             }.onError {
                 D.error($0)
@@ -817,8 +706,10 @@ public class WDOVerificationService: WDOBaseService {
             }
             startResult.onSuccess {
                 D.info("Verification process started")
-                self.cachedProcess = nil // we just started the process, so just clear the cache
-                self.markCompleted(.success(.documentsToScanSelect), completion)
+                self.markCompleted(
+                    .success(.scanDocument(.init(status: .uploadInProgress, documents: []))),
+                    completion
+                )
             }.onError {
                 D.error($0)
                 self.markCompleted($0, completion)
@@ -901,6 +792,49 @@ public extension WPNErrorReason {
 private extension Result where Success == WDOVerificationService.Success, Failure == WDOVerificationService.Fail {
     static func success(_ nextStep: WDOVerificationState) -> Self {
         return .success(WDOVerificationService.Success(nextStep))
+    }
+}
+
+private extension WDODocumentsStatus {
+    init(response: DocumentStatusResponse) {
+        self.init(
+            status: .init(response.status),
+            documents: response.documents.map { .init(response: $0) }
+        )
+    }
+}
+
+private extension WDODocument {
+    init(response: Document) {
+        self.init(
+            filename: response.filename,
+            id: response.id,
+            type: response.type,
+            side: .from(apiType: response.side),
+            status: .init(response.status),
+            errors: response.errors
+        )
+    }
+}
+
+private extension WDODocumentStatus {
+    init(_ status: DocumentStatus) {
+        switch status {
+        case .accepted:
+            self = .accepted
+        case .uploadInProgress:
+            self = .uploadInProgress
+        case .inProgress:
+            self = .inProgress
+        case .verificationPending:
+            self = .verificationPending
+        case .verificationInProgress:
+            self = .verificationInProgress
+        case .rejected:
+            self = .rejected
+        case .failed:
+            self = .failed
+        }
     }
 }
 
@@ -1044,23 +978,6 @@ public extension WDOVerificationService {
     func start(consentApprovedByUser: ConsentResponse) async throws -> Success {
         return try await withCheckedThrowingContinuation { cont in
             start(consentApprovedByUser: consentApprovedByUser) { result in
-                cont.resume(with: result)
-            }
-        }
-    }
-    
-    /// Set which documents will be scanned.
-    ///
-    /// Note that this needs to be in sync with what the server expects based on the configuration.
-    ///
-    /// - Parameters:
-    ///   - types: Types of documents to scan.
-    ///
-    ///  - returns: Success with "next state" to show
-    ///  - throws: `WDOVerificationService.Fail`
-    func documentsSetSelectedTypes(types: [WDODocumentType]) async throws -> Success {
-        return try await withCheckedThrowingContinuation { cont in
-            documentsSetSelectedTypes(types: types) { result in
                 cont.resume(with: result)
             }
         }
