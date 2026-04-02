@@ -20,6 +20,8 @@
 - added `async` variants for all asynchronous methods
 - updated `WDOConfigurationObjects`, which now includes the `useTemporaryActivation` flag and the `country` of origin in the scanned document
 - added optional `country` (ISO 3166-1 alpha-3) to `WDODocumentFile` for document submit and to document status response
+- added `WDODocumentToScan` struct and new `documentsSetSelectedTypes(documents:)` method that accepts documents with optional country. The previous `documentsSetSelectedTypes(types:)` is now deprecated.
+- `WDOScannedDocument` now carries optional `country` property
 - added `processType` to IdentityStatusResponse to better distinguish between configured onboarding processes
 - `WDOVerificationState.otp` now carries `otpResendPeriodInSeconds` as an associated value (previously available as `WDOVerificationService.otpResendPeriodInSeconds` property, which was removed)
 - `WDOVerificationState.endstate` now carries optional `rejectReason` associated value with the server-provided rejection reason

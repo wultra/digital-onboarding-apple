@@ -239,10 +239,15 @@ After the user approves the consent, present a document selector for documents w
 
 For example, your system might require a national ID and one additional document like a driver's license, passport, or any other government-issued personal document.
 
+The document types and their country can be retrieved from the configuration via `WDOConfigurationService.getConfiguration()`.
+
 ```swift
 let verification: WDOVerificationService // configured instance
-let documentsToScan: [WDODocumentType] = [.idCard, .driversLicense]
-verification.documentsSetSelectedTypes(types: documentsToScan) { result in 
+let documentsToScan: [WDODocumentToScan] = [
+    WDODocumentToScan(type: "ID_CARD", country: "CZE"),
+    WDODocumentToScan(type: "DRIVING_LICENSE")
+]
+verification.documentsSetSelectedTypes(documents: documentsToScan) { result in 
     switch result {
     case .success(let state):
         // state will be in the `scanDocument` case here - display the document scanner

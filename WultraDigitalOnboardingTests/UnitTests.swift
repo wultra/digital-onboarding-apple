@@ -928,7 +928,7 @@ struct DocumentFileInitTests {
 
     @Test
     func `country is preserved through cache serialization`() throws {
-        let process = WDOVerificationScanProcess(types: ["ID_CARD"])
+        let process = WDOVerificationScanProcess(documents: [WDODocumentToScan(type: "ID_CARD", country: "CZE")])
         process.feed([
             Document(filename: "f.jpg", id: "srv-1", type: "ID_CARD", side: .front, country: "CZE", status: .accepted, errors: nil),
             Document(filename: "b.jpg", id: "srv-2", type: "ID_CARD", side: .back, country: "CZE", status: .accepted, errors: nil)
@@ -936,25 +936,24 @@ struct DocumentFileInitTests {
 
         let restored = try #require(WDOVerificationScanProcess(cacheData: try process.dataForCache()))
         let idCard = try #require(restored.documents.first { $0.type == "ID_CARD" })
-        #expect(idCard.sides[0].country == "CZE")
-        #expect(idCard.sides[1].country == "CZE")
+        #expect(idCard.country == "CZE")
     }
 
     @Test
     func `nil country is preserved through cache serialization`() throws {
-        let process = WDOVerificationScanProcess(types: ["PASSPORT"])
+        let process = WDOVerificationScanProcess(documents: [WDODocumentToScan(type: "PASSPORT")])
         process.feed([
             Document(filename: "f.jpg", id: "srv-1", type: "PASSPORT", side: .front, country: nil, status: .accepted, errors: nil)
         ])
 
         let restored = try #require(WDOVerificationScanProcess(cacheData: try process.dataForCache()))
         let passport = try #require(restored.documents.first { $0.type == "PASSPORT" })
-        #expect(passport.sides[0].country == nil)
+        #expect(passport.country == nil)
     }
 
     @Test
     func `createFileForUpload preserves country parameter`() {
-        let process = WDOVerificationScanProcess(types: ["ID_CARD"])
+        let process = WDOVerificationScanProcess(documents: [WDODocumentToScan(type: "ID_CARD", country: "CZE")])
         process.feed([
             Document(filename: "f.jpg", id: "srv-1", type: "ID_CARD", side: .front, country: "CZE", status: .rejected, errors: ["blur"])
         ])

@@ -113,7 +113,7 @@ class IntegrationTests: BaseTestClass {
             
             // select documents to scan
             let documentsToScan = config.getDocumentsToScan()
-            let selectResult = try await x.verification.documentsSetSelectedTypes(types: documentsToScan.map({ $0.type }))
+            let selectResult = try await x.verification.documentsSetSelectedTypes(documents: documentsToScan.map { WDODocumentToScan(type: $0.type, country: $0.country) })
             #expect(selectResult.shadowState == .scanDocument)
             try await x.assertVerificationState(.scanDocument)
             
@@ -180,9 +180,9 @@ class IntegrationTests: BaseTestClass {
                         print("Skipping driving license because there is a bug on the backend (DRIVING_LICENSE is expected...)")
                         continue
                     }
-                    var documentsToUpload = [WDODocumentFile(data: dummyJpeg, type: documentToScan.type, side: .front, originalDocumentId: nil, dataSignature: nil)]
+                    var documentsToUpload = [WDODocumentFile(data: dummyJpeg, type: documentToScan.type, side: .front, originalDocumentId: nil, country: documentToScan.country, dataSignature: nil)]
                     if documentToScan.sideCount == 2 {
-                        documentsToUpload.append(WDODocumentFile(data: dummyJpeg, type: documentToScan.type, side: .back, originalDocumentId: nil, dataSignature: nil))
+                        documentsToUpload.append(WDODocumentFile(data: dummyJpeg, type: documentToScan.type, side: .back, originalDocumentId: nil, country: documentToScan.country, dataSignature: nil))
                     }
                     // upload to server
                     _ = try await x.verification.documentsSubmit(files: documentsToUpload)

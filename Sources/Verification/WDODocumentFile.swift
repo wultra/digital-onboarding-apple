@@ -95,6 +95,23 @@ public extension WDOScannedDocument {
 /// Type of the document.
 public typealias WDODocumentType = String
 
+/// Document to scan, containing type and optional country.
+public struct WDODocumentToScan {
+    /// Type of the document.
+    public let type: WDODocumentType
+    /// Document country as an ISO 3166-1 alpha-3 code (e.g. "CZE"). Optional.
+    public let country: String?
+
+    /// Creates a document to scan.
+    /// - Parameters:
+    ///   - type: Type of the document.
+    ///   - country: Document country as an ISO 3166-1 alpha-3 code. Optional, `nil` by default.
+    public init(type: WDODocumentType, country: String? = nil) {
+        self.type = type
+        self.country = country
+    }
+}
+
 /// Side of the document
 public enum WDODocumentSide: String {
     /// Front side of a document. Usually the one with the picture.

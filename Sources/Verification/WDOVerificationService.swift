@@ -308,10 +308,22 @@ public class WDOVerificationService: WDOBaseService {
     /// - Parameters:
     ///   - types: Types of documents to scan.
     ///   - completion: Callback with the result.
+    @available(*, deprecated, message: "Use documentsSetSelectedTypes(documents:completion:) instead to include country information.")
     public func documentsSetSelectedTypes(types: [WDODocumentType], completion: @escaping (Result<Success, Fail>) -> Void) {
+        documentsSetSelectedTypes(documents: types.map { WDODocumentToScan(type: $0) }, completion: completion)
+    }
+    
+    /// Set which documents will be scanned.
+    ///
+    /// Note that this needs to be in sync with what the server expects based on the configuration.
+    ///
+    /// - Parameters:
+    ///   - documents: Documents to scan including type and optional country.
+    ///   - completion: Callback with the result.
+    public func documentsSetSelectedTypes(documents: [WDODocumentToScan], completion: @escaping (Result<Success, Fail>) -> Void) {
         // TODO: We should maybe verify that we're in the expected state here?
-        D.debug("Selecting document types - \(types).")
-        let process = WDOVerificationScanProcess(types: types)
+        D.debug("Selecting document types - \(documents.map { $0.type }).")
+        let process = WDOVerificationScanProcess(documents: documents)
         cachedProcess = process
         markCompleted(.success(.scanDocument(process)), completion)
     }
@@ -340,8 +352,8 @@ public class WDOVerificationService: WDOBaseService {
                 // only process files without originalDocumentId
                 guard file.originalDocumentId == nil else { return file }
                 let serverId = cached.documents
-                    .first { $0.type == file.type }?
-                    .sides.first { $0.type == file.side && $0.country == file.country }?
+                    .first { $0.type == file.type && $0.country == file.country }?
+                    .sides.first { $0.type == file.side }?
                     .serverId
                 // if the server ID is not found, just return the file
                 guard let serverId else { return file }
@@ -1054,13 +1066,13 @@ public extension WDOVerificationService {
     /// Note that this needs to be in sync with what the server expects based on the configuration.
     ///
     /// - Parameters:
-    ///   - types: Types of documents to scan.
+    ///   - documents: Documents to scan including type and optional country.
     ///
     ///  - returns: Success with "next state" to show
     ///  - throws: `WDOVerificationService.Fail`
-    func documentsSetSelectedTypes(types: [WDODocumentType]) async throws -> Success {
+    func documentsSetSelectedTypes(documents: [WDODocumentToScan]) async throws -> Success {
         return try await withCheckedThrowingContinuation { cont in
-            documentsSetSelectedTypes(types: types) { result in
+            documentsSetSelectedTypes(documents: documents) { result in
                 cont.resume(with: result)
             }
         }
