@@ -1210,9 +1210,9 @@ public extension WDOVerificationService {
     ///
     ///  - returns: OTP
     ///  - throws: `WDOVerificationService.Fail`
-    func getOTP() async throws -> String {
+    func getOTP(strategy: WDOGetOTPEndpointStrategy) async throws -> String {
         return try await withCheckedThrowingContinuation { cont in
-            getOTP { result in
+            getOTP(strategy: strategy) { result in
                 cont.resume(with: result)
             }
         }

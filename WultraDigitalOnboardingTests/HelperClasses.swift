@@ -27,7 +27,9 @@ class TestHelper {
     let verification: WDOVerificationService
     let configuration: WDOConfigurationService
     let processType: String
-    
+    /// Credentials used for activation (set after `startAndActivate`).
+    private(set) var lastCredentials: SampleCredentials?
+
     private let environment: ServerEnvironment
     
     init(environment: ServerEnvironment, processType: String, customPaInstance: PowerAuthSDK? = nil) throws {
@@ -82,7 +84,8 @@ class TestHelper {
     }
     
     func startAndActivate(credentials: SampleCredentials = .demo()) async throws -> (config: WDOConfigurationResponse, consentRequired: Bool)? {
-        
+
+        lastCredentials = credentials
         let config = try await getConfig()
         try await start(credentials: credentials)
         
@@ -184,6 +187,7 @@ struct ServerEnvironment: Decodable {
     let mobileConfig: String
     let otpMock: String
     let servicesMock: Bool
+    let authorization: String?
     
     var otpGetDetailStrategy: WDOGetOTPEndpointStrategy {
         if otpMock.uppercased() == "ESO" {
@@ -198,7 +202,7 @@ struct ServerEnvironment: Decodable {
         }
     }
     
-    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool) {
+    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool, authorization: String? = nil) {
         self.name = name
         self.processTypes = processTypes
         self.esUrl = esUrl
@@ -206,6 +210,7 @@ struct ServerEnvironment: Decodable {
         self.mobileConfig = config
         self.otpMock = otpMock
         self.servicesMock = servicesMock
+        self.authorization = authorization
     }
 }
 
