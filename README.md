@@ -4,6 +4,7 @@
 <p align="center"><img src="docs/images/intro.jpg" alt="Wultra Digital Onboarding for Apple Platforms" width="100%" /></p>
 
 ![build](https://github.com/wultra/digital-onboarding-apple/actions/workflows/build.yml/badge.svg) 
+[![tests](https://github.com/wultra/digital-onboarding-apple/actions/workflows/tests.yml/badge.svg)](https://github.com/wultra/digital-onboarding-apple/actions/workflows/tests.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/wultra/digital-onboarding-apple)
 ![date](https://img.shields.io/github/release-date/wultra/digital-onboarding-apple) 
 ![SPM](https://img.shields.io/badge/Swift_Package_Manager-%F0%9F%91%8D-F4412B) 
