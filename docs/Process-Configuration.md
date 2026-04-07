@@ -3,6 +3,8 @@
 With `WDOConfigurationService` you can retrieve the configuration of the onboarding process from the server. 
 The configuration contains information about which steps are required to be performed during the onboarding process and which document types are supported or required for scanning.
 
+Use returned document `type` values in `WDOVerificationService.documentsSetSelectedTypes(types:)`.
+
 ## Retrieving the configuration
 
 To retrieve the configuration, create an instance of `WDOConfigurationService` and call the `getConfiguration` method with the process type identifier.
@@ -38,6 +40,8 @@ public struct WDOConfigurationResponse: Codable {
     public let otpForIdentification: Bool
     /// Is OTP required for the second part - identity verification.
     public let otpForIdentityVerification: Bool
+    /// Is the onboarding process configured with temporary activation that should be exchanged for the permanent one.
+    public let useTemporaryActivation: Bool
     /// Documents required for identity verification.
     public let documents: WDOConfigurationDocuments
 }
@@ -64,8 +68,12 @@ public struct WDOConfigurationDocument: Codable {
     public let type: String
     /// Number of sides the document has
     public let sideCount: Int
+    /// Country of origin of the document as ISO 3166-1 alpha-3 code
+    public let country: String?
 }
 ```
+
+`type` is a backend-defined string such as `ID_CARD` or `PASSPORT`.
 
 ## Read next
 - [Device Activation](Device-Activation.md)

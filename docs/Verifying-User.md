@@ -4,6 +4,8 @@ If your PowerAuthSDK instance was activated with the `WDOActivationService`, it 
 
 Additional verification means that the user will need to scan their face and documents like ID and/or passport.
 
+Expected and required document types can be retrieved from the server via configuration endpoints, for example with `WDOConfigurationService.getConfiguration(processType:)`.
+
 ## When is the verification needed?
 
 Verification is needed if the `activationFlags` in the `PowerAuthActivationStatus` contains `VERIFICATION_PENDING` or `VERIFICATION_IN_PROGRESS` value.
@@ -187,6 +189,8 @@ verification.status { result in
 }
 ```
 
+When state is `.processing(.onboardingApproval)`, keep polling `status()` until the backend moves the process forward.
+
 ## Getting the user consent text
 
 When the state is `intro`, and `consentRequired` is true, the first step in the flow is to get the consent text for the user to approve.
@@ -209,7 +213,7 @@ verification.getConsent { result in
 
 ## Approving the user consent
 
-When the state is `consent`, you should display the consent text to the user to approve or reject.
+When `status()` returns `.intro(consentRequired: true)`, display the consent text to the user and let the user approve or reject it.
 
 If the user __declines the consent__, call `start(consentApprovedByUser: .declined, ...)` which will return the user to the intro screen.
 
@@ -241,7 +245,7 @@ For example, your system might require a national ID and one additional document
 
 ```swift
 let verification: WDOVerificationService // configured instance
-let documentsToScan: [WDODocumentType] = [.idCard, .driversLicense]
+let documentsToScan: [WDODocumentType] = ["ID_CARD", "DRIVING_LICENSE"]
 verification.documentsSetSelectedTypes(types: documentsToScan) { result in 
     switch result {
     case .success(let state):
@@ -273,7 +277,7 @@ ZenID RecogLib_iOS integration example:
 ```swift
 let verification: WDOVerificationService // configured instance
 
-let documentsToScan = [WDODocumentType.idCard, .driversLicense]
+let documentsToScan = ["ID_CARD", "DRIVING_LICENSE"]
     
 verification.documentsSetSelectedTypes(types: documentsToScan) { result in
     switch result {
@@ -319,14 +323,14 @@ let verification: WDOVerificationService // configured instance
 
 let passportToUpload = WDODocumentFile(
     data: Data(...), // raw image data from the document scanning library/photo camera
-    type: WDODocumentType.passport,
+    type: "PASSPORT",
     side: WDODocumentSide.front, // passport has only front side
     originalDocumentId: nil, // use only when re-uploading the file (for example when first upload was rejected because of a blur)
     dataSignature: nil // optional, use when provided by the document scanning library
 )
 
 verification.documentsSubmit(
-    types: [passportToUpload],
+    files: [passportToUpload],
     progressCallback: { percentUploadProgress in
         // report upload progress
     }
@@ -351,7 +355,7 @@ class WDODocumentFile {
     public var data: Data
     /// Image signature. Use only when the scan SDK supports this.
     public var dataSignature: String?
-    /// Type of the document (for example .idCard).
+    /// Type of the document (for example "ID_CARD").
     public let type: WDODocumentType
     /// Side of the document (`front` if the document is one-sided or only one side is expected).
     public let side: WDODocumentSide
@@ -435,7 +439,7 @@ Example:
 
 ```swift
 let verification: WDOVerificationService // configured instance
-val newPaInstance: PowerAuthSDK // new PowerAuth instance to be activated and then used in the app
+let newPaInstance: PowerAuthSDK // new PowerAuth instance to be activated and then used in the app
 let password = PowerAuthCorePassword(string: "1234") // user entered PIN code
 verification.finishActivation(
     newPowerAuthInstance: newPaInstance, 

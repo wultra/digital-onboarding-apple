@@ -174,7 +174,7 @@ class MyUserService {
 
 ## Creating the activation
 
-To activate the user (activating the `PowerAuthSDK` instance), data retrieved from the process start can be used with additional `OTP`. The OTP is usually sent via SMS, email, or other channel. To decide if the OTP is needed, you can use the [Configuration API](Process-Configuration.md) or have it hardcoded.
+To activate the user (activating the `PowerAuthSDK` instance), data retrieved from the process start can be used with optional `OTP`. The OTP is usually sent via SMS, email, or other channel. To decide if the OTP is needed, use the [Configuration API](Process-Configuration.md).
 
 Use the `activate` function to create the activation.
 
@@ -182,11 +182,11 @@ Use the `activate` function to create the activation.
 /// Activate the PowerAuthSDK instance that was passed in the initializer.
 ///
 /// - Parameters:
-///   - otp: OTP code received by the user (via SMS or email).
+///   - otp: OTP code received by the user (via SMS or email). Pass `nil` when OTP is not required.
 ///   - activationName: Name of the activation. Device name by default (usually something like John's iPhone or similar).
 ///   - completion: Callback with the result.
 public func activate(
-    otp: String,
+    otp: String?,
     activationName: String = UIDevice.current.name,
     completion: @escaping (Result<PowerAuthActivationResult, WPNError>) -> Void
 )
@@ -199,7 +199,7 @@ class MyUserService {
     // prepared service
     private var activationService: WDOActivationService!
     
-    func activate(smsOTP: String) {
+    func activate(smsOTP: String?) {
         activationService.activate(otp: smsOTP) { result in
             switch result {
             case .success(let resultData):
