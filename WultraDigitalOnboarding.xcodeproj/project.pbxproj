@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DC27FCA32F7BE5AF00D76F21 /* WDOBaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC27FCA22F7BE5AA00D76F21 /* WDOBaseService.swift */; };
 		DC316C5A2F2CD9EB0046F169 /* WultraDigitalOnboarding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; };
 		DC40301D2F47C038007755BE /* PowerAuth2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; };
 		DC40301E2F47C038007755BE /* PowerAuth2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -82,6 +83,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		DC27FCA22F7BE5AA00D76F21 /* WDOBaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WDOBaseService.swift; sourceTree = "<group>"; };
 		DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WultraDigitalOnboardingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC402FEF2F45C247007755BE /* WDOHostApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WDOHostApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WultraDigitalOnboarding.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -243,6 +245,7 @@
 				EAB4E7AD2ED882C6008BBDBF /* Configuration */,
 				DC75BBAC2A1521B0009C2901 /* Onboarding */,
 				DC75BB9D2A1521B0009C2901 /* Verification */,
+				DC27FCA22F7BE5AA00D76F21 /* WDOBaseService.swift */,
 				DC75BBAE2A1521B0009C2901 /* PowerAuthExtensions.swift */,
 				DC75BBA72A1521B0009C2901 /* WDOError.swift */,
 				DC75BB9B2A1521B0009C2901 /* WDOLogger.swift */,
@@ -468,6 +471,7 @@
 				DC75BBB42A1521B0009C2901 /* Networking.swift in Sources */,
 				DC75BBB32A1521B0009C2901 /* WDOVerificationService.swift in Sources */,
 				DC75BBCF2A152855009C2901 /* WDODocumentFile.swift in Sources */,
+				DC27FCA32F7BE5AF00D76F21 /* WDOBaseService.swift in Sources */,
 				DC75BBB72A1521B0009C2901 /* OnboardingObjects.swift in Sources */,
 				DC75BBB92A1521B0009C2901 /* DemoEndpoints.swift in Sources */,
 				DC75BBB82A1521B0009C2901 /* WDOError.swift in Sources */,

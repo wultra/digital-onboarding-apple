@@ -25,28 +25,12 @@ import WultraPowerAuthNetworking
 /// This can be confirmed in the `PowerAuthActivationStatus.needVerification`, which will be `true`.
 ///
 /// This service operates against Wultra Onboarding server (usually ending with `/enrollment-onboarding-server`), and you need to configure a networking service with the right URL.
-public class WDOVerificationService {
+public class WDOVerificationService: WDOBaseService {
     
     // MARK: Public Properties
     
     /// Delegate that retrieves information about the verification and activation changes.
     public weak var delegate: WDOVerificationServiceDelegate?
-    
-    /// Accept language for the outgoing requests headers.
-    /// The default value is "en".
-    ///
-    /// Standard RFC "Accept-Language" https://tools.ietf.org/html/rfc7231#section-5.3.5
-    /// Response texts are based on this setting. For example, when "de" is set, server
-    /// will return error texts and other in German (if available).
-    public var acceptLanguage: String {
-        get {
-            return api.networking.acceptLanguage
-        }
-        set {
-            D.debug("Setting new language for WDOVerificationService: \(newValue)")
-            api.networking.acceptLanguage = newValue
-        }
-    }
     
     /// Type of the process.
     ///
@@ -55,7 +39,6 @@ public class WDOVerificationService {
 
     // MARK: - Private properties
 
-    private let api: Networking
     private var lastStatus: IdentityStatusResponse?
     // Cache key is scoped to the current process ID for isolation between processes.
     private var keychainKey: String? {
@@ -84,29 +67,6 @@ public class WDOVerificationService {
                 KeychainWrapper.standard.removeObject(forKey: key)
             }
         }
-    }
-    
-    // MARK: - Public initializers
-    
-    /// Creates service instance
-    /// - Parameters:
-    ///   - powerAuth: Configured PowerAuthSDK instance. This instance needs to have a valid activation.
-    ///   - config: Configuration of the networking service.
-    public convenience init(powerAuth: PowerAuthSDK, wpnConfig: WPNConfig) {
-        self.init(networking: .init(powerAuth: powerAuth, config: wpnConfig, serviceName: "WDOVerificationNetworking"))
-    }
-    
-    /// Creates service instance
-    /// - Parameters:
-    ///   - networking: Networking service for the onboarding server with configured PowerAuthSDK instance that needs to have a valid activation.
-    public convenience init(networking: WPNNetworkingService) {
-        self.init(api: .init(networking: networking))
-    }
-    
-    // MARK: - Private initializers
-    
-    init(api: Networking) {
-        self.api = api
     }
     
     // MARK: - Public API
@@ -903,21 +863,6 @@ public class WDOVerificationService {
         }
         completion(result)
     }
-    
-    // MARK: - Test Features
-    
-    #if DEBUG
-    /// Internal processing callback only for testing purposes!
-    /// This callback can be set only in DEBUG build and is called during the process.
-    /// Use this when some internal testing needs to be done during integration tests.
-    internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)?
-    #else
-    internal var _testing_Callback: ((_ name: String, _ data: Any) -> Void)? {
-        // no-op for non-debug
-        get { nil }
-        set { }
-    }
-    #endif
 }
 
 // MARK: - Other public APIs

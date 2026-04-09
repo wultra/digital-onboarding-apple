@@ -18,36 +18,7 @@ import WultraPowerAuthNetworking
 import PowerAuth2
 
 /// Service that provides configuration for the Wultra Digital Onboarding SDK.
-public class WDOConfigurationService {
-    
-    // MARK: - Dependencies and constants
-    
-    private let api: Networking
-    
-    // MARK: - Public initializers
-    
-    /// Creates service instance
-    /// - Parameters:
-    ///   - powerAuth: Configured PowerAuthSDK instance.
-    ///   - config: Configuration for the networking.
-    public convenience init(powerAuth: PowerAuthSDK, config: WPNConfig) {
-        self.init(
-            networking: WPNNetworkingService(powerAuth: powerAuth, config: config, serviceName: "WDOConfigurationNetworking")
-        )
-    }
-    
-    /// Creates service instance
-    /// - Parameters:
-    ///   - networking: Networking service for the onboarding server with configured PowerAuthSDK instance.
-    public convenience init(networking: WPNNetworkingService) {
-        self.init(api: .init(networking: networking))
-    }
-    
-    // MARK: - Private initializer
-    
-    init(api: Networking) {
-        self.api = api
-    }
+public class WDOConfigurationService: WDOBaseService {
     
     // MARK: - Public API
     

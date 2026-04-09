@@ -27,7 +27,7 @@ private typealias ProcessData = (processId: String, activationCode: String?)
 /// and you will need to verify the PowerAuthSDK instance via `WDOVerificationService`.
 ///
 /// This service operates against Wultra Onboarding server (usually ending with `/enrollment-onboarding-server`) and you need to configure a networking service with the right URL.
-public class WDOActivationService {
+public class WDOActivationService: WDOBaseService {
     
     // MARK: - Public Properties
     
@@ -36,22 +36,6 @@ public class WDOActivationService {
     /// Note that even if this property is `true` it can be already discontinued on the server.
     /// Calling `status(completion:)` for example after the app is launched in this case is recommended.
     public var hasActiveProcess: Bool { processId != nil }
-    
-    /// Accept language for the outgoing requests headers.
-    /// The default value is "en".
-    ///
-    /// Standard RFC "Accept-Language" https://tools.ietf.org/html/rfc7231#section-5.3.5
-    /// Response texts are based on this setting. For example, when "de" is set, server
-    /// will return error texts and other in German (if available).
-    public var acceptLanguage: String {
-        get {
-            return api.networking.acceptLanguage
-        }
-        set {
-            D.debug("Setting new language for WDOActivationService: \(newValue)")
-            api.networking.acceptLanguage = newValue
-        }
-    }
     
     // MARK: - Private properties
     private var processData: ProcessData? {
@@ -78,7 +62,6 @@ public class WDOActivationService {
     
     // MARK: - Dependencies and constants
     
-    private let api: Networking
     private let keychainKey: String
     private let oq: OperationQueue = {
         let q = OperationQueue()
@@ -90,13 +73,14 @@ public class WDOActivationService {
     // MARK: - Public initializers
     
     /// Creates service instance
+    ///
     /// - Parameters:
     ///   - powerAuth: Configured PowerAuthSDK instance. This instance needs to be without valid activation.
-    ///   - config: Configuration for the networking.
+    ///   - networkingConfig: Configuration for the networking.
     ///   - canRestoreSession: If the activation session can be restored (when app restarts). `true` by default.
-    public convenience init(powerAuth: PowerAuthSDK, config: WPNConfig, canRestoreSession: Bool = true) {
+    public convenience init(powerAuth: PowerAuthSDK, networkingConfig: WPNConfig, canRestoreSession: Bool = true) {
         self.init(
-            networking: WPNNetworkingService(powerAuth: powerAuth, config: config, serviceName: "WDOActivationNetworking"),
+            networking: Self.createApi(powerAuth: powerAuth, networkingConfig: networkingConfig),
             canRestoreSession: canRestoreSession
         )
     }
@@ -106,14 +90,19 @@ public class WDOActivationService {
     ///   - networking: Networking service for the onboarding server with configured PowerAuthSDK instance that needs to be without valid activation.
     ///   - canRestoreSession: If the activation session can be restored (when app restarts). `true` by default.
     public convenience init(networking: WPNNetworkingService, canRestoreSession: Bool = true) {
-        self.init(api: .init(networking: networking), canRestoreSession: canRestoreSession)
+        self.init(
+            api: .init(
+                networking: networking
+            ),
+            canRestoreSession: canRestoreSession
+        )
     }
     
     // MARK: - Internal initializers
     
     init(api: Networking, canRestoreSession: Bool) {
-        self.api = api
         self.keychainKey = "wdopid_\(api.networking.powerAuth.configuration.instanceId)"
+        super.init(api: api)
         if canRestoreSession == false {
             processData = nil
         }

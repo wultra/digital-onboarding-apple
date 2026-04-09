@@ -43,9 +43,9 @@ class TestHelper {
         
         self.powerAuth = pa
         let url = URL(string: environment.esoUrl)!
-        self.activation = WDOActivationService(powerAuth: powerAuth, config: .init(baseUrl: url))
-        self.verification = WDOVerificationService(powerAuth: powerAuth, wpnConfig: .init(baseUrl: url))
-        self.configuration = WDOConfigurationService(powerAuth: powerAuth, config: .init(baseUrl: url))
+        self.activation = WDOActivationService(powerAuth: powerAuth, networkingConfig: .init(baseUrl: url))
+        self.verification = WDOVerificationService(powerAuth: powerAuth, networkingConfig: .init(baseUrl: url))
+        self.configuration = WDOConfigurationService(powerAuth: powerAuth, networkingConfig: .init(baseUrl: url))
         self.environment = environment
         self.processType = processType
     }
