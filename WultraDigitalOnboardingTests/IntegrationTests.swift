@@ -127,8 +127,17 @@ class IntegrationTests: BaseTestClass {
             }
             
              func waitForNonProcessingStatus() async throws -> WDOVerificationState {
+                 // Polling configuration: max 10 retries × 3 s = 30 s before giving up
+                 let pollIntervalSeconds: Double = 3
+                 let maxRetries = 10
+                 var retryCount = 0
+
                  var statusResult = try await x.verification.status()
                  while statusResult.state.shadowState == .processing {
+                     guard retryCount < maxRetries else {
+                         throw SimpleError("Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+                     }
+                     retryCount += 1
                      // handle onboarding approval when processing is waiting for manual approval
                      if case .processing(let item) = statusResult.state, item == .onboardingApproval {
                          if let userId = x.lastCredentials.map({ "mockuser_\($0.clientNumber)" }) {
@@ -142,7 +151,7 @@ class IntegrationTests: BaseTestClass {
                              print("Process is waiting for onboarding approval but no env/userId provided — waiting...")
                          }
                      }
-                     try await Task.sleep(for: .seconds(3))
+                     try await Task.sleep(for: .seconds(pollIntervalSeconds))
                      statusResult = try await x.verification.status()
                 }
                 return statusResult.state
