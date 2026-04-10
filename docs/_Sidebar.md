@@ -11,3 +11,4 @@
 **Other**
 
 - [Changelog](./Changelog.md)
+- [Migration Guides](./Migration-Guides.md)

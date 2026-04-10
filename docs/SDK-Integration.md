@@ -4,6 +4,7 @@
 
 - iOS 13.0+
 - [PowerAuth Mobile SDK](https://github.com/wultra/powerauth-mobile-sdk) needs to be available in your project
+- Enrollment onboarding server 2.1.0+
 
 ## Swift Package Manager
 
@@ -56,6 +57,22 @@ pod 'WultraDigitalOnboarding'
 ## Xcode Compatibility
 
 We recommend using Xcode version 15.0 or newer.
+
+## Shared Service API
+
+`WDOActivationService`, `WDOVerificationService`, and `WDOConfigurationService` inherit from `WDOBaseService`.
+
+- `acceptLanguage`
+- `networking`
+
+## Async/Await
+
+All asynchronous public APIs also provide `async throws` variants.
+
+```swift
+let configuration = try await configurationService.getConfiguration(processType: "onboarding")
+let status = try await verificationService.status()
+```
 
 ## Read next
 
