@@ -710,8 +710,10 @@ public class WDOVerificationService: WDOBaseService {
     ///
     /// If the app is running against our demo server, you can retrieve the OTP without needing to send SMS or emails.
     ///
-    /// - Parameter completion: Callback with the result.
-    public func getOTP(completion: @escaping (Result<String, Fail>) -> Void) {
+    /// - Parameters:
+    ///  - strategy: Which Endpoint Strategy should be used for the OTP retrieval. For more info, visit the enum inline documentation.
+    ///  - completion: Callback with the result.
+    public func getOTP(strategy: WDOGetOTPEndpointStrategy = .automaticMock, completion: @escaping (Result<String, Fail>) -> Void) {
         
         D.debug("Retrieving verification OTP via non-production endpoint.")
         
@@ -719,7 +721,7 @@ public class WDOVerificationService: WDOBaseService {
             return
         }
         
-        api.onboarding.getOTP(processId: processId, type: .userVerification) { [weak self] result in
+        api.onboarding.getOTP(strategy: strategy, processId: processId, type: .userVerification) { [weak self] result in
             
             guard let self else {
                 completion(.failure(.init(.init(reason: .unknown))))
@@ -1208,9 +1210,9 @@ public extension WDOVerificationService {
     ///
     ///  - returns: OTP
     ///  - throws: `WDOVerificationService.Fail`
-    func getOTP() async throws -> String {
+    func getOTP(strategy: WDOGetOTPEndpointStrategy) async throws -> String {
         return try await withCheckedThrowingContinuation { cont in
-            getOTP { result in
+            getOTP(strategy: strategy) { result in
                 cont.resume(with: result)
             }
         }
