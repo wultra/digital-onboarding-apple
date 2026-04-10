@@ -113,7 +113,7 @@ class IntegrationTests: BaseTestClass {
             
             // select documents to scan
             let documentsToScan = config.getDocumentsToScan()
-            let selectResult = try await x.verification.documentsSetSelectedTypes(types: documentsToScan.map({ $0.type }))
+            let selectResult = try await x.verification.documentsSetSelectedTypes(types: documentsToScan.map({ $0.patchedType }))
             #expect(selectResult.shadowState == .scanDocument)
             try await x.assertVerificationState(.scanDocument)
             
@@ -123,7 +123,38 @@ class IntegrationTests: BaseTestClass {
             
             // make sure all selected document are in the process
             for documentToScan in documentsToScan {
-                #expect(process.documents.contains { $0.type == documentToScan.type })
+                #expect(process.documents.contains { $0.type == documentToScan.patchedType })
+            }
+            
+             func waitForNonProcessingStatus() async throws -> WDOVerificationState {
+                 // Polling configuration: max 10 retries × 3 s = 30 s before giving up
+                 let pollIntervalSeconds: Double = 3
+                 let maxRetries = 10
+                 var retryCount = 0
+
+                 var statusResult = try await x.verification.status()
+                 while statusResult.state.shadowState == .processing {
+                     guard retryCount < maxRetries else {
+                         throw SimpleError("Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+                     }
+                     retryCount += 1
+                     // handle onboarding approval when processing is waiting for manual approval
+                     if case .processing(let item) = statusResult.state, item == .onboardingApproval {
+                         if let userId = x.lastCredentials.map({ "mockuser_\($0.clientNumber)" }) {
+                             print("Process is waiting for onboarding approval, approving...")
+                             try await approveOnboarding(
+                                env: env,
+                                processId: statusResult.serverData.processId,
+                                userId: userId
+                            )
+                         } else {
+                             print("Process is waiting for onboarding approval but no env/userId provided — waiting...")
+                         }
+                     }
+                     try await Task.sleep(for: .seconds(pollIntervalSeconds))
+                     statusResult = try await x.verification.status()
+                }
+                return statusResult.state
             }
             
              func waitForNonProcessingStatus() async throws -> WDOVerificationState {
@@ -160,7 +191,7 @@ class IntegrationTests: BaseTestClass {
             
             // make sure all selected document are in the process
             for documentToScan in documentsToScan {
-                #expect(newProcess.documents.contains { $0.type == documentToScan.type })
+                #expect(newProcess.documents.contains { $0.type == documentToScan.patchedType })
             }
             
             // empty jpeg used for document uploads
@@ -175,14 +206,9 @@ class IntegrationTests: BaseTestClass {
                 // now lets try to upload fake files to test reupload
                 for documentToScan in documentsToScan {
 
-                    if documentToScan.type == "DRIVING_LICENCE" {
-                        // TODO: remove this once fixed on the backend
-                        print("Skipping driving license because there is a bug on the backend (DRIVING_LICENSE is expected...)")
-                        continue
-                    }
-                    var documentsToUpload = [WDODocumentFile(data: dummyJpeg, type: documentToScan.type, side: .front, originalDocumentId: nil, dataSignature: nil)]
+                    var documentsToUpload = [WDODocumentFile(data: dummyJpeg, type: documentToScan.patchedType, side: .front, originalDocumentId: nil, dataSignature: nil)]
                     if documentToScan.sideCount == 2 {
-                        documentsToUpload.append(WDODocumentFile(data: dummyJpeg, type: documentToScan.type, side: .back, originalDocumentId: nil, dataSignature: nil))
+                        documentsToUpload.append(WDODocumentFile(data: dummyJpeg, type: documentToScan.patchedType, side: .back, originalDocumentId: nil, dataSignature: nil))
                     }
                     // upload to server
                     _ = try await x.verification.documentsSubmit(files: documentsToUpload)
@@ -217,9 +243,9 @@ class IntegrationTests: BaseTestClass {
                     throw SimpleError("Unexpected state: \(state.shadowState)")
                 }
                 for doc in documentsToScan {
-                    var filesToUpload = [WDODocumentFile(data: dummyJpeg, type: doc.type, side: .front, originalDocumentId: nil)]
+                    var filesToUpload = [WDODocumentFile(data: dummyJpeg, type: doc.patchedType, side: .front, originalDocumentId: nil)]
                     if doc.sideCount == 2 {
-                        filesToUpload.append(WDODocumentFile(data: dummyJpeg, type: doc.type, side: .back, originalDocumentId: nil))
+                        filesToUpload.append(WDODocumentFile(data: dummyJpeg, type: doc.patchedType, side: .back, originalDocumentId: nil))
                     }
                     _ = try await x.verification.documentsSubmit(files: filesToUpload)
                     state = try await waitForNonProcessingStatus()
@@ -399,12 +425,24 @@ extension WDOConfigurationResponse {
                     break
                 }
                 
-                if !selected.contains(where: { $0.type == document.type }) {
+                if !selected.contains(where: { $0.patchedType == document.patchedType }) {
                     selected.append(document)
                 }
             }
         }
         
         return selected
+    }
+}
+
+extension WDOConfigurationDocument {
+    // TODO: Remove me after 2026
+    // There was a BUG on a server, where driving license was named incorectly
+    // This fixes it in environments where it wasn't deployed yet.
+    var patchedType: String {
+        if type == "DRIVING_LICENCE" {
+            return "DRIVING_LICENSE"
+        }
+        return type
     }
 }
