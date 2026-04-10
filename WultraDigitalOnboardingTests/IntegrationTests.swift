@@ -157,28 +157,6 @@ class IntegrationTests: BaseTestClass {
                 return statusResult.state
             }
             
-             func waitForNonProcessingStatus() async throws -> WDOVerificationState {
-                 var statusResult = try await x.verification.status()
-                 while statusResult.state.shadowState == .processing {
-                     // handle onboarding approval when processing is waiting for manual approval
-                     if case .processing(let item) = statusResult.state, item == .onboardingApproval {
-                         if let userId = x.lastCredentials.map({ "mockuser_\($0.clientNumber)" }) {
-                             print("Process is waiting for onboarding approval, approving...")
-                             try await approveOnboarding(
-                                env: env,
-                                processId: statusResult.serverData.processId,
-                                userId: userId
-                            )
-                         } else {
-                             print("Process is waiting for onboarding approval but no env/userId provided — waiting...")
-                         }
-                     }
-                     try await Task.sleep(for: .seconds(3))
-                     statusResult = try await x.verification.status()
-                }
-                return statusResult.state
-            }
-            
             // -- APP RESTART SIMULATION: now make sure that when the app is restarted, the process is the same...
             let recreatedVerificaiton = try TestHelper(environment: env, processType: x.processType, customPaInstance: x.powerAuth)
             // fetch status with a new verification service instance (but the same PA instance)
