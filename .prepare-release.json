@@ -1,0 +1,41 @@
+{
+  "_purpose": "This file is used as a definition file for the prepare-release script.",
+  "_info": "It defines files that contains version number that should be updated during the release preparation.",
+  "library": {
+    "name": "digital-onboarding-apple",
+    "type": "ios-oss",
+    "podspec": "WultraDigitalOnboarding.podspec"
+  },
+  "files": [
+    {
+      "description": "Cocoapods definition file.",
+      "path": "WultraDigitalOnboarding.podspec",
+      "type": "version_replace",
+      "match": "\n  s.version               = '%VERSION%'\n"
+    },
+    {
+      "description": "Example app pubspec file in the documentation.",
+      "path": "docs/SDK-Integration.md",
+      "type": "version_replace",
+      "match": "\"%VERSION%\""
+    },{
+      "description": "SDK integration tutorial.",
+      "path": "docs/SDK-integration.md",
+      "type": "versionstream_verify",
+      "match": "`%VERSION_STREAM%`"
+    },
+    {
+      "description": "Changelog for the wultra documentation.",
+      "path": "docs/Changelog.md",
+      "type": "version_verify",
+      "match": "## %VERSION%"
+    }
+  ],
+  "scripts": [
+    {
+      "type": "bash",
+      "script": "pod lib lint --allow-warnings",
+      "description": "run pod lint"
+    }
+  ]
+}
