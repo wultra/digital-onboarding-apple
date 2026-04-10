@@ -632,6 +632,7 @@ extension Networking.Onboarding {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONEncoder().encode(data)
+        D.debug("Requesting OTP from a mock service with \(String(data: request.httpBody!, encoding: .utf8) ?? "nil") json body")
         let urlSession = URLSession(configuration: .ephemeral)
         urlSession.dataTask(with: request) { responseData, _, error in
 
