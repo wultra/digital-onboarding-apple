@@ -21,6 +21,12 @@ import PowerAuthCore
 @testable import WultraDigitalOnboarding
 internal import WultraPowerAuthNetworking
 
+// MARK: - NOTE TO THE TESTS -
+// These tests expect to run against enrollment-onboarding-server that is connected to
+// mock providers for document scan and presence check.
+// It is not sending real documents to the server, but rather JSON instructions for the mock server.
+// (see getMockDocumentToUpload)
+
 class IntegrationTests: BaseTestClass {
     
     override init() {
@@ -172,42 +178,9 @@ class IntegrationTests: BaseTestClass {
                 #expect(newProcess.documents.contains { $0.type == documentToScan.patchedType })
             }
             
-            // empty jpeg used for document uploads
-            let dummyJpeg =
-            Data(base64Encoded: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCABkAGQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5/ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA//2Q==")!
-            
             // if services are not mocked on the server, we can't continue past document upload
             guard env.servicesMock else {
-                
-                // -- end APP RESTART SIMULATION
-                
-                // now lets try to upload fake files to test reupload
-                for documentToScan in documentsToScan {
-
-                    var documentsToUpload = [WDODocumentFile(data: dummyJpeg, type: documentToScan.patchedType, side: .front, originalDocumentId: nil, dataSignature: nil)]
-                    if documentToScan.sideCount == 2 {
-                        documentsToUpload.append(WDODocumentFile(data: dummyJpeg, type: documentToScan.patchedType, side: .back, originalDocumentId: nil, dataSignature: nil))
-                    }
-                    // upload to server
-                    _ = try await x.verification.documentsSubmit(files: documentsToUpload)
-                    // wait for processing
-                    _ = try await waitForNonProcessingStatus()
-                    // set testing callback to verify that all documents (in second try) have originalDocumentID
-                    // that were automatically added by the submit method...
-                    x.verification._testing_Callback = { _, data in
-                        guard let files = data as? [WDODocumentFile] else {
-                            D.fatalError("Unexpected type")
-                        }
-                        guard files.allSatisfy({ $0.originalDocumentId != nil }) else {
-                            D.fatalError("All documents should have originalDocumentId")
-                        }
-                    }
-                    // again
-                    _ = try await x.verification.documentsSubmit(files: documentsToUpload)
-                    x.verification._testing_Callback = nil
-                }
-                
-                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'")
+                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'; services are not mocked and the server expects real documents.")
                 return
             }
 
@@ -221,9 +194,9 @@ class IntegrationTests: BaseTestClass {
                     throw SimpleError("Unexpected state: \(state.shadowState)")
                 }
                 for doc in documentsToScan {
-                    var filesToUpload = [WDODocumentFile(data: dummyJpeg, type: doc.patchedType, side: .front, originalDocumentId: nil)]
+                    var filesToUpload = [try doc.getMockDocumentToUpload(side: .front)]
                     if doc.sideCount == 2 {
-                        filesToUpload.append(WDODocumentFile(data: dummyJpeg, type: doc.patchedType, side: .back, originalDocumentId: nil))
+                        filesToUpload.append(try doc.getMockDocumentToUpload(side: .back))
                     }
                     _ = try await x.verification.documentsSubmit(files: filesToUpload)
                     state = try await waitForNonProcessingStatus()
@@ -413,14 +386,36 @@ extension WDOConfigurationResponse {
     }
 }
 
-extension WDOConfigurationDocument {
+private extension WDOConfigurationDocument {
     // TODO: Remove me after 2026
-    // There was a BUG on a server, where driving license was named incorectly
+    // There was a BUG on a server, where driving license was named incorrectly
     // This fixes it in environments where it wasn't deployed yet.
-    var patchedType: String {
+    var patchedType: WDODocumentType {
         if type == "DRIVING_LICENCE" {
             return "DRIVING_LICENSE"
         }
         return type
+    }
+    
+    /// Returns test data for given document.
+    /// It is expected that the receiver is a mock service. Sending just the JSON instruction for the mock server.
+    func getMockDocumentToUpload(side: WDODocumentSide) throws -> WDODocumentFile {
+        
+        let mockType: String
+        
+        switch patchedType {
+        case "DRIVING_LICENSE": mockType = "Dl"
+        case "ID_CARD": mockType = "Id"
+        case "PASSPORT": mockType = "Passport"
+        default: throw SimpleError("Unsupported \(patchedType) document type for testing")
+        }
+        
+        let json = "{\"type\": \"\(mockType)\", \"isoAlpha3CountryCode\": \"\(country ?? "CZE")\"}"
+        
+        guard let data = json.data(using: .utf8) else {
+            throw SimpleError("Failed to encode json to Data for \(patchedType): \(json)")
+        }
+        
+        return WDODocumentFile(data: data, type: patchedType, side: side, originalDocumentId: nil, dataSignature: nil)
     }
 }
