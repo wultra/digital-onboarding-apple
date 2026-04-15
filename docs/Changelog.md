@@ -1,6 +1,6 @@
 # Changelog
 
-## TBA
+## 2.0.0 (April, 2026)
 
 - This release requires enrollment onboarding server version 2.1.0 or higher.
 - Added `WDOConfigurationService` and configuration response models.
