@@ -180,7 +180,7 @@ class IntegrationTests: BaseTestClass {
             
             // if services are not mocked on the server, we can't continue past document upload
             guard env.servicesMock else {
-                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)' - the service is not mock and is expecting real documents...")
+                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'; services are not mocked and the server expects real documents.")
                 return
             }
 
@@ -398,7 +398,7 @@ private extension WDOConfigurationDocument {
     }
     
     /// Returns test data for given document.
-    /// It is expected that the reveicer is a mock service. Sending just the JSON instruction for the mock server.
+    /// It is expected that the receiver is a mock service. Sending just the JSON instruction for the mock server.
     func getMockDocumentToUpload(side: WDODocumentSide) throws -> WDODocumentFile {
         
         let mockType: String
