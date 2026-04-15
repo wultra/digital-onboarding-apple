@@ -180,34 +180,7 @@ class IntegrationTests: BaseTestClass {
             
             // if services are not mocked on the server, we can't continue past document upload
             guard env.servicesMock else {
-                
-                // now lets try to upload fake files to test reupload
-                for documentToScan in documentsToScan {
-
-                    var documentsToUpload = [try documentToScan.getMockDocumentToUpload(side: .front)]
-                    if documentToScan.sideCount == 2 {
-                        documentsToUpload.append(try documentToScan.getMockDocumentToUpload(side: .back))
-                    }
-                    // upload to server
-                    _ = try await x.verification.documentsSubmit(files: documentsToUpload)
-                    // wait for processing
-                    _ = try await waitForNonProcessingStatus()
-                    // set testing callback to verify that all documents (in second try) have originalDocumentID
-                    // that were automatically added by the submit method...
-                    x.verification._testing_Callback = { _, data in
-                        guard let files = data as? [WDODocumentFile] else {
-                            D.fatalError("Unexpected type")
-                        }
-                        guard files.allSatisfy({ $0.originalDocumentId != nil }) else {
-                            D.fatalError("All documents should have originalDocumentId")
-                        }
-                    }
-                    // again
-                    _ = try await x.verification.documentsSubmit(files: documentsToUpload)
-                    x.verification._testing_Callback = nil
-                }
-                
-                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'")
+                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)' - the service is not mock and is expecting real documents...")
                 return
             }
 
@@ -415,7 +388,7 @@ extension WDOConfigurationResponse {
 
 private extension WDOConfigurationDocument {
     // TODO: Remove me after 2026
-    // There was a BUG on a server, where driving license was named incorectly
+    // There was a BUG on a server, where driving license was named incorrectly
     // This fixes it in environments where it wasn't deployed yet.
     var patchedType: WDODocumentType {
         if type == "DRIVING_LICENCE" {
@@ -425,7 +398,7 @@ private extension WDOConfigurationDocument {
     }
     
     /// Returns test data for given document.
-    /// It is expected that the reciever is a mock service. Sending just the JSON instruction for the mock server.
+    /// It is expected that the reveicer is a mock service. Sending just the JSON instruction for the mock server.
     func getMockDocumentToUpload(side: WDODocumentSide) throws -> WDODocumentFile {
         
         let mockType: String

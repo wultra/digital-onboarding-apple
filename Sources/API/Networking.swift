@@ -631,8 +631,17 @@ extension Networking.Onboarding {
         var request = URLRequest(url: mockURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONEncoder().encode(data)
-        D.debug("Requesting OTP from a mock service with \(String(data: request.httpBody!, encoding: .utf8) ?? "nil") json body")
+        
+        do {
+            let body = try JSONEncoder().encode(data)
+            request.httpBody = body
+            D.debug("Requesting OTP from a mock service with \(String(data: request.httpBody!, encoding: .utf8) ?? "nil") json body")
+        } catch {
+            D.error("Failed to encode the data to json: \(error)")
+            completion(.failure(.init(reason: .network_generic, error: error)))
+            return nil // empty body would fail anyway, so fail early
+        }
+        
         let urlSession = URLSession(configuration: .ephemeral)
         urlSession.dataTask(with: request) { responseData, _, error in
 
