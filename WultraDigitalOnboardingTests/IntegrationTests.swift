@@ -21,6 +21,12 @@ import PowerAuthCore
 @testable import WultraDigitalOnboarding
 internal import WultraPowerAuthNetworking
 
+// MARK: - NOTE TO THE TESTS -
+// These tests expect to run against enrollment-onboarding-server that is connected to
+// mock providers for document scan and presence check.
+// It is not sending real documents to the server, but rather JSON instructions for the mock server.
+// (see getMockDocumentToUpload)
+
 class IntegrationTests: BaseTestClass {
     
     override init() {
