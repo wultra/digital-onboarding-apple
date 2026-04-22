@@ -49,12 +49,12 @@ class IntegrationTests: BaseTestClass {
         try await env.test { x in
             do {
                 let result = try await x.activation.status()
-                throw SimpleError("Expected to throw error but got \(result)")
+                throw SimpleError("[\(x.processType)] Expected to throw error but got \(result)")
             } catch let error as WPNError {
                 guard error.reason == .wdo_activation_notRunning else {
-                    throw SimpleError("Invalid error type: \(error)")
+                    throw SimpleError("[\(x.processType)] Invalid error type: \(error)")
                 }
-                print("Expected error: \(error)")
+                print("[\(x.processType)] Expected error: \(error)")
             }
         }
     }
@@ -67,17 +67,17 @@ class IntegrationTests: BaseTestClass {
                 // There is a bug on the server, when OTP is not required, it ignores it
                 // so it cannot be simulated
                 // https://github.com/wultra/powerauth-server/issues/2249
-                print("Skipping test as OTP is not required")
+                print("[\(x.processType)] Skipping test as OTP is not required")
                 return
             }
             try await x.start()
             do {
                 let otp = config.otpForIdentification ? nil : "123456"
                 try await x.activate(otp: otp)
-                throw SimpleError("Activate should fail")
+                throw SimpleError("[\(x.processType)] Activate should fail")
             } catch let error {
                 // make sure that powerauth activation failed
-                #expect(error.isPowerAuthError, "Error throw during activation: \(error)")
+                #expect(error.isPowerAuthError, "[\(x.processType)] Error throw during activation: \(error)")
             }
         }
     }
@@ -124,7 +124,7 @@ class IntegrationTests: BaseTestClass {
             try await x.assertVerificationState(.scanDocument)
             
             guard case .scanDocument(let process) = selectResult.state else {
-                throw SimpleError("Unexpected state: \(startResult.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected state: \(startResult.shadowState)")
             }
             
             // make sure all selected document are in the process
@@ -141,7 +141,7 @@ class IntegrationTests: BaseTestClass {
                  var statusResult = try await x.verification.status()
                  while statusResult.state.shadowState == .processing {
                      guard retryCount < maxRetries else {
-                         throw SimpleError("[\(env.name)] Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+                         throw SimpleError("[\(x.processType)] Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
                      }
                      retryCount += 1
                      try await Task.sleep(for: .seconds(pollIntervalSeconds))
@@ -157,7 +157,7 @@ class IntegrationTests: BaseTestClass {
             
             // we should be in the scanDocument status (no document uploaded yet)
             guard case .scanDocument(let newProcess) = newStatus.state else {
-                throw SimpleError("[\(env.name)] Unexpected state: \(startResult.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected state: \(newStatus.state.shadowState)")
             }
             
             // make sure all selected document are in the process
@@ -167,7 +167,7 @@ class IntegrationTests: BaseTestClass {
             
             // if services are not mocked on the server, we can't continue past document upload
             guard env.servicesMock else {
-                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'; services are not mocked and the server expects real documents.")
+                print("[\(x.processType)] Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'; services are not mocked and the server expects real documents.")
                 return
             }
 
@@ -178,7 +178,7 @@ class IntegrationTests: BaseTestClass {
             // (with mocked services this shouldn't happen, but handle it for robustness)
             if state.shadowState == .scanDocument {
                 guard case .scanDocument = state else {
-                    throw SimpleError("Unexpected state: \(state.shadowState)")
+                    throw SimpleError("[\(x.processType)] Unexpected state: \(state.shadowState)")
                 }
                 for doc in documentsToScan {
                     var filesToUpload = [try doc.getMockDocumentToUpload(side: .front)]
@@ -242,13 +242,13 @@ class IntegrationTests: BaseTestClass {
 
             // at this point we should be in success or endstate
             if state.shadowState == .success {
-                print("Full onboarding flow completed successfully!")
+                print("[\(x.processType)] Full onboarding flow completed successfully!")
             } else if state.shadowState == .failed {
-                throw SimpleError("Verification ended in failed state — mocked services should not fail")
+                throw SimpleError("[\(x.processType)] Verification ended in failed state — mocked services should not fail")
             } else if state.shadowState == .endstate {
-                throw SimpleError("Verification ended in endstate — mocked services should not reach endstate")
+                throw SimpleError("[\(x.processType)] Verification ended in endstate — mocked services should not reach endstate")
             } else {
-                throw SimpleError("Unexpected final state: \(state.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected final state: \(state.shadowState)")
             }
         }
     }
