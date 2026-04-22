@@ -182,7 +182,7 @@ public class WDOVerificationService: WDOBaseService {
                 case .statusCheck(let reason):
                     self.markCompleted(.success(makeResult(.processing(.from(reason)))), completion)
                 case .otp:
-                    self.markCompleted(.success(makeResult(.otp(remainingAttempts: nil, otpResendPeriodInSeconds: self.lastStatus?.config.otpResendPeriodSeconds))), completion)
+                    self.markCompleted(.success(makeResult(.otp(remainingAttempts: nil))), completion)
                 case .activationFinish:
                     self.markCompleted(.success(makeResult(.activationFinish)), completion)
                 case .failed:
@@ -662,7 +662,7 @@ public class WDOVerificationService: WDOBaseService {
                 } else {
                     if data.remainingAttempts > 0 && data.expired == false {
                         D.error("OTP not verified. Try again")
-                        self.markCompleted(.success(.otp(remainingAttempts: data.remainingAttempts, otpResendPeriodInSeconds: self.lastStatus?.config.otpResendPeriodSeconds)), completion)
+                        self.markCompleted(.success(.otp(remainingAttempts: data.remainingAttempts)), completion)
                     } else {
                         D.error("OTP not verified.")
                         self.markCompleted(.failure(.init(.init(reason: .wdo_verification_otpFailed))), completion)

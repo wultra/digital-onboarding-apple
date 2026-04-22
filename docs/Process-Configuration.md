@@ -42,6 +42,8 @@ public struct WDOConfigurationResponse: Codable {
     public let otpForIdentityVerification: Bool
     /// Is the onboarding process configured with temporary activation that should be exchanged for the permanent one.
     public let useTemporaryActivation: Bool
+    /// Time in seconds the user needs to wait between OTP resend calls.
+    public let otpResendPeriodSeconds: Int
     /// Documents required for identity verification.
     public let documents: WDOConfigurationDocuments
 }
@@ -74,6 +76,8 @@ public struct WDOConfigurationDocument: Codable {
 ```
 
 `type` is a backend-defined string such as `ID_CARD` or `PASSPORT`.
+
+Use `otpResendPeriodSeconds` to drive the cooldown for `resendOTP()` in your activation or verification UI.
 
 ## Read next
 - [Device Activation](Device-Activation.md)

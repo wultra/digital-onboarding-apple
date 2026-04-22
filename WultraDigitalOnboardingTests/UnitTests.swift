@@ -327,7 +327,7 @@ struct VerificationStateDescriptionTests {
             .processing(.clientAccepted),
             .processing(.onboardingApproval),
             .presenceCheck,
-            .otp(remainingAttempts: 3, otpResendPeriodInSeconds: 60),
+            .otp(remainingAttempts: 3),
             .activationFinish,
             .failed,
             .endstate(.rejected, rejectReason: "fraud"),
@@ -399,8 +399,7 @@ struct VerificationStatusTranslationTests {
         var json: [String: Any] = [
             "processId": "test-proc",
             "processType": "onboarding",
-            "identityVerificationStatus": status.rawValue,
-            "config": ["otpResendPeriodSeconds": 30]
+            "identityVerificationStatus": status.rawValue
         ]
         if let phase { json["identityVerificationPhase"] = phase.rawValue }
         if let consentRequired { json["consentRequired"] = consentRequired }
@@ -716,6 +715,7 @@ struct CodableModelTests {
             "otpForIdentification": false,
             "otpForIdentityVerification": true,
             "useTemporaryActivation": true,
+            "otpResendPeriodSeconds": 30,
             "documents": {
                 "totalRequiredDocumentsCount": 2,
                 "groups": [
@@ -736,6 +736,7 @@ struct CodableModelTests {
         #expect(config.otpForIdentification == false)
         #expect(config.otpForIdentityVerification == true)
         #expect(config.useTemporaryActivation == true)
+        #expect(config.otpResendPeriodSeconds == 30)
         #expect(config.documents.totalRequiredDocumentsCount == 2)
         #expect(config.documents.groups.count == 1)
         #expect(config.documents.groups[0].requiredDocumentsCount == 1)
@@ -754,7 +755,28 @@ struct CodableModelTests {
     }
 
     @Test
-    func `IdentityStatusResponse decodes with custom coding keys`() throws {
+    func `IdentityStatusResponse decodes without deprecated config`() throws {
+        let json = """
+        {
+            "processId": "abc-123",
+            "processType": "onboarding",
+            "identityVerificationStatus": "IN_PROGRESS",
+            "identityVerificationPhase": "DOCUMENT_UPLOAD",
+            "consentRequired": false
+        }
+        """.data(using: .utf8)!
+
+        let response = try JSONDecoder().decode(IdentityStatusResponse.self, from: json)
+        #expect(response.processId == "abc-123")
+        #expect(response.processType == "onboarding")
+        #expect(response.status == .inProgress)
+        #expect(response.phase == .documentUpload)
+        #expect(response.consentRequired == false)
+        #expect(response.rejectReason == nil)
+    }
+
+    @Test
+    func `IdentityStatusResponse ignores deprecated config when present`() throws {
         let json = """
         {
             "processId": "abc-123",
@@ -773,7 +795,6 @@ struct CodableModelTests {
         #expect(response.phase == .documentUpload)
         #expect(response.consentRequired == false)
         #expect(response.rejectReason == nil)
-        #expect(response.config.otpResendPeriodSeconds == 60)
     }
 
     @Test
@@ -923,6 +944,7 @@ struct ConfigurationDocumentSelectionTests {
             "otpForIdentification": false,
             "otpForIdentityVerification": false,
             "useTemporaryActivation": false,
+            "otpResendPeriodSeconds": 30,
             "documents": {
                 "totalRequiredDocumentsCount": 2,
                 "groups": [
@@ -961,6 +983,7 @@ struct ConfigurationDocumentSelectionTests {
             "otpForIdentification": false,
             "otpForIdentityVerification": false,
             "useTemporaryActivation": false,
+            "otpResendPeriodSeconds": 30,
             "documents": {
                 "totalRequiredDocumentsCount": 3,
                 "groups": [
