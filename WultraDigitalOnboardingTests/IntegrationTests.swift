@@ -141,22 +141,9 @@ class IntegrationTests: BaseTestClass {
                  var statusResult = try await x.verification.status()
                  while statusResult.state.shadowState == .processing {
                      guard retryCount < maxRetries else {
-                         throw SimpleError("Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+                         throw SimpleError("[\(env.name)] Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
                      }
                      retryCount += 1
-                     // handle onboarding approval when processing is waiting for manual approval
-                     if case .processing(let item) = statusResult.state, item == .onboardingApproval {
-                         if let userId = x.lastCredentials.map({ "mockuser_\($0.clientNumber)" }) {
-                             print("Process is waiting for onboarding approval, approving...")
-                             try await approveOnboarding(
-                                env: env,
-                                processId: statusResult.serverData.processId,
-                                userId: userId
-                            )
-                         } else {
-                             print("Process is waiting for onboarding approval but no env/userId provided — waiting...")
-                         }
-                     }
                      try await Task.sleep(for: .seconds(pollIntervalSeconds))
                      statusResult = try await x.verification.status()
                 }
@@ -170,7 +157,7 @@ class IntegrationTests: BaseTestClass {
             
             // we should be in the scanDocument status (no document uploaded yet)
             guard case .scanDocument(let newProcess) = newStatus.state else {
-                throw SimpleError("Unexpected state: \(startResult.shadowState)")
+                throw SimpleError("[\(env.name)] Unexpected state: \(startResult.shadowState)")
             }
             
             // make sure all selected document are in the process
@@ -271,11 +258,11 @@ class IntegrationTests: BaseTestClass {
         
         try await env.test { x in
             // start valid onboarding
-            guard try await x.startAndActivate() != nil else {
+            guard let (config, consentRequired) = try await x.startAndActivate() else {
                 return
             }
             
-            _ = try await x.verification.start(consentApprovedByUser: .notRequired) // for simplicity not required
+            _ = try await x.verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
             
             // we should now be in document to scan select state
             try await x.assertVerificationState(.documentsToScanSelect)
@@ -300,59 +287,6 @@ class IntegrationTests: BaseTestClass {
             let paStatus = try await x.powerAuth.fetchActivationStatus()
             #expect(paStatus.state == .removed)
         }
-    }
-
-    /// Calls private test API to approve the onboarding process (simulates backoffice approval).
-    private func approveOnboarding(env: ServerEnvironment, processId: String, userId: String) async throws {
-
-        guard let authorization = env.authorization else {
-            throw SimpleError("Cannot approve onboarding — no authorization configured for environment '\(env.name)'")
-        }
-
-        let baseUrl = env.esoUrl.hasSuffix("/") ? String(env.esoUrl.dropLast()) : env.esoUrl
-
-        // step 1: get verification ID for the process
-        let verificationsUrl = URL(string: "\(baseUrl)/api/private/test/process/\(processId)/identityVerifications")!
-        var getRequest = URLRequest(url: verificationsUrl)
-        getRequest.httpMethod = "GET"
-        getRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        getRequest.setValue("Basic \(authorization)", forHTTPHeaderField: "Authorization")
-
-        let (data, response) = try await URLSession.shared.data(for: getRequest)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw SimpleError("Failed to get identity verifications for process \(processId)")
-        }
-
-        let verificationIds = try JSONDecoder().decode([String].self, from: data)
-        guard let verificationId = verificationIds.first else {
-            print("No verification ID found for process \(processId), skipping approval.")
-            return
-        }
-
-        print("Found verification ID: \(verificationId) for process \(processId)")
-
-        // step 2: approve the verification
-        let approveUrl = URL(string: "\(baseUrl)/api/private/client/approve")!
-        var postRequest = URLRequest(url: approveUrl)
-        postRequest.httpMethod = "POST"
-        postRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        postRequest.setValue("Basic \(authorization)", forHTTPHeaderField: "Authorization")
-
-        let body: [String: Any] = [
-            "processId": processId,
-            "identityVerificationId": verificationId,
-            "userId": userId,
-            "approvalResult": "OK",
-            "approvalResultReason": ""
-        ]
-        postRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        let (_, approveResponse) = try await URLSession.shared.data(for: postRequest)
-        guard let approveHttpResponse = approveResponse as? HTTPURLResponse, approveHttpResponse.statusCode == 200 else {
-            throw SimpleError("Failed to approve onboarding for process \(processId), verification \(verificationId)")
-        }
-
-        print("Onboarding approved for process \(processId), verification \(verificationId)")
     }
 }
 
