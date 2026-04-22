@@ -11,6 +11,8 @@ let configuration = try await configurationService.getConfiguration(processType:
 let otpResendPeriodSeconds = configuration.otpResendPeriodSeconds
 ```
 
+`otpResendPeriodSeconds` is optional and can be `nil` when you are still integrating with an older backend that does not return the field yet.
+
 2. Update OTP state handling.
 
 Before:
@@ -29,6 +31,6 @@ case .otp(let remainingAttempts):
 
 ## Checklist
 
-- Fetch and keep `WDOConfigurationResponse.otpResendPeriodSeconds` for the active process type.
+- Fetch and keep `WDOConfigurationResponse.otpResendPeriodSeconds` for the active process type, and handle `nil` for older backends.
 - Update `switch` statements and pattern matching for `WDOVerificationState.otp`.
 - Stop relying on OTP resend timing from `status()` results.

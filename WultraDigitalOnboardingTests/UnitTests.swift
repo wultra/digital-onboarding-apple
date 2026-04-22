@@ -751,7 +751,35 @@ struct CodableModelTests {
         // round trip
         let reencoded = try JSONEncoder().encode(config)
         let redecoded = try JSONDecoder().decode(WDOConfigurationResponse.self, from: reencoded)
+        #expect(redecoded.otpResendPeriodSeconds == 30)
         #expect(redecoded.documents.totalRequiredDocumentsCount == 2)
+    }
+
+    @Test
+    func `WDOConfigurationResponse decodes without otp resend period for older backends`() throws {
+        let json = """
+        {
+            "enabled": true,
+            "otpForIdentification": false,
+            "otpForIdentityVerification": true,
+            "useTemporaryActivation": true,
+            "documents": {
+                "totalRequiredDocumentsCount": 1,
+                "groups": [
+                    {
+                        "requiredDocumentsCount": 1,
+                        "items": [
+                            { "type": "ID_CARD", "sideCount": 2, "country": "CZE" }
+                        ]
+                    }
+                ]
+            }
+        }
+        """.data(using: .utf8)!
+
+        let config = try JSONDecoder().decode(WDOConfigurationResponse.self, from: json)
+        #expect(config.otpResendPeriodSeconds == nil)
+        #expect(config.documents.totalRequiredDocumentsCount == 1)
     }
 
     @Test

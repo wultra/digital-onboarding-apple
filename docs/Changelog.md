@@ -3,7 +3,7 @@
 ## 3.0.0 (TBA)
 
 - **⚠️ BREAKING**: `WDOVerificationState.otp` now carries only `remainingAttempts`.
-- `WDOConfigurationResponse` now includes `otpResendPeriodSeconds`.
+- `WDOConfigurationResponse` now includes optional `otpResendPeriodSeconds` (`nil` on older backends that do not provide the field yet).
 
 ## 2.0.0 (April, 2026)
 
