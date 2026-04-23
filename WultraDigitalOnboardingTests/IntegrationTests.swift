@@ -49,12 +49,12 @@ class IntegrationTests: BaseTestClass {
         try await env.test { x in
             do {
                 let result = try await x.activation.status()
-                throw SimpleError("Expected to throw error but got \(result)")
+                throw SimpleError("[\(x.processType)] Expected to throw error but got \(result)")
             } catch let error as WPNError {
                 guard error.reason == .wdo_activation_notRunning else {
-                    throw SimpleError("Invalid error type: \(error)")
+                    throw SimpleError("[\(x.processType)] Invalid error type: \(error)")
                 }
-                print("Expected error: \(error)")
+                print("[\(x.processType)] Expected error: \(error)")
             }
         }
     }
@@ -67,17 +67,17 @@ class IntegrationTests: BaseTestClass {
                 // There is a bug on the server, when OTP is not required, it ignores it
                 // so it cannot be simulated
                 // https://github.com/wultra/powerauth-server/issues/2249
-                print("Skipping test as OTP is not required")
+                print("[\(x.processType)] Skipping test as OTP is not required")
                 return
             }
             try await x.start()
             do {
                 let otp = config.otpForIdentification ? nil : "123456"
                 try await x.activate(otp: otp)
-                throw SimpleError("Activate should fail")
+                throw SimpleError("[\(x.processType)] Activate should fail")
             } catch let error {
                 // make sure that powerauth activation failed
-                #expect(error.isPowerAuthError, "Error throw during activation: \(error)")
+                #expect(error.isPowerAuthError, "[\(x.processType)] Error throw during activation: \(error)")
             }
         }
     }
@@ -124,7 +124,7 @@ class IntegrationTests: BaseTestClass {
             try await x.assertVerificationState(.scanDocument)
             
             guard case .scanDocument(let process) = selectResult.state else {
-                throw SimpleError("Unexpected state: \(startResult.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected state: \(startResult.shadowState)")
             }
             
             // make sure all selected document are in the process
@@ -141,22 +141,9 @@ class IntegrationTests: BaseTestClass {
                  var statusResult = try await x.verification.status()
                  while statusResult.state.shadowState == .processing {
                      guard retryCount < maxRetries else {
-                         throw SimpleError("Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+                         throw SimpleError("[\(x.processType)] Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
                      }
                      retryCount += 1
-                     // handle onboarding approval when processing is waiting for manual approval
-                     if case .processing(let item) = statusResult.state, item == .onboardingApproval {
-                         if let userId = x.lastCredentials.map({ "mockuser_\($0.clientNumber)" }) {
-                             print("Process is waiting for onboarding approval, approving...")
-                             try await approveOnboarding(
-                                env: env,
-                                processId: statusResult.serverData.processId,
-                                userId: userId
-                            )
-                         } else {
-                             print("Process is waiting for onboarding approval but no env/userId provided — waiting...")
-                         }
-                     }
                      try await Task.sleep(for: .seconds(pollIntervalSeconds))
                      statusResult = try await x.verification.status()
                 }
@@ -170,7 +157,7 @@ class IntegrationTests: BaseTestClass {
             
             // we should be in the scanDocument status (no document uploaded yet)
             guard case .scanDocument(let newProcess) = newStatus.state else {
-                throw SimpleError("Unexpected state: \(startResult.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected state: \(newStatus.state.shadowState)")
             }
             
             // make sure all selected document are in the process
@@ -180,7 +167,7 @@ class IntegrationTests: BaseTestClass {
             
             // if services are not mocked on the server, we can't continue past document upload
             guard env.servicesMock else {
-                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'; services are not mocked and the server expects real documents.")
+                print("[\(x.processType)] Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'; services are not mocked and the server expects real documents.")
                 return
             }
 
@@ -191,7 +178,7 @@ class IntegrationTests: BaseTestClass {
             // (with mocked services this shouldn't happen, but handle it for robustness)
             if state.shadowState == .scanDocument {
                 guard case .scanDocument = state else {
-                    throw SimpleError("Unexpected state: \(state.shadowState)")
+                    throw SimpleError("[\(x.processType)] Unexpected state: \(state.shadowState)")
                 }
                 for doc in documentsToScan {
                     var filesToUpload = [try doc.getMockDocumentToUpload(side: .front)]
@@ -255,13 +242,13 @@ class IntegrationTests: BaseTestClass {
 
             // at this point we should be in success or endstate
             if state.shadowState == .success {
-                print("Full onboarding flow completed successfully!")
+                print("[\(x.processType)] Full onboarding flow completed successfully!")
             } else if state.shadowState == .failed {
-                throw SimpleError("Verification ended in failed state — mocked services should not fail")
+                throw SimpleError("[\(x.processType)] Verification ended in failed state — mocked services should not fail")
             } else if state.shadowState == .endstate {
-                throw SimpleError("Verification ended in endstate — mocked services should not reach endstate")
+                throw SimpleError("[\(x.processType)] Verification ended in endstate — mocked services should not reach endstate")
             } else {
-                throw SimpleError("Unexpected final state: \(state.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected final state: \(state.shadowState)")
             }
         }
     }
@@ -271,11 +258,11 @@ class IntegrationTests: BaseTestClass {
         
         try await env.test { x in
             // start valid onboarding
-            guard try await x.startAndActivate() != nil else {
+            guard let (config, consentRequired) = try await x.startAndActivate() else {
                 return
             }
             
-            _ = try await x.verification.start(consentApprovedByUser: .notRequired) // for simplicity not required
+            _ = try await x.verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
             
             // we should now be in document to scan select state
             try await x.assertVerificationState(.documentsToScanSelect)
@@ -300,59 +287,6 @@ class IntegrationTests: BaseTestClass {
             let paStatus = try await x.powerAuth.fetchActivationStatus()
             #expect(paStatus.state == .removed)
         }
-    }
-
-    /// Calls private test API to approve the onboarding process (simulates backoffice approval).
-    private func approveOnboarding(env: ServerEnvironment, processId: String, userId: String) async throws {
-
-        guard let authorization = env.authorization else {
-            throw SimpleError("Cannot approve onboarding — no authorization configured for environment '\(env.name)'")
-        }
-
-        let baseUrl = env.esoUrl.hasSuffix("/") ? String(env.esoUrl.dropLast()) : env.esoUrl
-
-        // step 1: get verification ID for the process
-        let verificationsUrl = URL(string: "\(baseUrl)/api/private/test/process/\(processId)/identityVerifications")!
-        var getRequest = URLRequest(url: verificationsUrl)
-        getRequest.httpMethod = "GET"
-        getRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        getRequest.setValue("Basic \(authorization)", forHTTPHeaderField: "Authorization")
-
-        let (data, response) = try await URLSession.shared.data(for: getRequest)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw SimpleError("Failed to get identity verifications for process \(processId)")
-        }
-
-        let verificationIds = try JSONDecoder().decode([String].self, from: data)
-        guard let verificationId = verificationIds.first else {
-            print("No verification ID found for process \(processId), skipping approval.")
-            return
-        }
-
-        print("Found verification ID: \(verificationId) for process \(processId)")
-
-        // step 2: approve the verification
-        let approveUrl = URL(string: "\(baseUrl)/api/private/client/approve")!
-        var postRequest = URLRequest(url: approveUrl)
-        postRequest.httpMethod = "POST"
-        postRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        postRequest.setValue("Basic \(authorization)", forHTTPHeaderField: "Authorization")
-
-        let body: [String: Any] = [
-            "processId": processId,
-            "identityVerificationId": verificationId,
-            "userId": userId,
-            "approvalResult": "OK",
-            "approvalResultReason": ""
-        ]
-        postRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        let (_, approveResponse) = try await URLSession.shared.data(for: postRequest)
-        guard let approveHttpResponse = approveResponse as? HTTPURLResponse, approveHttpResponse.statusCode == 200 else {
-            throw SimpleError("Failed to approve onboarding for process \(processId), verification \(verificationId)")
-        }
-
-        print("Onboarding approved for process \(processId), verification \(verificationId)")
     }
 }
 
