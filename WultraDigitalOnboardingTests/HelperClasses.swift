@@ -187,7 +187,6 @@ struct ServerEnvironment: Decodable {
     let mobileConfig: String
     let otpMock: String
     let servicesMock: Bool
-    let authorization: String?
     
     var otpGetDetailStrategy: WDOGetOTPEndpointStrategy {
         if otpMock.uppercased() == "ESO" {
@@ -202,7 +201,7 @@ struct ServerEnvironment: Decodable {
         }
     }
     
-    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool, authorization: String? = nil) {
+    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool) {
         self.name = name
         self.processTypes = processTypes
         self.esUrl = esUrl
@@ -210,7 +209,6 @@ struct ServerEnvironment: Decodable {
         self.mobileConfig = config
         self.otpMock = otpMock
         self.servicesMock = servicesMock
-        self.authorization = authorization
     }
 }
 
