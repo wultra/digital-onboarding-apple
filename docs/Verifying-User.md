@@ -98,8 +98,7 @@ enum WDOVerificationState {
     /// The OTP is usually SMS or email.
     ///
     /// - `remainingAttempts`: Number of remaining attempts to enter the correct OTP. Available after a failed OTP attempt.
-    /// - `otpResendPeriodInSeconds`: Time in seconds the user needs to wait between OTP resend calls. `nil` when not provided by the server.
-    case otp(remainingAttempts: Int?, otpResendPeriodInSeconds: Int?)
+    case otp(remainingAttempts: Int?)
     
     /// Show "finish activation" with PIN prompt screen.
     ///
@@ -402,7 +401,7 @@ When this state is obtained, the following steps need to be done:
 
 After the presence check is finished, the user will receive an SMS/email OTP and the `otp` state will be reported. When this state is received, prompt the user for the OTP and verify it via `verifyOTP` method.
 
-The `otp` state also contains the number of remaining OTP attempts and the resend period in seconds. When attempts are depleted, the error state is returned.
+The `otp` state contains the number of remaining OTP attempts. The resend cooldown is available from `WDOConfigurationResponse.otpResendPeriodSeconds`, returned by `WDOConfigurationService.getConfiguration(processType:)`. When attempts are depleted, the error state is returned.
 
 Example:
 

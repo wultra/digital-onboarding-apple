@@ -54,8 +54,7 @@ public enum WDOVerificationState: CustomStringConvertible {
     /// The OTP is usually SMS or email.
     ///
     /// - `remainingAttempts`: Number of remaining attempts to enter the correct OTP. Available after a failed OTP attempt.
-    /// - `otpResendPeriodInSeconds`: Time in seconds the user needs to wait between OTP resend calls. `nil` when not provided by the server.
-    case otp(remainingAttempts: Int?, otpResendPeriodInSeconds: Int?)
+    case otp(remainingAttempts: Int?)
     
     /// Show "finish activation" with PIN prompt screen.
     ///

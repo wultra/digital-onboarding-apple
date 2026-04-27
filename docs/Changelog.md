@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.0 (TBA)
+
+- **⚠️ BREAKING**: `WDOVerificationState.otp` now carries only `remainingAttempts`.
+- `WDOConfigurationResponse` now includes optional `otpResendPeriodSeconds` (`nil` on older backends that do not provide the field yet).
+
 ## 2.0.0 (April, 2026)
 
 - This release requires enrollment onboarding server version 2.1.0 or higher.

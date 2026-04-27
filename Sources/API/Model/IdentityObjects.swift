@@ -29,7 +29,6 @@ struct IdentityStatusResponse: Decodable {
         case processId = "processId"
         case processType = "processType"
         case rejectReason = "rejectReason"
-        case config = "config"
         case status = "identityVerificationStatus"
         case phase = "identityVerificationPhase"
         case consentRequired = "consentRequired"
@@ -42,12 +41,7 @@ struct IdentityStatusResponse: Decodable {
     let rejectReason: String?
     let status: IdentityVerificationStatus
     let phase: IdentityVerificationPhase?
-    let config: IdentityConfig
     let consentRequired: Bool?
-}
-
-struct IdentityConfig: Decodable {
-    let otpResendPeriodSeconds: Int
 }
 
 /// Status of the current identity verification

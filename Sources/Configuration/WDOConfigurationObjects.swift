@@ -29,6 +29,9 @@ public struct WDOConfigurationResponse: Codable {
     public let otpForIdentityVerification: Bool
     /// Is the onboarding process configured with temporary activation that should be exchanged for the permanent one.
     public let useTemporaryActivation: Bool
+    /// Time in seconds the user needs to wait between OTP resend calls.
+    /// `nil` when the backend doesn't provide the value.
+    public let otpResendPeriodSeconds: Int?
     /// Documents required for identity verification.
     public let documents: WDOConfigurationDocuments
 }
