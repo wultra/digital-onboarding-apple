@@ -93,5 +93,12 @@ public extension PowerAuthActivationStatus {
     /// Identity Verification was already started by the user
     var verificationInProgress: Bool { activationFlags.contains("VERIFICATION_IN_PROGRESS") }
     
+    /// When true, this already active activation is going through a re-verification (Re-KYC) process,
+    /// triggered via `WDOVerificationService.startReVerification`.
+    var needReVerification: Bool { reKycInProgress }
+    
+    /// Re-verification (Re-KYC) identity verification process was already initialized by the user.
+    var reKycInProgress: Bool { activationFlags.contains("RE_KYC_IN_PROGRESS") }
+    
     internal var activationFlags: [String] { customObject?["activationFlags"] as? [String] ?? [] }
 }
