@@ -190,6 +190,61 @@ verification.status { result in
 
 When state is `.processing(.onboardingApproval)`, keep polling `status()` until the backend moves the process forward.
 
+## Starting a re-verification (Re-KYC)
+
+In some cases, you might require the user to repeat identity verification even though the `PowerAuthSDK` instance is already fully activated and does not need any verification (`needVerification` is `false`).
+
+To start such a process, call `startReVerification`. Unlike `WDOActivationService.start`, this call does not create a new PowerAuth activation - it reuses the current one and is authenticated with a PowerAuth POSSESSION (1FA) signature instead of user-provided credentials. You can pass `additionalData` in a similar manner as passing `credentials` to `start`.
+
+Once `startReVerification` succeeds, the same activation flags used for a regular verification are used to track progress: `PowerAuthActivationStatus.needReVerification` (or `reKycInProgress`, mirroring `RE_KYC_IN_PROGRESS`) becomes `true` and stays `true` until the verification process finishes.
+
+```swift
+/// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
+///
+/// - Parameters:
+///   - processType: The process type identification. If not specified, the default process type will be used.
+///   - completion: Callback with the verification status result.
+public func startReVerification(processType: String? = nil, completion: @escaping (Result<StatusResult, Fail>) -> Void)
+
+/// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
+///
+/// - Parameters:
+///   - additionalData: Custom additional data object passed to the server together with the Re-KYC start request.
+///   - processType: The process type identification. If not specified, the default process type will be used.
+///   - completion: Callback with the verification status result.
+public func startReVerification<T: Encodable>(additionalData: T, processType: String? = nil, completion: @escaping (Result<StatusResult, Fail>) -> Void)
+```
+
+`startReVerification` automatically fetches the verification status right after a successful start (same as calling `status()` would), so the returned result can be used directly to display the next state (usually `intro`), followed by `getConsent()`/`start(consentApprovedByUser:)` as usual.
+
+```swift
+let powerAuth: PowerAuthSDK // configured and activated PowerAuth instance
+let verification: WDOVerificationService // configured instance, powered by the same PowerAuthSDK instance
+
+// Your app decides on its own when a Re-KYC should be triggered (e.g. a business rule, a server-driven
+// prompt, or a dedicated backend call outside of this SDK).
+verification.startReVerification { result in
+    switch result {
+    case .success(let statusResult):
+        // display the next state (statusResult.state), same as with a regular verification flow
+        break
+    case .failure(let error):
+        // navigate to the error screen and show the error in
+        // error.cause
+    }
+}
+
+// After an app restart (or any time later), check `reKycInProgress` to find out whether a
+// Re-KYC is already in progress and resume it with the regular verification flow, e.g.
+// starting from the `documentsToScanSelect` state, without calling `startReVerification` again.
+powerAuth.fetchActivationStatus { status, error in
+    guard let status, status.reKycInProgress else {
+        return
+    }
+    // continue with the regular verification flow, e.g. verification.status()
+}
+```
+
 ## Getting the user consent text
 
 When the state is `intro`, and `consentRequired` is true, the first step in the flow is to get the consent text for the user to approve.

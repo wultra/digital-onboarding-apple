@@ -32,6 +32,8 @@
 - `WDOActivationService`, `WDOVerificationService`, and `WDOConfigurationService` now inherit from `WDOBaseService`, which provides shared `acceptLanguage` and `networking`.
 - Demo `getOTP()` now accepts `strategy:` and uses `WDOGetOTPEndpointStrategy`.
 - **Breaking:** Init parameter `config:` (on `WDOActivationService` and `WDOConfigurationService`) and `wpnConfig:` (on `WDOVerificationService`) renamed to `networkingConfig:` for consistency.
+- Added `WDOVerificationService.startReVerification` to support Re-KYC (repeated identity verification) for an already active PowerAuth instance, without creating a new activation. Requires Wultra Digital Onboarding server support (see [enrollment-server#1852](https://github.com/wultra/enrollment-server/issues/1852)).
+- `ProcessResponse` now contains an optional `activationType` property indicating whether a new activation was created or an existing one was reused.
 
 ## 1.3.0 (October, 2024)
 
