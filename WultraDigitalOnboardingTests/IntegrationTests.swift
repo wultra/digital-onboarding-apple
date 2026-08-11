@@ -254,11 +254,66 @@ class IntegrationTests: BaseTestClass {
     }
     
     @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification`(env: ServerEnvironment) async throws {
+        
+        try await env.test { x in
+            
+            // Re-KYC needs an activation not created through onboarding, so we use a code-based
+            // activation here instead of `startAndActivate()`.
+            guard env.cloudServerUrl != nil else {
+                print("[\(x.processType)] Skipping - cloud admin API is not configured for this environment.")
+                return
+            }
+            try await x.prepareCodeActivation()
+            
+            // The status is fetched automatically as part of the call, so the returned result
+            // already reports the next state to display.
+            let reVerificationResult = try await x.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(reVerificationResult.state.shadowState == .intro)
+            
+            let startResult = try await x.verification.start(consentApprovedByUser: .notRequired)
+            #expect(startResult.shadowState == .documentsToScanSelect)
+            try await x.assertVerificationState(.documentsToScanSelect)
+        }
+    }
+    
+    @Test(arguments: ServerEnvironment.loaded)
+    func `re-verification activation flags`(env: ServerEnvironment) async throws {
+        
+        try await env.test { x in
+            
+            guard env.cloudServerUrl != nil else {
+                print("[\(x.processType)] Skipping - cloud admin API is not configured for this environment.")
+                return
+            }
+            try await x.prepareCodeActivation()
+            
+            let statusBeforeReVerification = try await x.powerAuth.fetchActivationStatus()
+            #expect(!statusBeforeReVerification.reKycInProgress)
+            #expect(!statusBeforeReVerification.needReVerification)
+            
+            // `startReVerification` alone does not set any activation flag - the server only sets
+            // RE_KYC_IN_PROGRESS once `identity/init` is called.
+            _ = try await x.verification.startReVerification(processType: env.reKycProcessType)
+            
+            let statusAfterStart = try await x.powerAuth.fetchActivationStatus()
+            #expect(!statusAfterStart.reKycInProgress)
+            #expect(!statusAfterStart.needReVerification)
+            
+            _ = try await x.verification.start(consentApprovedByUser: .notRequired)
+            
+            let statusAfterInit = try await x.powerAuth.fetchActivationStatus()
+            #expect(statusAfterInit.reKycInProgress)
+            #expect(statusAfterInit.needReVerification)
+        }
+    }
+    
+    @Test(arguments: ServerEnvironment.loaded)
     func `cancel verification`(env: ServerEnvironment) async throws {
         
         try await env.test { x in
             // start valid onboarding
-            guard let (config, consentRequired) = try await x.startAndActivate() else {
+            guard let (_, consentRequired) = try await x.startAndActivate() else {
                 return
             }
             

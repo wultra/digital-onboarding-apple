@@ -107,6 +107,58 @@ class TestHelper {
         let status = try await verification.status()
         #expect(status.state.shadowState == expectedState)
     }
+    
+    /// Creates an activation via a PowerAuth activation code obtained from the PowerAuth Cloud admin API,
+    /// bypassing the onboarding process entirely - used by Re-KYC tests to obtain an activation that was
+    /// not created through onboarding.
+    func prepareCodeActivation(userId: String = UUID().uuidString) async throws {
+        guard let cloudServerUrl = environment.cloudServerUrl, let cloudServerLogin = environment.cloudServerLogin, let cloudServerPassword = environment.cloudServerPassword, let cloudApplicationId = environment.cloudApplicationId else {
+            throw SimpleError("Cloud admin API is not configured for the environment '\(environment.name)'")
+        }
+        
+        struct RegistrationResponse: Decodable {
+            let registrationId: String
+            let activationCode: String
+        }
+        
+        let body = """
+        {
+          "appId": "\(cloudApplicationId)",
+          "userId": "\(userId)",
+          "commitPhase": "ON_KEY_EXCHANGE"
+        }
+        """
+        
+        let url = URL(string: "\(cloudServerUrl)/v2/registrations")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body.data(using: .utf8)
+        let credentials = "\(cloudServerLogin):\(cloudServerPassword)"
+        request.setValue("Basic \(Data(credentials.utf8).base64EncodedString())", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw SimpleError("Cloud admin registration failed: \(String(decoding: data, as: UTF8.self))")
+        }
+        let registration = try JSONDecoder().decode(RegistrationResponse.self, from: data)
+        
+        let paActivation = try PowerAuthActivation(activationCode: registration.activationCode, name: UUID().uuidString)
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            powerAuth.createActivation(paActivation) { _, error in
+                if let error {
+                    cont.resume(throwing: error)
+                } else {
+                    cont.resume()
+                }
+            }
+        }
+        try powerAuth.persist()
+        
+        let paStatus = try await powerAuth.fetchActivationStatus()
+        #expect(paStatus.state == .active)
+        #expect(!paStatus.needVerification)
+    }
 }
 
 extension ServerEnvironment {
@@ -187,6 +239,13 @@ struct ServerEnvironment: Decodable {
     let mobileConfig: String
     let otpMock: String
     let servicesMock: Bool
+    let reKycProcessType: String
+    /// PowerAuth Cloud admin API connection, used to create an activation code directly via
+    /// `POST /v2/registrations`, bypassing the onboarding process. Required for Re-KYC tests.
+    let cloudServerUrl: String?
+    let cloudServerLogin: String?
+    let cloudServerPassword: String?
+    let cloudApplicationId: String?
     
     var otpGetDetailStrategy: WDOGetOTPEndpointStrategy {
         if otpMock.uppercased() == "ESO" {
@@ -201,7 +260,7 @@ struct ServerEnvironment: Decodable {
         }
     }
     
-    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool) {
+    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool, reKycProcessType: String, cloudServerUrl: String? = nil, cloudServerLogin: String? = nil, cloudServerPassword: String? = nil, cloudApplicationId: String? = nil) {
         self.name = name
         self.processTypes = processTypes
         self.esUrl = esUrl
@@ -209,7 +268,38 @@ struct ServerEnvironment: Decodable {
         self.mobileConfig = config
         self.otpMock = otpMock
         self.servicesMock = servicesMock
+        self.reKycProcessType = reKycProcessType
+        self.cloudServerUrl = cloudServerUrl
+        self.cloudServerLogin = cloudServerLogin
+        self.cloudServerPassword = cloudServerPassword
+        self.cloudApplicationId = cloudApplicationId
     }
+    
+    enum CodingKeys: String, CodingKey {
+        case name, processTypes, esUrl, esoUrl, mobileConfig, otpMock, servicesMock, reKycProcessType
+        case cloudServerUrl, cloudServerLogin, cloudServerPassword, cloudApplicationId
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        processTypes = try container.decode([String].self, forKey: .processTypes)
+        esUrl = try container.decode(String.self, forKey: .esUrl)
+        esoUrl = try container.decode(String.self, forKey: .esoUrl)
+        mobileConfig = try container.decode(String.self, forKey: .mobileConfig)
+        otpMock = try container.decode(String.self, forKey: .otpMock)
+        servicesMock = try container.decode(Bool.self, forKey: .servicesMock)
+        reKycProcessType = try container.decodeIfPresent(String.self, forKey: .reKycProcessType) ?? "re-kyc"
+        cloudServerUrl = try container.decodeIfPresent(String.self, forKey: .cloudServerUrl)
+        cloudServerLogin = try container.decodeIfPresent(String.self, forKey: .cloudServerLogin)
+        cloudServerPassword = try container.decodeIfPresent(String.self, forKey: .cloudServerPassword)
+        cloudApplicationId = try container.decodeIfPresent(String.self, forKey: .cloudApplicationId)
+    }
+}
+
+extension ServerEnvironment: CustomTestStringConvertible {
+    /// Avoids leaking credentials in test logs/failures (Swift Testing prints arguments by default).
+    var testDescription: String { "ServerEnvironment(name: \"\(name)\")" }
 }
 
 struct ServerEnvironmentData: Decodable {
