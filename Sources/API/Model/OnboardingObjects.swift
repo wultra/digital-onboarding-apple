@@ -24,7 +24,15 @@ struct StartOnboardingRequest<T: Codable>: Codable {
 }
 
 /// Object that starts the re-verification (Re-KYC) process for an already activated PowerAuth instance.
-typealias StartReVerificationRequest<T: Codable> = StartOnboardingRequest<T>
+struct StartReVerificationRequest<T: Encodable>: Encodable {
+    let identification: T
+    let processType: String?
+}
+
+/// Default additional data sent together with the Re-KYC start request when no custom value is provided.
+struct DefaultReVerificationData: Encodable {
+    let source = "re-verification"
+}
 
 /// For request that needs to identify the current process.
 struct ProcessRequest: Codable {

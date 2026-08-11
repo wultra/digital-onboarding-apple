@@ -220,23 +220,21 @@ class Networking {
         /// Starts the Re-KYC (re-verification) process for an already activated PowerAuth instance.
         ///
         /// - Parameters:
-        ///   - identification: Identification data, ignored by the server for this variant (the user is
-        ///     already identified via the PowerAuth signature), but still required to be a non-empty object.
-        ///     Defaults to a dummy value.
+        ///   - additionalData: Custom additional data object passed to the server together with the Re-KYC start request.
         ///   - processType: The process type identification. If not specified, the default process type will be used.
         ///   - completion: Result completion.
         /// - Returns: Operation to observe
         @discardableResult
-        func startReVerification(
-            identification: [String: String] = ["type": "re-kyc"],
+        func startReVerification<T: Encodable>(
+            additionalData: T,
             processType: String?,
             completion: @escaping (Result<ProcessResponse, WPNError>) -> Void
         ) -> Operation? {
             
-            typealias Endpoint = Endpoints.Identification.StartReVerification<[String: String]>
+            typealias Endpoint = Endpoints.Identification.StartReVerification<T>
             
             return networking.post(
-                data: Endpoint.EndpointType.RequestData(.init(identification: identification, processType: processType)),
+                data: Endpoint.EndpointType.RequestData(.init(identification: additionalData, processType: processType)),
                 signedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
