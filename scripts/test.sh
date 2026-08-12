@@ -68,6 +68,7 @@ echo "Starting the test"
 xcrun xcodebuild \
   -project "${XCODE_PROJECT}" \
   -scheme "${XCODE_SCHEME}" \
+  -derivedDataPath "${BUILD_FOLDER}" \
   -resolvePackageDependencies
 
 xcrun xcodebuild \

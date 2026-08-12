@@ -77,7 +77,7 @@ class TestHelper {
         let result = try await activation.activate(otp: otp, activationName: UIDevice.current.name)
         print("activated: \(result.activationFingerprint)")
         
-        // perist with random password
+        // persist with random password
         try await powerAuth.persist()
         
         // verify powerauth status
@@ -176,7 +176,7 @@ extension PowerAuthSDK {
                 if let error {
                     cont.resume(throwing: error)
                 } else {
-                    cont.resume()
+                    cont.resume(returning: ())
                 }
             }
         }
