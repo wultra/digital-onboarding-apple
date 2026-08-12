@@ -278,6 +278,26 @@ class IntegrationTests: BaseTestClass {
     }
     
     @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification after onboarding-based activation`(env: ServerEnvironment) async throws {
+        
+        // This test activates through normal onboarding first, then starts
+        // Re-KYC on that same activation.
+        try await env.test { x in
+            
+            guard try await x.startAndActivate() != nil else {
+                return
+            }
+            
+            let reVerificationResult = try await x.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(reVerificationResult.state.shadowState == .intro)
+            
+            let startResult = try await x.verification.start(consentApprovedByUser: .notRequired)
+            #expect(startResult.shadowState == .documentsToScanSelect)
+            try await x.assertVerificationState(.documentsToScanSelect)
+        }
+    }
+    
+    @Test(arguments: ServerEnvironment.loaded)
     func `re-verification activation flags`(env: ServerEnvironment) async throws {
         
         try await env.test { x in
