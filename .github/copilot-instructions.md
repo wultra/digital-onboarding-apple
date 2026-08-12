@@ -4,7 +4,7 @@
 
 | Task | Command | Notes |
 | --- | --- | --- |
-| Prepare local dependencies | `sh scripts/cart-update.sh` | Useful for initial setup and matches `.github/CONTRIBUTING.md`. The SDK is distributed via SPM and CocoaPods, but local development and CI still build Carthage dependencies. |
+| Prepare local dependencies | `xcrun xcodebuild -project WultraDigitalOnboarding.xcodeproj -scheme WultraDigitalOnboarding -resolvePackageDependencies` | Useful for initial setup. The SDK and its dependencies (PowerAuth mobile SDK, WultraPowerAuthNetworking) are resolved through Swift Package Manager; Xcode also resolves them automatically. Carthage is no longer used. |
 | Build the SDK | `sh scripts/build.sh` | Builds the `WultraDigitalOnboarding` scheme in Release for iPhone Simulator. |
 | Run the full test suite | `./scripts/test.sh` | Runs the `WultraDigitalOnboardingTests` scheme on an auto-detected iOS simulator. |
 | Run tests with environment config | `./scripts/test.sh -config "$CONFIG_JSON"` | Writes the JSON into `WultraDigitalOnboardingTests/config.json` before running the tests. Integration tests depend on that file. |

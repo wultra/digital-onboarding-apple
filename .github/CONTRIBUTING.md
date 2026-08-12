@@ -20,15 +20,14 @@ Before you start development, make sure you have the following prerequisites:
 - macOS machine
 - latest [Xcode](https://developer.apple.com/xcode/) installed
 - [CocoaPods](https://guides.cocoapods.org/using/getting-started.html) installed (`brew install cocoapods`)
-- [Carthage](https://github.com/Carthage/Carthage) installed (`brew install carthage`)
 
-To prepare the project for local development, run this command in the project root:
+The project resolves its dependencies (PowerAuth mobile SDK and WultraPowerAuthNetworking) through Swift Package Manager. To resolve them before building, run this command in the project root:
 
 ```bash
-sh scripts/cart-update.sh
+xcrun xcodebuild -project WultraDigitalOnboarding.xcodeproj -scheme WultraDigitalOnboarding -resolvePackageDependencies
 ```
 
-This downloads and builds Carthage dependencies required by the project.
+Xcode also resolves the packages automatically when you open the project.
 
 CI uses the Xcode selected in `scripts/xcodeselect.sh`. Local development should use the latest Xcode as well.
 
@@ -39,8 +38,6 @@ The most important files and directories are:
 ```text
 digital-onboarding-apple/
 ├── .github/                            # GitHub workflows and contribution docs
-├── Cartfile                            # Carthage dependencies for development
-├── Carthage/                           # Carthage build directory
 ├── docs/                               # Public documentation published to developers portal
 ├── Package.swift                       # Swift Package Manager definition file
 ├── README.md                           # Project overview
@@ -60,7 +57,7 @@ digital-onboarding-apple/
 Before you run tests, make sure:
 
 - `WultraDigitalOnboardingTests/config.json` is configured correctly. See `WultraDigitalOnboardingTests/Readme.md` for the file format.
-- Carthage dependencies are built via `sh scripts/cart-update.sh`.
+- Swift Package Manager dependencies are resolved (Xcode resolves them automatically, or run `xcrun xcodebuild -project WultraDigitalOnboarding.xcodeproj -scheme WultraDigitalOnboardingTests -resolvePackageDependencies`).
 - latest Xcode is selected.
 
 > [!NOTE]

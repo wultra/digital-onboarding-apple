@@ -2,6 +2,9 @@
 
 ## 3.0.0 (TBA)
 
+- **⚠️ BREAKING**: Upgraded to **PowerAuth mobile SDK `2.0.x`** (protocol 4.0) and **WultraPowerAuthNetworking `2.0.x`**.
+- **⚠️ BREAKING**: `WDOVerificationService.finishActivation(...)` `newPassword` now takes `PowerAuthPassword` instead of `PowerAuthCorePassword`. The `PowerAuthCore` module no longer needs to be imported at the call site.
+- **Distribution**: The Xcode project now resolves PowerAuth and WultraPowerAuthNetworking through **Swift Package Manager** instead of Carthage. `Cartfile`, `Cartfile.resolved`, and `scripts/cart-update.sh` were removed.
 - **⚠️ BREAKING**: `WDOVerificationState.otp` now carries only `remainingAttempts`.
 - `WDOConfigurationResponse` now includes optional `otpResendPeriodSeconds` (`nil` on older backends that do not provide the field yet).
 

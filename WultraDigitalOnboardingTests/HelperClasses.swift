@@ -33,14 +33,17 @@ class TestHelper {
     private let environment: ServerEnvironment
     
     init(environment: ServerEnvironment, processType: String, customPaInstance: PowerAuthSDK? = nil) throws {
-        guard let pa = customPaInstance ?? PowerAuthSDK(
-            configuration: .init(
-                instanceId: UUID().uuidString,
-                baseEndpointUrl: environment.esUrl,
-                configuration: environment.mobileConfig
+        let pa: PowerAuthSDK
+        if let customPaInstance {
+            pa = customPaInstance
+        } else {
+            pa = try PowerAuthSDK(
+                configuration: .init(
+                    instanceId: UUID().uuidString,
+                    baseEndpointUrl: environment.esUrl,
+                    configuration: environment.mobileConfig
+                )
             )
-        ) else {
-            throw SimpleError("Failed to create PowerAuthSDK")
         }
         
         self.powerAuth = pa
@@ -75,7 +78,7 @@ class TestHelper {
         print("activated: \(result.activationFingerprint)")
         
         // perist with random password
-        try powerAuth.persist()
+        try await powerAuth.persist()
         
         // verify powerauth status
         let paStatus = try await powerAuth.fetchActivationStatus()
@@ -167,8 +170,16 @@ extension PowerAuthSDK {
         }
     }
     
-    func persist(password: String = UUID().uuidString) throws {
-        return try persistActivation(withPassword: password)
+    func persist(password: String = UUID().uuidString) async throws {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            persistActivation(withPassword: password) { error in
+                if let error {
+                    cont.resume(throwing: error)
+                } else {
+                    cont.resume()
+                }
+            }
+        }
     }
 }
 

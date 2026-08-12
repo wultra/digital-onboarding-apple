@@ -50,7 +50,7 @@ pod 'WultraDigitalOnboarding'
 
 | WDO SDK | PowerAuth SDK |  
 |---------|---------      |
-| `3.0.x` | `1.9.x`       |
+| `3.0.x` | `2.0.x`       |
 | `2.0.x` | `1.9.x`       |
 | `1.3.x` | `1.9.x`       |
 | `1.1.x` - `1.2.x` | `1.8.x`       |

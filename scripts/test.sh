@@ -39,10 +39,6 @@ DESTINATION=$(getSimulatorDestination)
 
 echo "Simulator to use: ${DESTINATION}"
 
-pushd "${SCRIPT_FOLDER}"
-sh cart-update.sh
-popd
-
 pushd "${SCRIPT_FOLDER}/.."
 
 rm -rf "${BUILD_FOLDER}" # clear build folder
@@ -68,6 +64,11 @@ printLogs() {
 trap printLogs EXIT
 
 echo "Starting the test"
+
+xcrun xcodebuild \
+  -project "${XCODE_PROJECT}" \
+  -scheme "${XCODE_SCHEME}" \
+  -resolvePackageDependencies
 
 xcrun xcodebuild \
 	-derivedDataPath "${BUILD_FOLDER}" \

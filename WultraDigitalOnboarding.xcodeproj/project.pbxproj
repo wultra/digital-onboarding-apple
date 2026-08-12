@@ -7,16 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3B2102B681E57F2E3A717AE4 /* PowerAuth2 in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3470AEF93C0ED80784EE40 /* PowerAuth2 */; };
+		8F25D04FA22C14A2822B1D1D /* WultraPowerAuthNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = BED53C8EC722840BF0F049B3 /* WultraPowerAuthNetworking */; };
+		A1A947463E9A6CDE97568C6F /* WultraPowerAuthNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 531F4175B8D783786F555663 /* WultraPowerAuthNetworking */; };
+		B259E92F39C68E8F2A54882F /* PowerAuth2 in Frameworks */ = {isa = PBXBuildFile; productRef = 663BAE239EDF72EF7C3A9F43 /* PowerAuth2 */; };
+		BB4ECFE57FFE49BC106738CD /* WultraPowerAuthNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 42C3D0733A8A98AFB6CBC562 /* WultraPowerAuthNetworking */; };
+		CC57FD4678A2E8C523BDA6AD /* PowerAuth2 in Frameworks */ = {isa = PBXBuildFile; productRef = 4540565FD4CA9E55FF63D63B /* PowerAuth2 */; };
 		DC27FCA32F7BE5AF00D76F21 /* WDOBaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC27FCA22F7BE5AA00D76F21 /* WDOBaseService.swift */; };
 		DC316C5A2F2CD9EB0046F169 /* WultraDigitalOnboarding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; };
-		DC40301D2F47C038007755BE /* PowerAuth2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; };
-		DC40301E2F47C038007755BE /* PowerAuth2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		DC40301F2F47C038007755BE /* PowerAuthCore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */; };
-		DC4030202F47C038007755BE /* PowerAuthCore.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DC4030212F47C038007755BE /* WultraDigitalOnboarding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; };
 		DC4030222F47C038007755BE /* WultraDigitalOnboarding.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		DC4030252F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */; };
-		DC4030262F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DC75BBAF2A1521B0009C2901 /* WDOLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9B2A1521B0009C2901 /* WDOLogger.swift */; };
 		DC75BBB02A1521B0009C2901 /* KeychainWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9C2A1521B0009C2901 /* KeychainWrapper.swift */; };
 		DC75BBB12A1521B0009C2901 /* WDOVerificationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BB9E2A1521B0009C2901 /* WDOVerificationState.swift */; };
@@ -32,9 +32,6 @@
 		DC75BBBC2A1521B0009C2901 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BBAB2A1521B0009C2901 /* Utils.swift */; };
 		DC75BBBD2A1521B0009C2901 /* WDOActivationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BBAD2A1521B0009C2901 /* WDOActivationService.swift */; };
 		DC75BBBE2A1521B0009C2901 /* PowerAuthExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BBAE2A1521B0009C2901 /* PowerAuthExtensions.swift */; };
-		DC75BBC32A152344009C2901 /* WultraPowerAuthNetworking.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */; };
-		DC75BBC52A152344009C2901 /* PowerAuth2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */; };
-		DC75BBC72A152344009C2901 /* PowerAuthCore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */; };
 		DC75BBCF2A152855009C2901 /* WDODocumentFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC75BBCE2A152855009C2901 /* WDODocumentFile.swift */; };
 		EAB4E7AE2ED882C6008BBDBF /* WDOConfigurationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB4E7AC2ED882C6008BBDBF /* WDOConfigurationService.swift */; };
 		EABE7CBD2F0E6B5A006D1232 /* ConsentObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = EABE7CBC2F0E6B5A006D1232 /* ConsentObjects.swift */; };
@@ -73,9 +70,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				DC4030222F47C038007755BE /* WultraDigitalOnboarding.framework in Embed Frameworks */,
-				DC4030202F47C038007755BE /* PowerAuthCore.xcframework in Embed Frameworks */,
-				DC4030262F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Embed Frameworks */,
-				DC40301E2F47C038007755BE /* PowerAuth2.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -102,9 +96,6 @@
 		DC75BBAB2A1521B0009C2901 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		DC75BBAD2A1521B0009C2901 /* WDOActivationService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WDOActivationService.swift; sourceTree = "<group>"; };
 		DC75BBAE2A1521B0009C2901 /* PowerAuthExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PowerAuthExtensions.swift; sourceTree = "<group>"; };
-		DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WultraPowerAuthNetworking.xcframework; path = Carthage/Build/WultraPowerAuthNetworking.xcframework; sourceTree = "<group>"; };
-		DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = PowerAuth2.xcframework; path = Carthage/Build/PowerAuth2.xcframework; sourceTree = "<group>"; };
-		DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = PowerAuthCore.xcframework; path = Carthage/Build/PowerAuthCore.xcframework; sourceTree = "<group>"; };
 		DC75BBCE2A152855009C2901 /* WDODocumentFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WDODocumentFile.swift; sourceTree = "<group>"; };
 		EAB4E7AC2ED882C6008BBDBF /* WDOConfigurationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WDOConfigurationService.swift; sourceTree = "<group>"; };
 		EABE7CBC2F0E6B5A006D1232 /* ConsentObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentObjects.swift; sourceTree = "<group>"; };
@@ -112,8 +103,28 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		DC316C572F2CD9EB0046F169 /* WultraDigitalOnboardingTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = WultraDigitalOnboardingTests; sourceTree = "<group>"; };
-		DC402FF02F45C247007755BE /* WDOHostApp */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = WDOHostApp; sourceTree = "<group>"; };
+		DC316C572F2CD9EB0046F169 /* WultraDigitalOnboardingTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = WultraDigitalOnboardingTests;
+			sourceTree = "<group>";
+		};
+		DC402FF02F45C247007755BE /* WDOHostApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = WDOHostApp;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +133,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC316C5A2F2CD9EB0046F169 /* WultraDigitalOnboarding.framework in Frameworks */,
+				CC57FD4678A2E8C523BDA6AD /* PowerAuth2 in Frameworks */,
+				8F25D04FA22C14A2822B1D1D /* WultraPowerAuthNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,9 +143,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC4030212F47C038007755BE /* WultraDigitalOnboarding.framework in Frameworks */,
-				DC40301F2F47C038007755BE /* PowerAuthCore.xcframework in Frameworks */,
-				DC4030252F47C038007755BE /* WultraPowerAuthNetworking.xcframework in Frameworks */,
-				DC40301D2F47C038007755BE /* PowerAuth2.xcframework in Frameworks */,
+				3B2102B681E57F2E3A717AE4 /* PowerAuth2 in Frameworks */,
+				BB4ECFE57FFE49BC106738CD /* WultraPowerAuthNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -140,9 +152,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DC75BBC72A152344009C2901 /* PowerAuthCore.xcframework in Frameworks */,
-				DC75BBC52A152344009C2901 /* PowerAuth2.xcframework in Frameworks */,
-				DC75BBC32A152344009C2901 /* WultraPowerAuthNetworking.xcframework in Frameworks */,
+				B259E92F39C68E8F2A54882F /* PowerAuth2 in Frameworks */,
+				A1A947463E9A6CDE97568C6F /* WultraPowerAuthNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,9 +234,6 @@
 		DC75BBBF2A152344009C2901 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				DC75BBC12A152344009C2901 /* PowerAuth2.xcframework */,
-				DC75BBC22A152344009C2901 /* PowerAuthCore.xcframework */,
-				DC75BBC02A152344009C2901 /* WultraPowerAuthNetworking.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -303,6 +311,8 @@
 			);
 			name = WultraDigitalOnboardingTests;
 			packageProductDependencies = (
+				4540565FD4CA9E55FF63D63B /* PowerAuth2 */,
+				BED53C8EC722840BF0F049B3 /* WultraPowerAuthNetworking */,
 			);
 			productName = WultraDigitalOnboardingTests;
 			productReference = DC316C562F2CD9EB0046F169 /* WultraDigitalOnboardingTests.xctest */;
@@ -327,6 +337,8 @@
 			);
 			name = WDOHostApp;
 			packageProductDependencies = (
+				7C3470AEF93C0ED80784EE40 /* PowerAuth2 */,
+				42C3D0733A8A98AFB6CBC562 /* WultraPowerAuthNetworking */,
 			);
 			productName = WDOHostApp;
 			productReference = DC402FEF2F45C247007755BE /* WDOHostApp.app */;
@@ -347,6 +359,10 @@
 			dependencies = (
 			);
 			name = WultraDigitalOnboarding;
+			packageProductDependencies = (
+				663BAE239EDF72EF7C3A9F43 /* PowerAuth2 */,
+				531F4175B8D783786F555663 /* WultraPowerAuthNetworking */,
+			);
 			productName = WultraDigitalOnboarding;
 			productReference = DC75BB8E2A151FEB009C2901 /* WultraDigitalOnboarding.framework */;
 			productType = "com.apple.product-type.framework";
@@ -382,6 +398,10 @@
 				Base,
 			);
 			mainGroup = DC75BB842A151FEB009C2901;
+			packageReferences = (
+				5DB191BE638C126A9FD19EB8 /* XCRemoteSwiftPackageReference "powerauth-mobile-sdk" */,
+				A3060C6A5F5ACE1043EB11ED /* XCRemoteSwiftPackageReference "networking-apple" */,
+			);
 			productRefGroup = DC75BB8F2A151FEB009C2901 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -856,6 +876,58 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5DB191BE638C126A9FD19EB8 /* XCRemoteSwiftPackageReference "powerauth-mobile-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/wultra/powerauth-mobile-sdk.git";
+			requirement = {
+				kind = revision;
+				revision = "2.0.0-rc1";
+			};
+		};
+		A3060C6A5F5ACE1043EB11ED /* XCRemoteSwiftPackageReference "networking-apple" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/wultra/networking-apple.git";
+			requirement = {
+				kind = revision;
+				revision = "2.0.0-RC1";
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		42C3D0733A8A98AFB6CBC562 /* WultraPowerAuthNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3060C6A5F5ACE1043EB11ED /* XCRemoteSwiftPackageReference "networking-apple" */;
+			productName = WultraPowerAuthNetworking;
+		};
+		4540565FD4CA9E55FF63D63B /* PowerAuth2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5DB191BE638C126A9FD19EB8 /* XCRemoteSwiftPackageReference "powerauth-mobile-sdk" */;
+			productName = PowerAuth2;
+		};
+		531F4175B8D783786F555663 /* WultraPowerAuthNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3060C6A5F5ACE1043EB11ED /* XCRemoteSwiftPackageReference "networking-apple" */;
+			productName = WultraPowerAuthNetworking;
+		};
+		663BAE239EDF72EF7C3A9F43 /* PowerAuth2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5DB191BE638C126A9FD19EB8 /* XCRemoteSwiftPackageReference "powerauth-mobile-sdk" */;
+			productName = PowerAuth2;
+		};
+		7C3470AEF93C0ED80784EE40 /* PowerAuth2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5DB191BE638C126A9FD19EB8 /* XCRemoteSwiftPackageReference "powerauth-mobile-sdk" */;
+			productName = PowerAuth2;
+		};
+		BED53C8EC722840BF0F049B3 /* WultraPowerAuthNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3060C6A5F5ACE1043EB11ED /* XCRemoteSwiftPackageReference "networking-apple" */;
+			productName = WultraPowerAuthNetworking;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DC75BB852A151FEB009C2901 /* Project object */;
 }
