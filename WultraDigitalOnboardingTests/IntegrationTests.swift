@@ -289,22 +289,24 @@ class IntegrationTests: BaseTestClass {
             try await x.prepareCodeActivation()
             
             let statusBeforeReVerification = try await x.powerAuth.fetchActivationStatus()
-            #expect(!statusBeforeReVerification.reKycInProgress)
-            #expect(!statusBeforeReVerification.needReVerification)
+            #expect(statusBeforeReVerification.needVerification == false)
+            #expect(statusBeforeReVerification.reKycInProgress == false)
             
             // `startReVerification` alone does not set any activation flag - the server only sets
-            // RE_KYC_IN_PROGRESS once `identity/init` is called.
+            // the flag once `identity/init` is called. By default, that's the same `VERIFICATION_IN_PROGRESS`
+            // flag used by a regular verification (covered by `needVerification`); the test server's
+            // "re-kyc" process type is configured to use the dedicated `RE_KYC_IN_PROGRESS` flag instead.
             _ = try await x.verification.startReVerification(processType: env.reKycProcessType)
             
             let statusAfterStart = try await x.powerAuth.fetchActivationStatus()
-            #expect(!statusAfterStart.reKycInProgress)
-            #expect(!statusAfterStart.needReVerification)
+            #expect(statusAfterStart.needVerification == false)
+            #expect(statusAfterStart.reKycInProgress == false)
             
             _ = try await x.verification.start(consentApprovedByUser: .notRequired)
             
             let statusAfterInit = try await x.powerAuth.fetchActivationStatus()
+            #expect(statusAfterInit.needVerification)
             #expect(statusAfterInit.reKycInProgress)
-            #expect(statusAfterInit.needReVerification)
         }
     }
     

@@ -196,7 +196,7 @@ In some cases, you might require the user to repeat identity verification even t
 
 To start such a process, call `startReVerification`. Unlike `WDOActivationService.start`, this call does not create a new PowerAuth activation - it reuses the current one and is authenticated with a PowerAuth POSSESSION (1FA) signature instead of user-provided credentials. You can pass `additionalData` in a similar manner as passing `credentials` to `start`.
 
-Once `startReVerification` succeeds, the same activation flags used for a regular verification are used to track progress: `PowerAuthActivationStatus.needReVerification` (or `reKycInProgress`, mirroring `RE_KYC_IN_PROGRESS`) becomes `true` and stays `true` until the verification process finishes.
+Once `startReVerification` succeeds, progress is tracked the same way as with a regular verification: `PowerAuthActivationStatus.needVerification` becomes `true` and stays `true` until the process finishes.
 
 ```swift
 /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
@@ -234,11 +234,14 @@ verification.startReVerification { result in
     }
 }
 
-// After an app restart (or any time later), check `reKycInProgress` to find out whether a
-// Re-KYC is already in progress and resume it with the regular verification flow, e.g.
-// starting from the `documentsToScanSelect` state, without calling `startReVerification` again.
+// After an app restart (or any time later), check `needVerification` to find out whether a
+// verification (including a Re-KYC started this way) is already in progress and resume it with
+// the regular verification flow, e.g. starting from the `documentsToScanSelect` state, without
+// calling `startReVerification` again. The backend process can be configured to signal Re-KYC with
+// an arbitrary custom flag name instead of the standard one - `reKycInProgress` covers the common
+// `RE_KYC_IN_PROGRESS` convention, otherwise check `activationFlags` for your specific flag name.
 powerAuth.fetchActivationStatus { status, error in
-    guard let status, status.reKycInProgress else {
+    guard let status, status.needVerification else {
         return
     }
     // continue with the regular verification flow, e.g. verification.status()
