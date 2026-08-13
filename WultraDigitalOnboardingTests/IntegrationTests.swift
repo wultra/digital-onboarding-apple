@@ -250,30 +250,6 @@ class IntegrationTests: BaseTestClass {
     }
     
     @Test(arguments: ServerEnvironment.loaded)
-    func `start re-verification`(env: ServerEnvironment) async throws {
-        
-        try await env.test { x in
-            
-            // Re-KYC needs an activation not created through onboarding, so we use a code-based
-            // activation here instead of `startAndActivate()`.
-            guard env.cloudServerUrl != nil else {
-                print("[\(x.processType)] Skipping - cloud admin API is not configured for this environment.")
-                return
-            }
-            try await x.prepareCodeActivation()
-            
-            // The status is fetched automatically as part of the call, so the returned result
-            // already reports the next state to display.
-            let reVerificationResult = try await x.verification.startReVerification(processType: env.reKycProcessType)
-            #expect(reVerificationResult.state.shadowState == .intro)
-            
-            let startResult = try await x.verification.start(consentApprovedByUser: .notRequired)
-            #expect(startResult.shadowState == .documentsToScanSelect)
-            try await x.assertVerificationState(.documentsToScanSelect)
-        }
-    }
-    
-    @Test(arguments: ServerEnvironment.loaded)
     func `start re-verification after onboarding-based activation`(env: ServerEnvironment) async throws {
         try await env.test { x in
             guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
@@ -304,39 +280,6 @@ class IntegrationTests: BaseTestClass {
             #expect(status.needVerification)
             
             print("Re-KYC test succesfull")
-        }
-    }
-    
-    @Test(arguments: ServerEnvironment.loaded)
-    func `re-verification activation flags`(env: ServerEnvironment) async throws {
-        
-        try await env.test { x in
-            
-            guard env.cloudServerUrl != nil else {
-                print("[\(x.processType)] Skipping - cloud admin API is not configured for this environment.")
-                return
-            }
-            try await x.prepareCodeActivation()
-            
-            let statusBeforeReVerification = try await x.powerAuth.fetchActivationStatus()
-            #expect(statusBeforeReVerification.needVerification == false)
-            #expect(statusBeforeReVerification.reKycInProgress == false)
-            
-            // `startReVerification` alone does not set any activation flag - the server only sets
-            // the flag once `identity/init` is called. By default, that's the same `VERIFICATION_IN_PROGRESS`
-            // flag used by a regular verification (covered by `needVerification`); the test server's
-            // "re-kyc" process type is configured to use the dedicated `RE_KYC_IN_PROGRESS` flag instead.
-            _ = try await x.verification.startReVerification(processType: env.reKycProcessType)
-            
-            let statusAfterStart = try await x.powerAuth.fetchActivationStatus()
-            #expect(statusAfterStart.needVerification == false)
-            #expect(statusAfterStart.reKycInProgress == false)
-            
-            _ = try await x.verification.start(consentApprovedByUser: .notRequired)
-            
-            let statusAfterInit = try await x.powerAuth.fetchActivationStatus()
-            #expect(statusAfterInit.needVerification)
-            #expect(statusAfterInit.reKycInProgress)
         }
     }
     

@@ -15,11 +15,7 @@ The file format is:
       "mobileConfig": "...",
       "otpMock": "AUTO",
       "servicesMock": true,
-      "reKycProcessType": "re-kyc",
-      "cloudServerUrl": "https://example.com/powerauth-cloud",
-      "cloudServerLogin": "...",
-      "cloudServerPassword": "...",
-      "cloudApplicationId": "..."
+      "reKycProcessType": "re-kyc"
     }
   ]
 }
@@ -36,7 +32,6 @@ The file format is:
 - `otpMock`: OTP detail endpoint strategy.
 - `servicesMock`: Whether the environment supports mocked downstream services required by the full integration flow.
 - `reKycProcessType`: Process type configured on the server with `existingActivation=true`, used by the Re-KYC integration tests. Defaults to `"re-kyc"` when not present.
-- `cloudServerUrl` / `cloudServerLogin` / `cloudServerPassword` / `cloudApplicationId`: PowerAuth Cloud admin API connection, used to create an activation code directly (via `POST /v2/registrations`), bypassing the onboarding process. Required for the Re-KYC integration tests (`start re-verification`, `re-verification activation flags`); these tests are skipped when omitted.
 
 ## `otpMock` values
 
