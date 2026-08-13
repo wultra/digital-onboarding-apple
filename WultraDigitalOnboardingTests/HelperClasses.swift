@@ -30,7 +30,7 @@ class TestHelper {
     let processType: String
     /// Credentials used for activation (set after `startAndActivate`).
     private(set) var lastCredentials: SampleCredentials?
-
+    
     private let environment: ServerEnvironment
     
     init(environment: ServerEnvironment, processType: String, customPaInstance: PowerAuthSDK? = nil) throws {
@@ -85,7 +85,7 @@ class TestHelper {
     }
     
     func startAndActivate(credentials: SampleCredentials = .demo()) async throws -> (config: WDOConfigurationResponse, consentRequired: Bool)? {
-
+        
         lastCredentials = credentials
         let config = try await getConfig()
         try await start(credentials: credentials)
@@ -103,31 +103,31 @@ class TestHelper {
         
         return (config, consent)
     }
-
+    
     /// Runs `startAndActivate()` and then completes the whole verification flow
     func startAndActivateAndVerify(credentials: SampleCredentials = .demo()) async throws -> PowerAuthSDK? {
         guard let (config, consentRequired) = try await startAndActivate(credentials: credentials) else {
             return nil
         }
-
+        
         let startResult = try await verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
         guard startResult.shadowState == .documentsToScanSelect else {
             throw SimpleError("[\(processType)] Expected documentsToScanSelect after start(), got: \(startResult.shadowState)")
         }
-
+        
         let documentsToScan = config.getDocumentsToScan()
         _ = try await verification.documentsSetSelectedTypes(types: documentsToScan.map { $0.patchedType })
-
+        
         guard environment.servicesMock else {
             print("[\(processType)] Cannot complete verification to success — servicesMock is disabled for '\(environment.name)'")
             return nil
         }
-
+        
         func waitForNonProcessingStatus() async throws -> WDOVerificationState {
             let pollIntervalSeconds: Double = 3
             let maxRetries = 10
             var retryCount = 0
-
+            
             var statusResult = try await verification.status()
             while statusResult.state.shadowState == .processing {
                 guard retryCount < maxRetries else {
@@ -139,22 +139,22 @@ class TestHelper {
             }
             return statusResult.state
         }
-
+        
         var state = try await waitForNonProcessingStatus()
-
+        
         if state.shadowState == .scanDocument {
             for doc in documentsToScan {
                 _ = try await verification.documentsSubmit(files: try doc.uploadFiles())
                 state = try await waitForNonProcessingStatus()
             }
         }
-
+        
         if state.shadowState == .presenceCheck {
             _ = try await verification.presenceCheckInit()
             _ = try await verification.presenceCheckSubmit()
             state = try await waitForNonProcessingStatus()
         }
-
+        
         if state.shadowState == .otp {
             let otp = try await verification.getOTP(strategy: environment.otpGetDetailStrategy)
             let otpResult = try await verification.verifyOTP(otp: otp)
@@ -163,9 +163,9 @@ class TestHelper {
                 state = try await waitForNonProcessingStatus()
             }
         }
-
+        
         var activePowerAuth = powerAuth
-
+        
         if state.shadowState == .activationFinish {
             guard let newPa = PowerAuthSDK(configuration: .init(
                 instanceId: UUID().uuidString,
@@ -185,18 +185,19 @@ class TestHelper {
             state = finishResult.state
             activePowerAuth = newPa
         }
-
+        
         guard state.shadowState == .success else {
             throw SimpleError("[\(processType)] Expected success after completing verification, got: \(state.shadowState)")
         }
-
+        
         return activePowerAuth
     }
-
+    
     func assertVerificationState(_ expectedState: VerificationStateShadow) async throws {
         let status = try await verification.status()
         #expect(status.state.shadowState == expectedState)
     }
+}
 
 extension ServerEnvironment {
     func test(customPaInstance: PowerAuthSDK? = nil, completion: (TestHelper) async throws -> Void) async throws {
