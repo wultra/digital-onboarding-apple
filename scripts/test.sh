@@ -33,12 +33,6 @@ do
 	esac
 done
 
-# Resolve the newest available iOS Simulator destination through the shared Node helper.
-echo "Resolving the best simulator for the ${XCODE_SCHEME}..."
-DESTINATION=$(getSimulatorDestination)
-
-echo "Simulator to use: ${DESTINATION}"
-
 pushd "${SCRIPT_FOLDER}/.."
 
 rm -rf "${BUILD_FOLDER}" # clear build folder
@@ -70,6 +64,14 @@ xcrun xcodebuild \
   -project "${XCODE_PROJECT}" \
   -scheme "${XCODE_SCHEME}" \
   -resolvePackageDependencies
+
+# Resolve the newest available iOS Simulator destination through the shared Node helper.
+# This must run after package resolution because the helper invokes xcodebuild with
+# -disableAutomaticPackageResolution and needs a Package.resolved file to be present.
+echo "Resolving the best simulator for the ${XCODE_SCHEME}..."
+DESTINATION=$(getSimulatorDestination)
+
+echo "Simulator to use: ${DESTINATION}"
 
 echo "Starting the test"
 
