@@ -17,6 +17,7 @@
 import UIKit
 import Testing
 import PowerAuth2
+import PowerAuthCore
 @testable import WultraDigitalOnboarding
 internal import WultraPowerAuthNetworking
 
@@ -102,7 +103,96 @@ class TestHelper {
         
         return (config, consent)
     }
-    
+
+    /// Runs `startAndActivate()` and then completes the whole verification flow
+    func startAndActivateAndVerify(credentials: SampleCredentials = .demo()) async throws -> PowerAuthSDK? {
+        guard let (config, consentRequired) = try await startAndActivate(credentials: credentials) else {
+            return nil
+        }
+
+        let startResult = try await verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
+        guard startResult.shadowState == .documentsToScanSelect else {
+            throw SimpleError("[\(processType)] Expected documentsToScanSelect after start(), got: \(startResult.shadowState)")
+        }
+
+        let documentsToScan = config.getDocumentsToScan()
+        _ = try await verification.documentsSetSelectedTypes(types: documentsToScan.map { $0.patchedType })
+
+        guard environment.servicesMock else {
+            print("[\(processType)] Cannot complete verification to success — servicesMock is disabled for '\(environment.name)'")
+            return nil
+        }
+
+        func waitForNonProcessingStatus() async throws -> WDOVerificationState {
+            let pollIntervalSeconds: Double = 3
+            let maxRetries = 10
+            var retryCount = 0
+
+            var statusResult = try await verification.status()
+            while statusResult.state.shadowState == .processing {
+                guard retryCount < maxRetries else {
+                    throw SimpleError("[\(processType)] Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+                }
+                retryCount += 1
+                try await Task.sleep(for: .seconds(pollIntervalSeconds))
+                statusResult = try await verification.status()
+            }
+            return statusResult.state
+        }
+
+        var state = try await waitForNonProcessingStatus()
+
+        if state.shadowState == .scanDocument {
+            for doc in documentsToScan {
+                _ = try await verification.documentsSubmit(files: try doc.uploadFiles())
+                state = try await waitForNonProcessingStatus()
+            }
+        }
+
+        if state.shadowState == .presenceCheck {
+            _ = try await verification.presenceCheckInit()
+            _ = try await verification.presenceCheckSubmit()
+            state = try await waitForNonProcessingStatus()
+        }
+
+        if state.shadowState == .otp {
+            let otp = try await verification.getOTP(strategy: environment.otpGetDetailStrategy)
+            let otpResult = try await verification.verifyOTP(otp: otp)
+            state = otpResult.state
+            if state.shadowState == .processing {
+                state = try await waitForNonProcessingStatus()
+            }
+        }
+
+        var activePowerAuth = powerAuth
+
+        if state.shadowState == .activationFinish {
+            guard let newPa = PowerAuthSDK(configuration: .init(
+                instanceId: UUID().uuidString,
+                baseEndpointUrl: environment.esUrl,
+                configuration: environment.mobileConfig
+            )) else {
+                throw SimpleError("[\(processType)] Failed to create PowerAuthSDK for activation finish")
+            }
+            let password = PowerAuthCorePassword(string: "1234")
+            let finishResult = try await verification.finishActivation(
+                newPowerAuthInstance: newPa,
+                newActivationName: UIDevice.current.name,
+                newPassword: password,
+                validatePassword: false,
+                userIdentification: nil
+            )
+            state = finishResult.state
+            activePowerAuth = newPa
+        }
+
+        guard state.shadowState == .success else {
+            throw SimpleError("[\(processType)] Expected success after completing verification, got: \(state.shadowState)")
+        }
+
+        return activePowerAuth
+    }
+
     func assertVerificationState(_ expectedState: VerificationStateShadow) async throws {
         let status = try await verification.status()
         #expect(status.state.shadowState == expectedState)
@@ -320,6 +410,49 @@ extension ServerEnvironment {
             fatalError("Config file config.json at path \(configPath) cannot be parsed: \(error)")
         }
     }()
+}
+
+extension WDOConfigurationDocument {
+    // TODO: Remove me after 2026
+    // There was a BUG on a server, where driving license was named incorrectly
+    // This fixes it in environments where it wasn't deployed yet.
+    var patchedType: WDODocumentType {
+        if type == "DRIVING_LICENCE" {
+            return "DRIVING_LICENSE"
+        }
+        return type
+    }
+
+    /// Returns test data for given document.
+    /// It is expected that the receiver is a mock service. Sending just the JSON instruction for the mock server.
+    func getMockDocumentToUpload(side: WDODocumentSide) throws -> WDODocumentFile {
+
+        let mockType: String
+
+        switch patchedType {
+        case "DRIVING_LICENSE": mockType = "Dl"
+        case "ID_CARD": mockType = "Id"
+        case "PASSPORT": mockType = "Passport"
+        default: throw SimpleError("Unsupported \(patchedType) document type for testing")
+        }
+
+        let json = "{\"type\": \"\(mockType)\", \"isoAlpha3CountryCode\": \"\(country ?? "CZE")\"}"
+
+        guard let data = json.data(using: .utf8) else {
+            throw SimpleError("Failed to encode json to Data for \(patchedType): \(json)")
+        }
+
+        return WDODocumentFile(data: data, type: patchedType, side: side, originalDocumentId: nil, dataSignature: nil)
+    }
+
+    /// Builds the mock file(s) for a document upload, covering both sides when the document requires it.
+    func uploadFiles() throws -> [WDODocumentFile] {
+        var files = [try getMockDocumentToUpload(side: .front)]
+        if sideCount == 2 {
+            files.append(try getMockDocumentToUpload(side: .back))
+        }
+        return files
+    }
 }
 
 extension WDOVerificationState {

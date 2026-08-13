@@ -181,11 +181,7 @@ class IntegrationTests: BaseTestClass {
                     throw SimpleError("[\(x.processType)] Unexpected state: \(state.shadowState)")
                 }
                 for doc in documentsToScan {
-                    var filesToUpload = [try doc.getMockDocumentToUpload(side: .front)]
-                    if doc.sideCount == 2 {
-                        filesToUpload.append(try doc.getMockDocumentToUpload(side: .back))
-                    }
-                    _ = try await x.verification.documentsSubmit(files: filesToUpload)
+                    _ = try await x.verification.documentsSubmit(files: try doc.uploadFiles())
                     state = try await waitForNonProcessingStatus()
                 }
             }
@@ -279,21 +275,35 @@ class IntegrationTests: BaseTestClass {
     
     @Test(arguments: ServerEnvironment.loaded)
     func `start re-verification after onboarding-based activation`(env: ServerEnvironment) async throws {
-        
-        // This test activates through normal onboarding first, then starts
-        // Re-KYC on that same activation.
         try await env.test { x in
-            
-            guard try await x.startAndActivate() != nil else {
+            guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
                 return
             }
-            
-            let reVerificationResult = try await x.verification.startReVerification(processType: env.reKycProcessType)
+
+            let preReKycStatus = try await activePowerAuth.fetchActivationStatus()
+            #expect(preReKycStatus.needVerification == false)
+
+            // Re-KYC operates on the now-active PowerAuth instance, which may differ from x.powerAuth
+            // if activationFinish swapped to a new one.
+            let reKycHelper = try TestHelper(environment: env, processType: x.processType, customPaInstance: activePowerAuth)
+
+            let reVerificationResult = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
             #expect(reVerificationResult.state.shadowState == .intro)
-            
-            let startResult = try await x.verification.start(consentApprovedByUser: .notRequired)
+
+            // startReVerification alone must not flip needVerification yet - only `identity/init`
+            // (triggered by the subsequent `start(consentApprovedByUser:)` call) does that.
+            let statusAfterReVerification = try await activePowerAuth.fetchActivationStatus()
+            #expect(statusAfterReVerification.needVerification == false)
+
+            let startResult = try await reKycHelper.verification.start(consentApprovedByUser: .notRequired)
             #expect(startResult.shadowState == .documentsToScanSelect)
-            try await x.assertVerificationState(.documentsToScanSelect)
+            try await reKycHelper.assertVerificationState(.documentsToScanSelect)
+
+            // The reliable check regardless of which flag name the backend uses.
+            let status = try await activePowerAuth.fetchActivationStatus()
+            #expect(status.needVerification)
+            
+            print("Re-KYC test succesfull")
         }
     }
     
@@ -397,36 +407,3 @@ extension WDOConfigurationResponse {
     }
 }
 
-private extension WDOConfigurationDocument {
-    // TODO: Remove me after 2026
-    // There was a BUG on a server, where driving license was named incorrectly
-    // This fixes it in environments where it wasn't deployed yet.
-    var patchedType: WDODocumentType {
-        if type == "DRIVING_LICENCE" {
-            return "DRIVING_LICENSE"
-        }
-        return type
-    }
-    
-    /// Returns test data for given document.
-    /// It is expected that the receiver is a mock service. Sending just the JSON instruction for the mock server.
-    func getMockDocumentToUpload(side: WDODocumentSide) throws -> WDODocumentFile {
-        
-        let mockType: String
-        
-        switch patchedType {
-        case "DRIVING_LICENSE": mockType = "Dl"
-        case "ID_CARD": mockType = "Id"
-        case "PASSPORT": mockType = "Passport"
-        default: throw SimpleError("Unsupported \(patchedType) document type for testing")
-        }
-        
-        let json = "{\"type\": \"\(mockType)\", \"isoAlpha3CountryCode\": \"\(country ?? "CZE")\"}"
-        
-        guard let data = json.data(using: .utf8) else {
-            throw SimpleError("Failed to encode json to Data for \(patchedType): \(json)")
-        }
-        
-        return WDODocumentFile(data: data, type: patchedType, side: side, originalDocumentId: nil, dataSignature: nil)
-    }
-}
