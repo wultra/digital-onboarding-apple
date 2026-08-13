@@ -10,7 +10,6 @@
 | Run tests with environment config | `./scripts/test.sh -config "$CONFIG_JSON"` | Writes the JSON into `WultraDigitalOnboardingTests/config.json` before running the tests. Integration tests depend on that file. |
 | Run a single test | `xcrun xcodebuild -project WultraDigitalOnboarding.xcodeproj -scheme WultraDigitalOnboardingTests -destination 'platform=iOS Simulator,name=<simulator>,OS=<ios-version>' -only-testing:WultraDigitalOnboardingTests/<SuiteName>/<TestName> test` | Use `xcrun xcodebuild -project WultraDigitalOnboarding.xcodeproj -scheme WultraDigitalOnboardingTests -showdestinations` to pick a valid simulator. Tests use Swift Testing suites from `WultraDigitalOnboardingTests/*.swift`, not XCTest case classes. |
 | Run SwiftLint | `sh scripts/swiftlint.sh` | Downloads and uses a repo-local `./swiftlint` binary (v0.53.0) and matches CI's strict lint run. |
-| Validate the podspec | `pod lib lint --allow-warnings` | Matches `.github/workflows/podlint.yml`. |
 
 `scripts/xcodeselect.sh` pins the CI Xcode selection. If local CLI builds behave differently from CI, compare your active Xcode with that script.
 
