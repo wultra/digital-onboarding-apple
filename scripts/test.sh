@@ -67,16 +67,19 @@ echo "Starting the test"
 
 xcrun xcodebuild \
   -project "${XCODE_PROJECT}" \
-  -scheme "${XCODE_SCHEME}" \
-  -derivedDataPath "${BUILD_FOLDER}" \
-  -resolvePackageDependencies
+  -resolvePackageDependencies \
+  -onlyUsePackageVersionsFromResolvedFile
+
+  echo "Starting the test"
 
 xcrun xcodebuild \
-	-derivedDataPath "${BUILD_FOLDER}" \
+  -derivedDataPath "${BUILD_FOLDER}" \
   -project "${XCODE_PROJECT}" \
   -scheme "${XCODE_SCHEME}" \
   -destination "${DESTINATION}" \
+  -parallel-testing-enabled NO \
   -configuration "Debug" \
+  -onlyUsePackageVersionsFromResolvedFile \
   test
 
 popd
