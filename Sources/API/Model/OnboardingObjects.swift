@@ -61,6 +61,14 @@ enum ActivationType: String, Codable {
     case identity = "IDENTITY"
     /// An already existing (and active) PowerAuth activation is reused for this process (Re-KYC).
     case alreadyExists = "ACTIVATION_ALREADY_EXISTS"
+    /// Value returned by the server is not recognized by this version of the SDK.
+    case unknown
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = ActivationType(rawValue: rawValue) ?? .unknown
+    }
 }
 
 /// Status of the onboarding
