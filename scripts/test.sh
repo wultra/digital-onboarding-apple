@@ -63,14 +63,15 @@ printLogs() {
 # make sure that we search for log files even on exit
 trap printLogs EXIT
 
-echo "Starting the test"
+echo "Resolving Swift Package Manager dependencies"
 
 xcrun xcodebuild \
+  -derivedDataPath "${BUILD_FOLDER}" \
   -project "${XCODE_PROJECT}" \
-  -resolvePackageDependencies \
-  -onlyUsePackageVersionsFromResolvedFile
+  -scheme "${XCODE_SCHEME}" \
+  -resolvePackageDependencies
 
-  echo "Starting the test"
+echo "Starting the test"
 
 xcrun xcodebuild \
   -derivedDataPath "${BUILD_FOLDER}" \
@@ -79,7 +80,6 @@ xcrun xcodebuild \
   -destination "${DESTINATION}" \
   -parallel-testing-enabled NO \
   -configuration "Debug" \
-  -onlyUsePackageVersionsFromResolvedFile \
   test
 
 popd
