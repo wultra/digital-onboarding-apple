@@ -349,4 +349,3 @@ extension WDOConfigurationResponse {
         return selected
     }
 }
-
