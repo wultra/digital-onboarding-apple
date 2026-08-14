@@ -11,8 +11,8 @@ let package = Package(
         .library(name: "WultraDigitalOnboarding", targets: ["WultraDigitalOnboarding"])
     ],
     dependencies: [
-        .package(url: "https://github.com/wultra/powerauth-mobile-sdk.git", from: "2.0.0"),
-        .package(url: "https://github.com/wultra/networking-apple.git", from: "2.0.0")
+        .package(url: "https://github.com/wultra/powerauth-mobile-sdk.git", .upToNextMinor(from: "2.0.0")),
+        .package(url: "https://github.com/wultra/networking-apple.git", .upToNextMinor(from: "2.0.0"))
     ],
     targets: [
         .target(

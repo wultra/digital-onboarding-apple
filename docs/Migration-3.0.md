@@ -6,7 +6,6 @@ This guide covers public API changes between `2.x` and `3.0.x`. This version als
 
 - PowerAuth mobile SDK is now `2.0.x`.
 - WultraPowerAuthNetworking is now `2.0.x`.
-- The Xcode project resolves both dependencies through **Swift Package Manager**. Carthage is no longer used, and `Cartfile`, `Cartfile.resolved`, and `scripts/cart-update.sh` were removed.
 
 Update your app to PowerAuth mobile SDK `2.0.x` before adopting this version.
 
