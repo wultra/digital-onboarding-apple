@@ -33,16 +33,6 @@ do
 	esac
 done
 
-# Resolve the newest available iOS Simulator destination through the shared Node helper.
-echo "Resolving the best simulator for the ${XCODE_SCHEME}..."
-DESTINATION=$(getSimulatorDestination)
-
-echo "Simulator to use: ${DESTINATION}"
-
-pushd "${SCRIPT_FOLDER}"
-sh cart-update.sh
-popd
-
 pushd "${SCRIPT_FOLDER}/.."
 
 rm -rf "${BUILD_FOLDER}" # clear build folder
@@ -67,13 +57,30 @@ printLogs() {
 # make sure that we search for log files even on exit
 trap printLogs EXIT
 
+echo "Resolving Swift Package Manager dependencies"
+
+xcrun xcodebuild \
+  -derivedDataPath "${BUILD_FOLDER}" \
+  -project "${XCODE_PROJECT}" \
+  -scheme "${XCODE_SCHEME}" \
+  -resolvePackageDependencies
+
+# Resolve the newest available iOS Simulator destination through the shared Node helper.
+# This must run after package resolution because the helper invokes xcodebuild with
+# -disableAutomaticPackageResolution and needs a Package.resolved file to be present.
+echo "Resolving the best simulator for the ${XCODE_SCHEME}..."
+DESTINATION=$(getSimulatorDestination)
+
+echo "Simulator to use: ${DESTINATION}"
+
 echo "Starting the test"
 
 xcrun xcodebuild \
-	-derivedDataPath "${BUILD_FOLDER}" \
+  -derivedDataPath "${BUILD_FOLDER}" \
   -project "${XCODE_PROJECT}" \
   -scheme "${XCODE_SCHEME}" \
   -destination "${DESTINATION}" \
+  -parallel-testing-enabled NO \
   -configuration "Debug" \
   test
 
