@@ -17,7 +17,6 @@
 import UIKit
 import Testing
 import PowerAuth2
-import PowerAuthCore
 @testable import WultraDigitalOnboarding
 internal import WultraPowerAuthNetworking
 
@@ -170,14 +169,15 @@ class TestHelper {
         var activePowerAuth = powerAuth
         
         if state.shadowState == .activationFinish {
-            guard let newPa = PowerAuthSDK(configuration: .init(
-                instanceId: UUID().uuidString,
-                baseEndpointUrl: environment.esUrl,
-                configuration: environment.mobileConfig
+            guard let newPa = try? PowerAuthSDK(
+                configuration: .init(
+                    instanceId: UUID().uuidString,
+                    baseEndpointUrl: environment.esUrl,
+                    configuration: environment.mobileConfig
             )) else {
                 throw SimpleError("[\(processType)] Failed to create PowerAuthSDK for activation finish")
             }
-            let password = PowerAuthCorePassword(string: "1234")
+            let password = PowerAuthPassword(string: "1234")
             let finishResult = try await verification.finishActivation(
                 newPowerAuthInstance: newPa,
                 newActivationName: UIDevice.current.name,

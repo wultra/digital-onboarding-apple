@@ -42,7 +42,7 @@ enum Endpoints {
             static var endpoint: EndpointType { .init(endpointURLPath: "/api/identity/status", tokenName: "possession_universal") }
         }
         enum StartReVerification<TRequest: Encodable> {
-            typealias EndpointType = WPNEndpointSigned<WPNRequest<StartReVerificationRequest<TRequest>>, WPNResponse<ProcessResponse>>
+            typealias EndpointType = WPNEndpointAuthenticated<WPNRequest<StartReVerificationRequest<TRequest>>, WPNResponse<ProcessResponse>>
             static var endpoint: EndpointType { .init(endpointURLPath: "/api/onboarding/start", uriId: "/api/onboarding/start", e2ee: .activationScope) }
         }
         enum Init {

@@ -235,7 +235,7 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(identification: additionalData, processType: processType)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)
