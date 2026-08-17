@@ -6,11 +6,14 @@ set -u # stop when undefined variable is used
 
 SCRIPT_FOLDER=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-pushd "${SCRIPT_FOLDER}"
-sh cart-update.sh
-popd
-
 pushd "${SCRIPT_FOLDER}/.."
+
+xcrun xcodebuild \
+    -project "WultraDigitalOnboarding.xcodeproj" \
+    -scheme "WultraDigitalOnboarding" \
+    -configuration "Release" \
+    -sdk "iphonesimulator" \
+    -resolvePackageDependencies
 
 xcrun xcodebuild \
     -project "WultraDigitalOnboarding.xcodeproj" \

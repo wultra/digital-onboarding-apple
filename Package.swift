@@ -11,13 +11,16 @@ let package = Package(
         .library(name: "WultraDigitalOnboarding", targets: ["WultraDigitalOnboarding"])
     ],
     dependencies: [
-        .package(name: "PowerAuth2", url: "https://github.com/wultra/powerauth-mobile-sdk-spm.git", .upToNextMinor(from: "1.9.0")),
-        .package(name: "WultraPowerAuthNetworking", url: "https://github.com/wultra/networking-apple.git", .upToNextMinor(from: "1.5.0"))
+        .package(url: "https://github.com/wultra/powerauth-mobile-sdk.git", .upToNextMinor(from: "2.0.0")),
+        .package(url: "https://github.com/wultra/networking-apple.git", .upToNextMinor(from: "2.0.0"))
     ],
     targets: [
         .target(
             name: "WultraDigitalOnboarding",
-            dependencies: ["PowerAuth2", .product(name: "PowerAuthCore", package: "PowerAuth2"), "WultraPowerAuthNetworking"],
+            dependencies: [
+                .product(name: "PowerAuth2", package: "powerauth-mobile-sdk"),
+                .product(name: "WultraPowerAuthNetworking", package: "networking-apple")
+            ],
             path: "Sources"
         )
     ],

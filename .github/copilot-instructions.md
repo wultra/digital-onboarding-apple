@@ -4,13 +4,12 @@
 
 | Task | Command | Notes |
 | --- | --- | --- |
-| Prepare local dependencies | `sh scripts/cart-update.sh` | Useful for initial setup and matches `.github/CONTRIBUTING.md`. The SDK is distributed via SPM and CocoaPods, but local development and CI still build Carthage dependencies. |
+| Prepare local dependencies | `xcrun xcodebuild -project WultraDigitalOnboarding.xcodeproj -scheme WultraDigitalOnboarding -resolvePackageDependencies` | Useful for initial setup. The SDK and its dependencies (PowerAuth mobile SDK, WultraPowerAuthNetworking) are resolved through Swift Package Manager; Xcode also resolves them automatically. Carthage is no longer used. |
 | Build the SDK | `sh scripts/build.sh` | Builds the `WultraDigitalOnboarding` scheme in Release for iPhone Simulator. |
 | Run the full test suite | `./scripts/test.sh` | Runs the `WultraDigitalOnboardingTests` scheme on an auto-detected iOS simulator. |
 | Run tests with environment config | `./scripts/test.sh -config "$CONFIG_JSON"` | Writes the JSON into `WultraDigitalOnboardingTests/config.json` before running the tests. Integration tests depend on that file. |
 | Run a single test | `xcrun xcodebuild -project WultraDigitalOnboarding.xcodeproj -scheme WultraDigitalOnboardingTests -destination 'platform=iOS Simulator,name=<simulator>,OS=<ios-version>' -only-testing:WultraDigitalOnboardingTests/<SuiteName>/<TestName> test` | Use `xcrun xcodebuild -project WultraDigitalOnboarding.xcodeproj -scheme WultraDigitalOnboardingTests -showdestinations` to pick a valid simulator. Tests use Swift Testing suites from `WultraDigitalOnboardingTests/*.swift`, not XCTest case classes. |
 | Run SwiftLint | `sh scripts/swiftlint.sh` | Downloads and uses a repo-local `./swiftlint` binary (v0.53.0) and matches CI's strict lint run. |
-| Validate the podspec | `pod lib lint --allow-warnings` | Matches `.github/workflows/podlint.yml`. |
 
 `scripts/xcodeselect.sh` pins the CI Xcode selection. If local CLI builds behave differently from CI, compare your active Xcode with that script.
 

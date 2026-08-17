@@ -16,7 +16,6 @@
 
 import Foundation
 import PowerAuth2
-import PowerAuthCore
 import WultraPowerAuthNetworking
 
 /// Service that can verify a previously activated PowerAuthSDK instance.
@@ -557,7 +556,7 @@ public class WDOVerificationService: WDOBaseService {
     public func finishActivation(
         newPowerAuthInstance: PowerAuthSDK,
         newActivationName: String,
-        newPassword: PowerAuthCorePassword,
+        newPassword: PowerAuthPassword,
         validatePassword: Bool,
         userIdentification: Encodable?,
         completion: @escaping (Result<Success, Fail>) -> Void
@@ -650,11 +649,16 @@ public class WDOVerificationService: WDOBaseService {
                     }
                     
                     // persist the activation with the provided password
-                    do {
-                        try newPowerAuthInstance.persistActivation(with: .persistWithPassword(password: newPassword))
-                        self.markCompleted(.success(.success), completion)
-                    } catch let e {
-                        handleError(e, reason: "failed to persist activation")
+                    newPowerAuthInstance.persistActivation(withPassword: newPassword) { [weak self] persistError in
+                        guard let self else {
+                            completion(.failure(.init(.init(reason: .unknown))))
+                            return
+                        }
+                        if let persistError {
+                            handleError(persistError, reason: "failed to persist activation")
+                        } else {
+                            self.markCompleted(.success(.success), completion)
+                        }
                     }
                 }
             }
@@ -669,11 +673,14 @@ public class WDOVerificationService: WDOBaseService {
     ///   - completion Callback called when the password is valid or validation is not required.
     private func validatePasswordIfRequired(
         required: Bool,
-        password: PowerAuthCorePassword,
+        password: PowerAuthPassword,
         completion: @escaping (Error?) -> Void
     ) {
         if required {
-            api.networking.powerAuth.validatePassword(password: password) { error in
+            // `validatePassword` was removed in PowerAuth 2.0. Begin (but do not finish) a
+            // password change to validate the current password against the server; without a
+            // matching `finishPasswordChange` call this has no side effect.
+            api.networking.powerAuth.beginPasswordChange(oldPassword: password) { _, error in
                 completion(error)
             }
         } else {
@@ -1236,7 +1243,7 @@ public extension WDOVerificationService {
     func finishActivation(
         newPowerAuthInstance: PowerAuthSDK,
         newActivationName: String,
-        newPassword: PowerAuthCorePassword,
+        newPassword: PowerAuthPassword,
         validatePassword: Bool,
         userIdentification: Encodable?
     ) async throws -> Success {

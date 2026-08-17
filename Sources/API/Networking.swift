@@ -116,7 +116,7 @@ class Networking {
                 to: Endpoint.endpoint,
                 completion: { (result: WPNResponseBase?, error: WPNError?) in
                     assert(Thread.isMainThread)
-                    if result?.status == .Ok {
+                    if result?.status == .ok {
                         completion(.success(()))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
@@ -172,7 +172,7 @@ class Networking {
                 to: Endpoint.endpoint,
                 completion: { (result: WPNResponseBase?, error: WPNError?) in
                     assert(Thread.isMainThread)
-                    if result?.status == .Ok {
+                    if result?.status == .ok {
                         completion(.success(()))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
@@ -204,7 +204,7 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init()),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)
@@ -261,11 +261,11 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { (result: WPNResponseBase?, error: WPNError?) in
                     assert(Thread.isMainThread)
-                    if result?.status == .Ok {
+                    if result?.status == .ok {
                         completion(.success(()))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
@@ -287,11 +287,11 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)
-                    if result?.status == .Ok {
+                    if result?.status == .ok {
                         completion(.success(()))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
@@ -312,7 +312,7 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)
@@ -339,11 +339,11 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId, approved: approved)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)
-                    if result?.status == .Ok {
+                    if result?.status == .ok {
                         completion(.success(()))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
@@ -366,7 +366,7 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId, attributes: .init(challengeToken: challenge))),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { (result: WPNResponse<SDKInitResponse>?, error: WPNError?) in
                     assert(Thread.isMainThread)
@@ -399,13 +399,13 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(data),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 timeoutInterval: 180,
                 progressCallback: progressCallback,
                 completion: { result, error in
                     assert(Thread.isMainThread)
-                    if result?.status == .Ok {
+                    if result?.status == .ok {
                         completion(.success(()))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
@@ -427,7 +427,7 @@ class Networking {
 
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 timeoutInterval: 120,
                 completion: { result, error in
@@ -455,7 +455,7 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)
@@ -482,11 +482,11 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)
-                    if result?.status == .Ok {
+                    if result?.status == .ok {
                         completion(.success(()))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
@@ -508,11 +508,11 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { (result: WPNResponseBase?, error: WPNError?) in
                     assert(Thread.isMainThread)
-                    if result?.status == .Ok {
+                    if result?.status == .ok {
                         completion(.success(()))
                     } else {
                         completion(.failure(error ?? WPNError(reason: .unknown)))
@@ -561,7 +561,7 @@ class Networking {
             
             return networking.post(
                 data: Endpoint.EndpointType.RequestData(.init(processId: processId, userIdentification: userIdentification)),
-                signedWith: .possession(),
+                authenticatedWith: .possession(),
                 to: Endpoint.endpoint,
                 completion: { result, error in
                     assert(Thread.isMainThread)

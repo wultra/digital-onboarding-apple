@@ -497,7 +497,7 @@ Example:
 ```swift
 let verification: WDOVerificationService // configured instance
 let newPaInstance: PowerAuthSDK // new PowerAuth instance to be activated and then used in the app
-let password = PowerAuthCorePassword(string: "1234") // user entered PIN code
+let password = PowerAuthPassword(string: "1234") // user entered PIN code
 verification.finishActivation(
     newPowerAuthInstance: newPaInstance, 
     newActivationName: "my-new-activation-name", 
