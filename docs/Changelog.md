@@ -1,6 +1,10 @@
 # Changelog
 
-## 3.0.0 (TBA)
+## TBA
+
+- TBA
+
+## 3.0.0
 
 - **⚠️ BREAKING**: Upgraded to **PowerAuth mobile SDK `2.0.x`** (protocol 4.0) and **WultraPowerAuthNetworking `2.0.x`**.
 - **⚠️ BREAKING**: `WDOVerificationService.finishActivation(...)` `newPassword` now takes `PowerAuthPassword` instead of `PowerAuthCorePassword`. The `PowerAuthCore` module no longer needs to be imported at the call site.
@@ -9,7 +13,7 @@
 - Added `WDOVerificationService.startReVerification` to support Re-KYC (repeated identity verification) for an already active PowerAuth instance, without creating a new activation.
 - `ProcessResponse` now contains an optional `activationType` property indicating whether a new activation was created or an existing one was reused.
 
-## 2.0.0 (April, 2026)
+## 2.0.0
 
 - This release requires enrollment onboarding server version 2.1.0 or higher.
 - Added `WDOConfigurationService` and configuration response models.
@@ -37,31 +41,31 @@
 - Demo `getOTP()` now accepts `strategy:` and uses `WDOGetOTPEndpointStrategy`.
 - **Breaking:** Init parameter `config:` (on `WDOActivationService` and `WDOConfigurationService`) and `wpnConfig:` (on `WDOVerificationService`) renamed to `networkingConfig:` for consistency.
 
-## 1.3.0 (October, 2024)
+## 1.3.0
 
 - PowerAuth "server stack" `1.9+` is now required
 - `powerauth-mobile-sdk` v `1.9.x` is now required
 - `networking-apple` v `1.5.x` is now required
 
-## 1.2.0 (July, 2024)
+## 1.2.0
 
 -  `WDOLogger` now provides `delegate` property
 -  `WDOLogger.VerboseLevel` 
     -  renamed `all` -> `debug` 
     -  added an `info` option.
 
-## 1.1.1 (Feb 29, 2024)
+## 1.1.1
 
 -  `WDOActivationService` and `WDOVerificationService` initializers no longer throw exceptions.
 
-## 1.1.0 (Feb 9, 2024)
+## 1.1.0
 
 - Added support for the PowerAuth SDK 1.8.0+
 
-## 1.0.1 (Feb 9, 2024)
+## 1.0.1
 
 - Added documentation
 
-## 1.0.0 (Jan 10, 2024)
+## 1.0.0
 
 Initial release.
