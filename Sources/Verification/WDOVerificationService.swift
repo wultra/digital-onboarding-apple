@@ -198,11 +198,10 @@ public class WDOVerificationService: WDOBaseService {
         }
     }
     
-    /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance, signed with a
-    /// PowerAuth POSSESSION (1FA) signature instead of user-provided credentials.
+    /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
     ///
     /// This automatically fetches the verification status after a successful start, same as `status()`
-    /// would, so the returned result can be used directly to display the next state (usually `intro`).
+    /// would.
     ///
     /// - Parameters:
     ///   - additionalData: Custom additional data object passed to the server together with the Re-KYC start request.
@@ -229,11 +228,10 @@ public class WDOVerificationService: WDOBaseService {
         }
     }
     
-    /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance, signed with a
-    /// PowerAuth POSSESSION (1FA) signature instead of user-provided credentials.
+    /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
     ///
     /// This automatically fetches the verification status after a successful start, same as `status()`
-    /// would, so the returned result can be used directly to display the next state (usually `intro`).
+    /// would.
     ///
     /// - Parameters:
     ///   - processType: The process type identification. If not specified, the default process type will be used.

@@ -194,7 +194,7 @@ When state is `.processing(.onboardingApproval)`, keep polling `status()` until 
 
 In some cases, you might require the user to repeat identity verification even though the `PowerAuthSDK` instance is already fully activated and does not need any verification (`needVerification` is `false`).
 
-To start such a process, call `startReVerification`. Unlike `WDOActivationService.start`, this call does not create a new PowerAuth activation - it reuses the current one and is authenticated with a PowerAuth POSSESSION (1FA) signature instead of user-provided credentials. You can pass `additionalData` in a similar manner as passing `credentials` to `start`.
+To start such a process, call `startReVerification`. Unlike `WDOActivationService.start`, this call does not create a new PowerAuth activation - it reuses the current one. You can pass `additionalData` in a similar manner as passing `credentials` to `start`.
 
 Once the re-verification is initialized (after `start(consentApprovedByUser:)` calls `identity/init`), progress is tracked the same way as with a regular verification: `PowerAuthActivationStatus.needVerification` becomes `true` and stays `true` until the process finishes.
 
@@ -215,7 +215,7 @@ public func startReVerification(processType: String? = nil, completion: @escapin
 public func startReVerification<T: Encodable>(additionalData: T, processType: String? = nil, completion: @escaping (Result<StatusResult, Fail>) -> Void)
 ```
 
-`startReVerification` automatically fetches the verification status right after a successful start (same as calling `status()` would), so the returned result can be used directly to display the next state (usually `intro`), followed by `getConsent()`/`start(consentApprovedByUser:)` as usual.
+`startReVerification` automatically fetches the verification status right after a successful start (same as calling `status()` would).
 
 ```swift
 let powerAuth: PowerAuthSDK // configured and activated PowerAuth instance

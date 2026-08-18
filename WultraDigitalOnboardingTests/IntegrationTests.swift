@@ -283,6 +283,23 @@ class IntegrationTests: BaseTestClass {
     }
     
     @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification called twice in a row`(env: ServerEnvironment) async throws {
+        try await env.test { x in
+            guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
+                return
+            }
+
+            let reKycHelper = try TestHelper(environment: env, processType: x.processType, customPaInstance: activePowerAuth)
+
+            let first = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(first.state.shadowState == .intro, "[\(x.processType)] Expected intro state after first startReVerification, got: \(first.state.shadowState)")
+
+            let second = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(second.state.shadowState == .intro, "[\(x.processType)] Expected intro state after second startReVerification, got: \(second.state.shadowState)")
+        }
+    }
+
+    @Test(arguments: ServerEnvironment.loaded)
     func `cancel verification`(env: ServerEnvironment) async throws {
         
         try await env.test { x in
