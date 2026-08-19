@@ -265,12 +265,16 @@ class IntegrationTests: BaseTestClass {
             let reVerificationResult = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
             #expect(reVerificationResult.state.shadowState == .intro)
 
+            guard case .intro(let consentRequired) = reVerificationResult.state else {
+                throw SimpleError("[\(x.processType)] Expected intro state after startReVerification, got: \(reVerificationResult.state.shadowState)")
+            }
+
             // startReVerification alone must not flip needVerification yet - only `identity/init`
             // (triggered by the subsequent `start(consentApprovedByUser:)` call) does that.
             let statusAfterReVerification = try await activePowerAuth.fetchActivationStatus()
             #expect(statusAfterReVerification.needVerification == false)
 
-            let startResult = try await reKycHelper.verification.start(consentApprovedByUser: .notRequired)
+            let startResult = try await reKycHelper.verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
             #expect(startResult.shadowState == .documentsToScanSelect)
             try await reKycHelper.assertVerificationState(.documentsToScanSelect)
 
