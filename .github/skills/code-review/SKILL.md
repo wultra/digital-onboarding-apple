@@ -1,3 +1,8 @@
+---
+name: code-review
+description: Review pull requests in the Digital Onboarding SDK for Apple platforms. Use when reviewing Swift APIs, onboarding state, identity verification, security, or documentation changes.
+---
+
 # Digital Onboarding Apple SDK review
 
 ## Review contract
