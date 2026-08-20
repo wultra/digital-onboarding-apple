@@ -19,7 +19,7 @@ Elevate your standard device activation, user login, and request signing scenari
 
 ### Other resources
 
-We also provide an [Android version of this library](https://github.com/wultra/digital-onboarding-android).
+We also provide [Android](https://github.com/wultra/digital-onboarding-android) and [Mobile JS](https://github.com/wultra/digital-onboarding-js) versions of this library.
 
 ## What will you need before the implementation
 
@@ -45,9 +45,8 @@ The code of the library is open source and you can freely browse it in our GitHu
 ## Integration Tutorials
 - [SDK Integration](SDK-Integration.md)
 - [Process Configuration](Process-Configuration.md)
-- [Device Activation With Email* Only](Device-Activation.md)
+- [Device Activation (With Weak Credentials)](Device-Activation.md)
 - [Verifying User With Document Scan And Genuine Presence Check](Verifying-User.md)
-- Onboarding a new user _(not available at the moment)_
 - [Error Handling](Error-Handling.md)
 - [Language Configuration](Language-Configuration.md)
 - [Logging](Logging.md)
