@@ -126,6 +126,11 @@ class TestHelper {
     /// - Returns: the PowerAuth instance that ends up active once the flow finishes, or `nil` when
     ///   the flow cannot be completed because `servicesMock` is disabled for the environment.
     func driveVerificationToSuccess(config: WDOConfigurationResponse) async throws -> PowerAuthSDK? {
+        let precondition = try await verification.status()
+        guard precondition.state.shadowState == .documentsToScanSelect else {
+            throw SimpleError("[\(processType)] driveVerificationToSuccess() requires the process to be in documentsToScanSelect state, got: \(precondition.state.shadowState)")
+        }
+        
         let documentsToScan = config.getDocumentsToScan()
         _ = try await verification.documentsSetSelectedTypes(types: documentsToScan.map { $0.patchedType })
         

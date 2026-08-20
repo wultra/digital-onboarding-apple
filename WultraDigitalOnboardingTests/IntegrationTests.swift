@@ -327,6 +327,7 @@ class IntegrationTests: BaseTestClass {
                 let result = try await reKycHelper.verification.startReVerification(processType: unknownProcessType)
                 throw SimpleError("[\(x.processType)] Expected startReVerification with unknown process type '\(unknownProcessType)' to fail, got state: \(result.state.shadowState)")
             } catch let error as WDOVerificationService.Fail {
+                #expect(!error.cause.networkIsNotReachable, "[\(x.processType)] Failure should not be a network connectivity error: \(error.cause)")
                 print("[\(x.processType)] Expected failure for unknown re-KYC process type: \(error.cause)")
             }
 
