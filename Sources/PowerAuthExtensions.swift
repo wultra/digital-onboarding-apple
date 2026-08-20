@@ -84,8 +84,11 @@ public extension PowerAuthSDK {
 
 public extension PowerAuthActivationStatus {
     
-    /// When true, activation needs to be verified via `WDOVerificationService`.
-    var needVerification: Bool { verificationPending || verificationInProgress }
+    /// When true, activation needs to be verified via `WDOVerificationService`. This is also `true`
+    /// when a re-verification (Re-KYC) process, triggered via `WDOVerificationService.startReVerification`,
+    /// is in progress - by default the server signals this with the same flags as a regular verification,
+    /// unless it's configured to use a dedicated flag instead (see `reKycInProgress`).
+    var needVerification: Bool { verificationPending || verificationInProgress || reKycInProgress }
     
     /// Identity Verification is waiting to start.
     var verificationPending: Bool { activationFlags.contains("VERIFICATION_PENDING") }
@@ -93,5 +96,15 @@ public extension PowerAuthActivationStatus {
     /// Identity Verification was already started by the user
     var verificationInProgress: Bool { activationFlags.contains("VERIFICATION_IN_PROGRESS") }
     
-    internal var activationFlags: [String] { customObject?["activationFlags"] as? [String] ?? [] }
+    /// Re-verification (Re-KYC) identity verification process was already initialized by the user.
+    ///
+    /// This checks for the `RE_KYC_IN_PROGRESS` flag, which is only one possible convention - the
+    /// server process configuration allows using an arbitrary custom flag name instead of the standard
+    /// `VERIFICATION_IN_PROGRESS`. If your backend is configured with a different custom flag, this
+    /// property won't detect it; check `activationFlags` for that flag name directly instead.
+    var reKycInProgress: Bool { activationFlags.contains("RE_KYC_IN_PROGRESS") }
+    
+    /// Raw list of activation flags reported by the server, e.g. `VERIFICATION_IN_PROGRESS` or a
+    /// custom Re-KYC flag name configured on the backend process.
+    var activationFlags: [String] { customObject?["activationFlags"] as? [String] ?? [] }
 }

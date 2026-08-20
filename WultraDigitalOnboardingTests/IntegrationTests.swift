@@ -221,11 +221,7 @@ class IntegrationTests: BaseTestClass {
                     throw SimpleError("Unexpected state: \(state.shadowState)")
                 }
                 for doc in documentsToScan {
-                    var filesToUpload = [WDODocumentFile(data: dummyJpeg, type: doc.patchedType, side: .front, originalDocumentId: nil)]
-                    if doc.sideCount == 2 {
-                        filesToUpload.append(WDODocumentFile(data: dummyJpeg, type: doc.patchedType, side: .back, originalDocumentId: nil))
-                    }
-                    _ = try await x.verification.documentsSubmit(files: filesToUpload)
+                    _ = try await x.verification.documentsSubmit(files: try doc.uploadFiles())
                     state = try await waitForNonProcessingStatus()
                 }
             }
@@ -293,6 +289,95 @@ class IntegrationTests: BaseTestClass {
         }
     }
     
+    @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification after onboarding-based activation`(env: ServerEnvironment) async throws {
+        try await env.test { x in
+            guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
+                return
+            }
+
+            let preReKycStatus = try await activePowerAuth.fetchActivationStatus()
+            #expect(preReKycStatus.needVerification == false)
+
+            // Re-KYC operates on the now-active PowerAuth instance, which may differ from x.powerAuth
+            // if activationFinish swapped to a new one.
+            let reKycHelper = try TestHelper(environment: env, processType: env.reKycProcessType, customPaInstance: activePowerAuth)
+
+            let reVerificationResult = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(reVerificationResult.state.shadowState == .intro)
+
+            guard case .intro(let consentRequired) = reVerificationResult.state else {
+                throw SimpleError("[\(x.processType)] Expected intro state after startReVerification, got: \(reVerificationResult.state.shadowState)")
+            }
+
+            // startReVerification alone must not flip needVerification yet - only `identity/init`
+            // (triggered by the subsequent `start(consentApprovedByUser:)` call) does that.
+            let statusAfterReVerification = try await activePowerAuth.fetchActivationStatus()
+            #expect(statusAfterReVerification.needVerification == false)
+
+            let startResult = try await reKycHelper.verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
+            #expect(startResult.shadowState == .documentsToScanSelect)
+            try await reKycHelper.assertVerificationState(.documentsToScanSelect)
+
+            // The reliable check regardless of which flag name the backend uses.
+            let status = try await activePowerAuth.fetchActivationStatus()
+            #expect(status.needVerification)
+
+            // drive the re-verification flow to completion, same as a regular onboarding verification
+            let reKycConfig = try await reKycHelper.getConfig()
+            guard let reKycActivePowerAuth = try await reKycHelper.driveVerificationToSuccess(config: reKycConfig) else {
+                return
+            }
+
+            // once re-verification succeeds, needVerification should be cleared again
+            let finalStatus = try await reKycActivePowerAuth.fetchActivationStatus()
+            #expect(finalStatus.needVerification == false)
+
+            print("Re-KYC test succesfull")
+        }
+    }
+    
+    @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification called twice in a row`(env: ServerEnvironment) async throws {
+        try await env.test { x in
+            guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
+                return
+            }
+
+            let reKycHelper = try TestHelper(environment: env, processType: env.reKycProcessType, customPaInstance: activePowerAuth)
+
+            let first = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(first.state.shadowState == .intro, "[\(x.processType)] Expected intro state after first startReVerification, got: \(first.state.shadowState)")
+
+            let second = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(second.state.shadowState == .intro, "[\(x.processType)] Expected intro state after second startReVerification, got: \(second.state.shadowState)")
+        }
+    }
+    
+    @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification with unknown process type fails`(env: ServerEnvironment) async throws {
+        try await env.test { x in
+            guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
+                return
+            }
+
+            let reKycHelper = try TestHelper(environment: env, processType: env.reKycProcessType, customPaInstance: activePowerAuth)
+            let unknownProcessType = "unknown-re-kyc-\(UUID().uuidString)"
+
+            do {
+                let result = try await reKycHelper.verification.startReVerification(processType: unknownProcessType)
+                throw SimpleError("[\(x.processType)] Expected startReVerification with unknown process type '\(unknownProcessType)' to fail, got state: \(result.state.shadowState)")
+            } catch let error as WDOVerificationService.Fail {
+                #expect(!error.cause.networkIsNotReachable, "[\(x.processType)] Failure should not be a network connectivity error: \(error.cause)")
+                print("[\(x.processType)] Expected failure for unknown re-KYC process type: \(error.cause)")
+            }
+
+            // an unknown process type must not have started a re-verification, so needVerification stays false
+            let status = try await activePowerAuth.fetchActivationStatus()
+            #expect(status.needVerification == false)
+        }
+    }
+
     @Test(arguments: ServerEnvironment.loaded)
     func `cancel verification`(env: ServerEnvironment) async throws {
         
@@ -410,17 +495,5 @@ extension WDOConfigurationResponse {
         }
         
         return selected
-    }
-}
-
-extension WDOConfigurationDocument {
-    // TODO: Remove me after 2026
-    // There was a BUG on a server, where driving license was named incorectly
-    // This fixes it in environments where it wasn't deployed yet.
-    var patchedType: String {
-        if type == "DRIVING_LICENCE" {
-            return "DRIVING_LICENSE"
-        }
-        return type
     }
 }

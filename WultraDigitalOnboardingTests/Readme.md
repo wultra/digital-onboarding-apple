@@ -15,7 +15,8 @@ The file format is:
       "mobileConfig": "...",
       "otpMock": "AUTO",
       "servicesMock": true,
-      "authorization": "base64-user-colon-password"
+      "authorization": "base64-user-colon-password",
+      "reKycProcessType": "re-kyc"
     }
   ]
 }
@@ -32,6 +33,7 @@ The file format is:
 - `otpMock`: OTP detail endpoint strategy.
 - `servicesMock`: Whether the environment supports mocked downstream services required by the full integration flow.
 - `authorization`: Optional base64-encoded `user:password` value for Basic auth used by approval-related test requests.
+- `reKycProcessType`: Process type configured on the server with `existingActivation=true`, used by the Re-KYC integration tests. Defaults to `"re-kyc"` when not present.
 
 ## `otpMock` values
 
