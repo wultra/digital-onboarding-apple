@@ -27,7 +27,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/wultra/digital-onboarding-apple.git", .from("3.0.0"))
+        .package(url: "https://github.com/wultra/digital-onboarding-apple.git", .from("3.1.0"))
     ],
     targets: [
         .target(
