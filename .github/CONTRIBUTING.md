@@ -119,20 +119,22 @@ The version number has format `major.minor.patch`, for example `2.0.0`.
 
 - updated `WultraDigitalOnboarding.podspec`
 - updated `docs/Changelog.md`
-- updated `docs/SDK-Integration.md` when version examples or compatibility information change
 - updated migration guide or other public documentation if the release changes the public API
 
 You can use:
 
 ```bash
-./scripts/prepare-release.sh VERSION
+./scripts/prepare-release.sh -v VERSION
 ```
 
-Optional flags:
+Verify a prepared release and restore development metadata after release:
 
-- `-c` or `--commit` to create a commit and tag
-- `-p` or `--push` to push tags
-- `-r` or `--release` to run CocoaPods release steps
+```bash
+./scripts/prepare-release.sh -v VERSION --verify
+./scripts/prepare-release.sh --prepare-dev
+```
+
+On non-release branches, keep the podspec version at `0.0.1-dev`.
 
 ### Example release flow
 
@@ -141,7 +143,7 @@ Optional flags:
 3. Create a working branch, for example `issues/65-prepare-release-2_0_0`.
 4. Update all files required for the release.
 5. Run tests and SwiftLint.
-6. Run `./scripts/prepare-release.sh VERSION`.
+6. Run `./scripts/prepare-release.sh -v VERSION`.
 7. Create a pull request into the target `release/a.b.x` branch.
 8. After approval, squash-merge the pull request.
 9. Publish the tag and create the GitHub release.
