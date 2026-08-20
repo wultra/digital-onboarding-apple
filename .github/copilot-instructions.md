@@ -41,3 +41,9 @@
 - Tests use the Swift Testing framework (`import Testing`, `@Test`, `#expect`), not XCTest. Integration tests iterate over every environment and `processType` loaded from `WultraDigitalOnboardingTests/config.json`, and the full onboarding flow assumes mocked downstream services.
 - Respect `.swiftlint.yml` as-is. The repo intentionally disables several common SwiftLint rules and excludes generated/build directories.
 - If a change affects public API or documented flow, keep `docs/SDK-Integration.md`, `docs/Process-Configuration.md`, `docs/Device-Activation.md`, `docs/Verifying-User.md`, `docs/Changelog.md`, and any relevant migration guide in sync.
+
+## Releases and branching
+
+- Branch from and open pull requests into `develop`.
+- On non-release branches, keep the podspec version at `0.0.1-dev`.
+- Prepare the podspec and changelog for a release with `sh scripts/prepare-release.sh -v X.Y.Z`. Pass `--verify` to check a prepared release and `--prepare-dev` after a release to restore development metadata.
