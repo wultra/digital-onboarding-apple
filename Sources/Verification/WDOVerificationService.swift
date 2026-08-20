@@ -198,6 +198,51 @@ public class WDOVerificationService: WDOBaseService {
         }
     }
     
+    /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
+    ///
+    /// This automatically fetches the verification status after a successful start, same as `status()`
+    /// would.
+    ///
+    /// - Parameters:
+    ///   - additionalData: Custom additional data object passed to the server together with the Re-KYC start request.
+    ///   - processType: The process type identification. If not specified, the default process type will be used.
+    ///   - completion: Callback with the verification status result.
+    public func startReVerification<T: Encodable>(
+        additionalData: T,
+        processType: String? = nil,
+        completion: @escaping (Result<StatusResult, Fail>) -> Void
+    ) {
+        D.debug("Starting re-verification, processType: \(processType ?? "default")")
+        api.identityVerification.startReVerification(additionalData: additionalData, processType: processType) { [weak self] result in
+            guard let self else {
+                completion(.failure(.init(.init(reason: .unknown))))
+                return
+            }
+            result.onSuccess {
+                D.info("Re-verification started successfully.")
+                D.debug(" - processId: \($0.processId)")
+                self.status(completion: completion)
+            }.onError {
+                self.markCompleted($0, completion)
+            }
+        }
+    }
+    
+    /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
+    ///
+    /// This automatically fetches the verification status after a successful start, same as `status()`
+    /// would.
+    ///
+    /// - Parameters:
+    ///   - processType: The process type identification. If not specified, the default process type will be used.
+    ///   - completion: Callback with the verification status result.
+    public func startReVerification(
+        processType: String? = nil,
+        completion: @escaping (Result<StatusResult, Fail>) -> Void
+    ) {
+        startReVerification(additionalData: DefaultReVerificationData(), processType: processType, completion: completion)
+    }
+    
     /// Returns consent text for the user to approve. The content of the text depends on the server configuration and might be plain text or HTML.
     ///
     /// Consent text explains how the service will handle his document photos or selfie scans.
@@ -1025,6 +1070,37 @@ public extension WDOVerificationService {
                 cont.resume(with: result)
             }
         }
+    }
+    
+    /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
+    ///
+    /// This automatically fetches the verification status after a successful start, same as `status()`
+    /// would, so the returned result can be used directly to display the next state (usually `intro`).
+    ///
+    /// - Parameters:
+    ///   - additionalData: Custom additional data object passed to the server together with the Re-KYC start request.
+    ///   - processType: The process type identification. If not specified, the default process type will be used.
+    ///  - returns: `StatusResult` containing the current verification state and server process data.
+    ///  - throws: `WDOVerificationService.Fail`
+    func startReVerification<T: Encodable>(additionalData: T, processType: String? = nil) async throws -> StatusResult {
+        return try await withCheckedThrowingContinuation { cont in
+            startReVerification(additionalData: additionalData, processType: processType) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+    
+    /// Starts a Re-KYC (re-verification) process for an already active PowerAuth instance.
+    ///
+    /// This automatically fetches the verification status after a successful start, same as `status()`
+    /// would, so the returned result can be used directly to display the next state (usually `intro`).
+    ///
+    /// - Parameters:
+    ///   - processType: The process type identification. If not specified, the default process type will be used.
+    ///  - returns: `StatusResult` containing the current verification state and server process data.
+    ///  - throws: `WDOVerificationService.Fail`
+    func startReVerification(processType: String? = nil) async throws -> StatusResult {
+        return try await startReVerification(additionalData: DefaultReVerificationData(), processType: processType)
     }
     
     /// Returns consent text for the user to approve. The content of the text depends on the server configuration and might be plain text or HTML.

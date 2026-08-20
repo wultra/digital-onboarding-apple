@@ -29,7 +29,7 @@ class TestHelper {
     let processType: String
     /// Credentials used for activation (set after `startAndActivate`).
     private(set) var lastCredentials: SampleCredentials?
-
+    
     private let environment: ServerEnvironment
     
     init(environment: ServerEnvironment, processType: String, customPaInstance: PowerAuthSDK? = nil) throws {
@@ -87,7 +87,7 @@ class TestHelper {
     }
     
     func startAndActivate(credentials: SampleCredentials = .demo()) async throws -> (config: WDOConfigurationResponse, consentRequired: Bool)? {
-
+        
         lastCredentials = credentials
         let config = try await getConfig()
         try await start(credentials: credentials)
@@ -104,6 +104,110 @@ class TestHelper {
         }
         
         return (config, consent)
+    }
+    
+    /// Runs `startAndActivate()` and then completes the whole verification flow
+    func startAndActivateAndVerify(credentials: SampleCredentials = .demo()) async throws -> PowerAuthSDK? {
+        guard let (config, consentRequired) = try await startAndActivate(credentials: credentials) else {
+            return nil
+        }
+        
+        let startResult = try await verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
+        guard startResult.shadowState == .documentsToScanSelect else {
+            throw SimpleError("[\(processType)] Expected documentsToScanSelect after start(), got: \(startResult.shadowState)")
+        }
+        
+        return try await driveVerificationToSuccess(config: config)
+    }
+    
+    /// Drives an already-started verification process through document selection/scanning, presence check,
+    /// OTP and (optional) activation finish, all the way to the `success` state.
+    ///
+    /// - Returns: the PowerAuth instance that ends up active once the flow finishes, or `nil` when
+    ///   the flow cannot be completed because `servicesMock` is disabled for the environment.
+    func driveVerificationToSuccess(config: WDOConfigurationResponse) async throws -> PowerAuthSDK? {
+        let precondition = try await verification.status()
+        guard precondition.state.shadowState == .documentsToScanSelect else {
+            throw SimpleError("[\(processType)] driveVerificationToSuccess() requires the process to be in documentsToScanSelect state, got: \(precondition.state.shadowState)")
+        }
+        
+        let documentsToScan = config.getDocumentsToScan()
+        _ = try await verification.documentsSetSelectedTypes(types: documentsToScan.map { $0.patchedType })
+        
+        guard environment.servicesMock else {
+            print("[\(processType)] Cannot complete verification to success — servicesMock is disabled for '\(environment.name)'")
+            return nil
+        }
+        
+        func waitForNonProcessingStatus() async throws -> WDOVerificationState {
+            let pollIntervalSeconds: Double = 3
+            let maxRetries = 10
+            var retryCount = 0
+            
+            var statusResult = try await verification.status()
+            while statusResult.state.shadowState == .processing {
+                guard retryCount < maxRetries else {
+                    throw SimpleError("[\(processType)] Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+                }
+                retryCount += 1
+                try await Task.sleep(for: .seconds(pollIntervalSeconds))
+                statusResult = try await verification.status()
+            }
+            return statusResult.state
+        }
+        
+        var state = try await waitForNonProcessingStatus()
+        
+        if state.shadowState == .scanDocument {
+            for doc in documentsToScan {
+                _ = try await verification.documentsSubmit(files: try doc.uploadFiles())
+                state = try await waitForNonProcessingStatus()
+            }
+        }
+        
+        if state.shadowState == .presenceCheck {
+            _ = try await verification.presenceCheckInit()
+            _ = try await verification.presenceCheckSubmit()
+            state = try await waitForNonProcessingStatus()
+        }
+        
+        if state.shadowState == .otp {
+            let otp = try await verification.getOTP(strategy: environment.otpGetDetailStrategy)
+            let otpResult = try await verification.verifyOTP(otp: otp)
+            state = otpResult.state
+            if state.shadowState == .processing {
+                state = try await waitForNonProcessingStatus()
+            }
+        }
+        
+        var activePowerAuth = powerAuth
+        
+        if state.shadowState == .activationFinish {
+            guard let newPa = try? PowerAuthSDK(
+                configuration: .init(
+                    instanceId: UUID().uuidString,
+                    baseEndpointUrl: environment.esUrl,
+                    configuration: environment.mobileConfig
+            )) else {
+                throw SimpleError("[\(processType)] Failed to create PowerAuthSDK for activation finish")
+            }
+            let password = PowerAuthPassword(string: "1234")
+            let finishResult = try await verification.finishActivation(
+                newPowerAuthInstance: newPa,
+                newActivationName: UIDevice.current.name,
+                newPassword: password,
+                validatePassword: false,
+                userIdentification: nil
+            )
+            state = finishResult.state
+            activePowerAuth = newPa
+        }
+        
+        guard state.shadowState == .success else {
+            throw SimpleError("[\(processType)] Expected success after completing verification, got: \(state.shadowState)")
+        }
+        
+        return activePowerAuth
     }
     
     func assertVerificationState(_ expectedState: VerificationStateShadow) async throws {
@@ -198,6 +302,7 @@ struct ServerEnvironment: Decodable {
     let mobileConfig: String
     let otpMock: String
     let servicesMock: Bool
+    let reKycProcessType: String
     
     var otpGetDetailStrategy: WDOGetOTPEndpointStrategy {
         if otpMock.uppercased() == "ESO" {
@@ -212,7 +317,7 @@ struct ServerEnvironment: Decodable {
         }
     }
     
-    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool) {
+    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool, reKycProcessType: String) {
         self.name = name
         self.processTypes = processTypes
         self.esUrl = esUrl
@@ -220,7 +325,30 @@ struct ServerEnvironment: Decodable {
         self.mobileConfig = config
         self.otpMock = otpMock
         self.servicesMock = servicesMock
+        self.reKycProcessType = reKycProcessType
+        
     }
+    
+    enum CodingKeys: String, CodingKey {
+        case name, processTypes, esUrl, esoUrl, mobileConfig, otpMock, servicesMock, reKycProcessType
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        processTypes = try container.decode([String].self, forKey: .processTypes)
+        esUrl = try container.decode(String.self, forKey: .esUrl)
+        esoUrl = try container.decode(String.self, forKey: .esoUrl)
+        mobileConfig = try container.decode(String.self, forKey: .mobileConfig)
+        otpMock = try container.decode(String.self, forKey: .otpMock)
+        servicesMock = try container.decode(Bool.self, forKey: .servicesMock)
+        reKycProcessType = try container.decodeIfPresent(String.self, forKey: .reKycProcessType) ?? "re-kyc"
+    }
+}
+
+extension ServerEnvironment: CustomTestStringConvertible {
+    /// Avoids leaking credentials in test logs/failures (Swift Testing prints arguments by default).
+    var testDescription: String { "ServerEnvironment(name: \"\(name)\")" }
 }
 
 struct ServerEnvironmentData: Decodable {
@@ -241,6 +369,49 @@ extension ServerEnvironment {
             fatalError("Config file config.json at path \(configPath) cannot be parsed: \(error)")
         }
     }()
+}
+
+extension WDOConfigurationDocument {
+    // TODO: Remove me after 2026
+    // There was a BUG on a server, where driving license was named incorrectly
+    // This fixes it in environments where it wasn't deployed yet.
+    var patchedType: WDODocumentType {
+        if type == "DRIVING_LICENCE" {
+            return "DRIVING_LICENSE"
+        }
+        return type
+    }
+
+    /// Returns test data for given document.
+    /// It is expected that the receiver is a mock service. Sending just the JSON instruction for the mock server.
+    func getMockDocumentToUpload(side: WDODocumentSide) throws -> WDODocumentFile {
+
+        let mockType: String
+
+        switch patchedType {
+        case "DRIVING_LICENSE": mockType = "Dl"
+        case "ID_CARD": mockType = "Id"
+        case "PASSPORT": mockType = "Passport"
+        default: throw SimpleError("Unsupported \(patchedType) document type for testing")
+        }
+
+        let json = "{\"type\": \"\(mockType)\", \"isoAlpha3CountryCode\": \"\(country ?? "CZE")\"}"
+
+        guard let data = json.data(using: .utf8) else {
+            throw SimpleError("Failed to encode json to Data for \(patchedType): \(json)")
+        }
+
+        return WDODocumentFile(data: data, type: patchedType, side: side, originalDocumentId: nil, dataSignature: nil)
+    }
+
+    /// Builds the mock file(s) for a document upload, covering both sides when the document requires it.
+    func uploadFiles() throws -> [WDODocumentFile] {
+        var files = [try getMockDocumentToUpload(side: .front)]
+        if sideCount == 2 {
+            files.append(try getMockDocumentToUpload(side: .back))
+        }
+        return files
+    }
 }
 
 extension WDOVerificationState {

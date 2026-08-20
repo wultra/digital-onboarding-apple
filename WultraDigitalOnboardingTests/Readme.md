@@ -14,7 +14,8 @@ The file format is:
       "esoUrl": "https://example.com/enrollment-server-onboarding/",
       "mobileConfig": "...",
       "otpMock": "AUTO",
-      "servicesMock": true
+      "servicesMock": true,
+      "reKycProcessType": "re-kyc"
     }
   ]
 }
@@ -30,6 +31,7 @@ The file format is:
 - `mobileConfig`: PowerAuth mobile configuration string for the given environment.
 - `otpMock`: OTP detail endpoint strategy.
 - `servicesMock`: Whether the environment supports mocked downstream services required by the full integration flow.
+- `reKycProcessType`: Process type configured on the server with `existingActivation=true`, used by the Re-KYC integration tests. Defaults to `"re-kyc"` when not present.
 
 ## `otpMock` values
 
