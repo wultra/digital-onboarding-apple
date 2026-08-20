@@ -36,8 +36,8 @@ This is one Swift 5.9/iOS 13 library target, `WultraDigitalOnboarding`, from
 * `Sources/Onboarding/WDOActivationService.swift` owns start/status/cancel,
   activation, and OTP resend flow.
 * `Sources/Configuration/WDOConfigurationService.swift` and
-  `WDOConfigurationObjects.swift` fetch server-driven process, document, and
-  OTP configuration.
+  `Sources/Configuration/WDOConfigurationObjects.swift` fetch server-driven
+  process, document, and OTP configuration.
 * `Sources/Verification/WDOVerificationService.swift`,
   `WDOVerificationState.swift`, `WDOVerificationScanProcess.swift`, and
   `WDODocumentFile.swift` drive post-activation verification/document uploads.
