@@ -27,7 +27,8 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/wultra/digital-onboarding-apple.git", .from("3.0.0"))
+        // Replace VERSION_DEFINITION with the actual package version.
+        .package(url: "https://github.com/wultra/digital-onboarding-apple.git", .from("VERSION_DEFINITION"))
     ],
     targets: [
         .target(
