@@ -6,36 +6,33 @@
     "type": "ios-oss",
     "podspec": "WultraDigitalOnboarding.podspec"
   },
+  "scriptVersion": 2,
+  "devVersion": "0.0.1-dev",
   "files": [
     {
       "description": "Cocoapods definition file.",
       "path": "WultraDigitalOnboarding.podspec",
       "type": "version_replace",
-      "match": "\n  s.version               = '%VERSION%'\n"
+      "match": "\n  s.version               = '%VERSION%'\n",
+      "devChange": true
     },
     {
-      "description": "Example app pubspec file in the documentation.",
+      "description": "Example integration in the documentation.",
       "path": "docs/SDK-Integration.md",
       "type": "version_replace",
       "match": "\"%VERSION%\""
-    },{
-      "description": "SDK integration tutorial.",
-      "path": "docs/SDK-Integration.md",
-      "type": "versionstream_verify",
-      "match": "`%VERSION_STREAM%`"
     },
     {
-      "description": "Changelog for the wultra documentation.",
+      "description": "Changelog for the Wultra documentation.",
       "path": "docs/Changelog.md",
-      "type": "version_verify",
-      "match": "## %VERSION%"
-    }
-  ],
-  "scripts": [
+      "type": "tba_replace",
+      "match": "## TBA"
+    },
     {
-      "type": "bash",
-      "script": "pod lib lint --allow-warnings",
-      "description": "run pod lint"
+      "description": "Verify that the changelog does not contain a TBA placeholder.",
+      "path": "docs/Changelog.md",
+      "type": "verify_not_containing",
+      "match": "- TBA"
     }
   ]
 }
