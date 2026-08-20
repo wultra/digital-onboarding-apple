@@ -117,6 +117,15 @@ class TestHelper {
             throw SimpleError("[\(processType)] Expected documentsToScanSelect after start(), got: \(startResult.shadowState)")
         }
         
+        return try await driveVerificationToSuccess(config: config)
+    }
+    
+    /// Drives an already-started verification process through document selection/scanning, presence check,
+    /// OTP and (optional) activation finish, all the way to the `success` state.
+    ///
+    /// - Returns: the PowerAuth instance that ends up active once the flow finishes, or `nil` when
+    ///   the flow cannot be completed because `servicesMock` is disabled for the environment.
+    func driveVerificationToSuccess(config: WDOConfigurationResponse) async throws -> PowerAuthSDK? {
         let documentsToScan = config.getDocumentsToScan()
         _ = try await verification.documentsSetSelectedTypes(types: documentsToScan.map { $0.patchedType })
         
