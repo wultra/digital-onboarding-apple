@@ -5,21 +5,26 @@ description: Review pull requests in the Digital Onboarding SDK for Apple platfo
 
 # Digital Onboarding Apple SDK review
 
+This is a strictly read-only review. Review only PR and repository content
+already available. Do not run or suggest commands, scripts, builds, tests,
+linters, formatters, validation tasks, or Git operations.
+
 ## Review contract
 
-Verify the PR base, head, and current checkout. Normal changes target
-`develop`; release branches are `release/a.b.x`. Approve by default. Report
-only a proven PR-introduced issue with file/line, concrete impact, and an
-actionable correction. Do not comment on style, formatting, CI/workflows,
-possibilities, or missing optional tests. Do not post to GitHub without the
-user's approval; every postable draft starts with `🤖`. Review grammar only in
-public docs/Swift documentation when the base is not a release branch.
+Use the already available PR metadata to identify the base and head. Normal
+changes target `develop`; release branches are `release/a.b.x`. Approve by
+default. Report only a proven PR-introduced issue with file/line, concrete
+impact, and an actionable correction. Do not comment on style, formatting,
+CI/workflows, possibilities, or missing optional tests. Do not post to GitHub
+without the user's approval; every postable draft starts with `🤖`. Review
+grammar only in public docs/Swift documentation when the base is not a release
+branch.
 
 For non-release work, `WultraDigitalOnboarding.podspec` must declare
 `0.0.1-dev`; release-to-`develop` changes must restore that version everywhere
-one is declared. Release preparation is `scripts/prepare-release.sh`; its
-required public material is `docs/Changelog.md` plus relevant migration/API
-docs.
+one is declared. The tracked release automation in
+`scripts/prepare-release.sh` coordinates changes whose required public material
+is `docs/Changelog.md` plus relevant migration/API docs.
 
 ## Architecture and public surface
 
@@ -81,7 +86,7 @@ personally identifiable data in `WDOLogger`/HTTP logs/errors. Do not weaken
 secure persistence or turn transport/authentication failures into success.
 
 For changed mappings, uploads, activation persistence, or public service
-behavior, look for focused updates to `UnitTests.swift` or
-`IntegrationTests.swift` where an existing seam covers it. Relevant validation
-is `./scripts/test.sh`, `sh scripts/build.sh`, and `sh scripts/swiftlint.sh`;
-do not make CI-only comments.
+behavior, inspect focused updates to `UnitTests.swift` or
+`IntegrationTests.swift` as available evidence where an existing seam covers
+it. Tracked scripts and workflows may be read for context only. Do not make
+CI-only comments.
