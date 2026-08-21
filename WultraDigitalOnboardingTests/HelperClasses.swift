@@ -17,6 +17,7 @@
 import UIKit
 import Testing
 import PowerAuth2
+import PowerAuthCore
 @testable import WultraDigitalOnboarding
 internal import WultraPowerAuthNetworking
 
@@ -180,7 +181,7 @@ class TestHelper {
         var activePowerAuth = powerAuth
         
         if state.shadowState == .activationFinish {
-            guard let newPa = try? PowerAuthSDK(
+            guard let newPa = PowerAuthSDK(
                 configuration: .init(
                     instanceId: UUID().uuidString,
                     baseEndpointUrl: environment.esUrl,

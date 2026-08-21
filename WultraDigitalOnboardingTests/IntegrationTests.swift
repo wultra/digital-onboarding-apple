@@ -383,11 +383,12 @@ class IntegrationTests: BaseTestClass {
         
         try await env.test { x in
             // start valid onboarding
-            guard try await x.startAndActivate() != nil else {
+            guard let (_, consentRequired) = try await x.startAndActivate() else {
                 return
             }
             
-            _ = try await x.verification.start(consentApprovedByUser: .notRequired) // for simplicity not required
+            let consentResponse: ConsentResponse = consentRequired ? .approved : .notRequired
+            _ = try await x.verification.start(consentApprovedByUser: consentResponse)
             
             // we should now be in document to scan select state
             try await x.assertVerificationState(.documentsToScanSelect)
@@ -400,7 +401,7 @@ class IntegrationTests: BaseTestClass {
             try await x.assertVerificationState(.intro)
             
             // start again
-            _ = try await x.verification.start(consentApprovedByUser: .notRequired)
+            _ = try await x.verification.start(consentApprovedByUser: consentResponse)
             
             // We should now be in document to scan select state
             try await x.assertVerificationState(.documentsToScanSelect)
