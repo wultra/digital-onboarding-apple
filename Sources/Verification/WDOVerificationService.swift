@@ -49,8 +49,7 @@ public class WDOVerificationService: WDOBaseService {
         get {
             guard
                 let key = keychainKey,
-                let data = KeychainWrapper.standard.string(forKey: key) else
-            {
+                let data = KeychainWrapper.standard.string(forKey: key) else {
                 return nil
             }
             return WDOVerificationScanProcess(cacheData: data)

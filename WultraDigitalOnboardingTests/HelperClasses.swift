@@ -34,14 +34,17 @@ class TestHelper {
     private let environment: ServerEnvironment
     
     init(environment: ServerEnvironment, processType: String, customPaInstance: PowerAuthSDK? = nil) throws {
-        guard let pa = customPaInstance ?? PowerAuthSDK(
-            configuration: .init(
-                instanceId: UUID().uuidString,
-                baseEndpointUrl: environment.esUrl,
-                configuration: environment.mobileConfig
-            )
-        ) else {
-            throw SimpleError("Failed to create PowerAuthSDK")
+        let pa: PowerAuthSDK
+        if let customPaInstance {
+            pa = customPaInstance
+        } else {
+            pa = PowerAuthSDK(
+                configuration: .init(
+                    instanceId: UUID().uuidString,
+                    baseEndpointUrl: environment.esUrl,
+                    configuration: environment.mobileConfig
+                )
+            )!
         }
         
         self.powerAuth = pa
@@ -75,7 +78,7 @@ class TestHelper {
         let result = try await activation.activate(otp: otp, activationName: UIDevice.current.name)
         print("activated: \(result.activationFingerprint)")
         
-        // perist with random password
+        // persist with random password
         try powerAuth.persist()
         
         // verify powerauth status
@@ -292,7 +295,6 @@ struct ServerEnvironment: Decodable {
     let mobileConfig: String
     let otpMock: String
     let servicesMock: Bool
-    let authorization: String?
     let reKycProcessType: String
     
     var otpGetDetailStrategy: WDOGetOTPEndpointStrategy {
@@ -308,7 +310,7 @@ struct ServerEnvironment: Decodable {
         }
     }
     
-    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool, authorization: String? = nil, reKycProcessType: String = "re-kyc") {
+    init(name: String, processTypes: [String], esUrl: String, esoUrl: String, config: String, otpMock: String, servicesMock: Bool, reKycProcessType: String) {
         self.name = name
         self.processTypes = processTypes
         self.esUrl = esUrl
@@ -316,12 +318,11 @@ struct ServerEnvironment: Decodable {
         self.mobileConfig = config
         self.otpMock = otpMock
         self.servicesMock = servicesMock
-        self.authorization = authorization
         self.reKycProcessType = reKycProcessType
     }
     
     enum CodingKeys: String, CodingKey {
-        case name, processTypes, esUrl, esoUrl, mobileConfig, otpMock, servicesMock, authorization, reKycProcessType
+        case name, processTypes, esUrl, esoUrl, mobileConfig, otpMock, servicesMock, reKycProcessType
     }
     
     init(from decoder: Decoder) throws {
@@ -333,7 +334,6 @@ struct ServerEnvironment: Decodable {
         mobileConfig = try container.decode(String.self, forKey: .mobileConfig)
         otpMock = try container.decode(String.self, forKey: .otpMock)
         servicesMock = try container.decode(Bool.self, forKey: .servicesMock)
-        authorization = try container.decodeIfPresent(String.self, forKey: .authorization)
         reKycProcessType = try container.decodeIfPresent(String.self, forKey: .reKycProcessType) ?? "re-kyc"
     }
 }
