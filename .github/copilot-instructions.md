@@ -13,6 +13,10 @@
 
 `scripts/xcodeselect.sh` pins the CI Xcode selection. If local CLI builds behave differently from CI, compare your active Xcode with that script.
 
+## Code review
+
+- Use the `github_copilot_wultra_mobile_sdk_reviewer` MCP server tool for code reviews in this repository.
+
 ## High-level architecture
 
 - This repo ships a single `WultraDigitalOnboarding` library (`Package.swift`) and builds on top of `PowerAuth2`, `PowerAuthCore`, and `WultraPowerAuthNetworking`. Current package metadata targets Swift 5.9 and iOS 13.

@@ -998,11 +998,253 @@ struct ConfigurationDocumentSelectionTests {
         let selected = config.getDocumentsToScan()
 
         #expect(selected.count == 2)
-        // first from group 1 (ID_CARD), first from group 2 (DRIVING_LICENSE)
         #expect(selected[0].type == "ID_CARD")
         #expect(selected[1].type == "DRIVING_LICENSE")
     }
+}
 
+// MARK: - Onboarding Model Tests
+
+struct OnboardingModelTests {
+
+            @Test
+            func `activation type decodes known values`() throws {
+                let cases: [(String, ActivationType)] = [
+                    ("CODE", .code),
+                    ("IDENTITY", .identity),
+                    ("ACTIVATION_ALREADY_EXISTS", .alreadyExists)
+                ]
+
+                for (rawValue, expected) in cases {
+                    let decoded = try JSONDecoder().decode(ActivationType.self, from: Data("\"\(rawValue)\"".utf8))
+                    #expect(decoded == expected)
+                }
+            }
+
+            @Test
+            func `activation type maps future server values to unknown`() throws {
+                let decoded = try JSONDecoder().decode(ActivationType.self, from: Data("\"FUTURE_TYPE\"".utf8))
+                #expect(decoded == .unknown)
+            }
+
+            @Test
+            func `process response decodes optional activation details`() throws {
+                let json = """
+                {
+                    "processId": "process-123",
+                    "onboardingStatus": "ACTIVATION_IN_PROGRESS",
+                    "activationCode": "activation-code",
+                    "activationType": "CODE"
+                }
+                """
+
+                let response = try JSONDecoder().decode(ProcessResponse.self, from: Data(json.utf8))
+                #expect(response.processId == "process-123")
+                #expect(response.onboardingStatus == .activationInProgress)
+                #expect(response.activationCode == "activation-code")
+                #expect(response.activationType == .code)
+            }
+
+            @Test
+            func `process response supports missing optional activation details`() throws {
+                let json = """
+                {
+                    "processId": "process-123",
+                    "onboardingStatus": "VERIFICATION_IN_PROGRESS"
+                }
+                """
+
+                let response = try JSONDecoder().decode(ProcessResponse.self, from: Data(json.utf8))
+                #expect(response.activationCode == nil)
+                #expect(response.activationType == nil)
+            }
+
+            @Test
+            func `start onboarding request encodes identification and process type`() throws {
+                let request = StartOnboardingRequest(
+                    identification: ["clientNumber": "123456", "birthDate": "1989-11-17"],
+                    processType: "standard"
+                )
+
+                let dictionary = try jsonDictionary(from: request)
+                #expect((dictionary["identification"] as? [String: String])?["clientNumber"] == "123456")
+                #expect((dictionary["identification"] as? [String: String])?["birthDate"] == "1989-11-17")
+                #expect(dictionary["processType"] as? String == "standard")
+            }
+
+            @Test
+            func `start re-verification request encodes custom identification`() throws {
+                let request = StartReVerificationRequest(
+                    identification: ["accountId": "account-123"],
+                    processType: "re-kyc"
+                )
+
+                let dictionary = try jsonDictionary(from: request)
+                #expect((dictionary["identification"] as? [String: String])?["accountId"] == "account-123")
+                #expect(dictionary["processType"] as? String == "re-kyc")
+            }
+
+            @Test
+            func `default re-verification data encodes its fixed source`() throws {
+                let dictionary = try jsonDictionary(from: DefaultReVerificationData())
+                #expect(dictionary["source"] as? String == "re-verification")
+            }
+        }
+
+        // MARK: - Identity Request and Response Tests
+
+        struct IdentityRequestAndResponseTests {
+
+            @Test
+            func `activation finish request omits absent user identification`() throws {
+                let dictionary = try jsonDictionary(from: ActivationFinishRequest(processId: "process-123", userIdentification: nil))
+                #expect(dictionary["processId"] as? String == "process-123")
+                #expect(dictionary["userIdentification"] == nil)
+            }
+
+            @Test
+            func `activation finish request encodes user identification`() throws {
+                let request = ActivationFinishRequest(
+                    processId: "process-123",
+                    userIdentification: ["customerId": "customer-456"]
+                )
+
+                let dictionary = try jsonDictionary(from: request)
+                #expect((dictionary["userIdentification"] as? [String: String])?["customerId"] == "customer-456")
+            }
+
+            @Test
+            func `SDK init request encodes token and iOS platform`() throws {
+                let request = SDKInitRequest(
+                    processId: "process-123",
+                    attributes: SDKInitRequestAttributes(challengeToken: "challenge-token")
+                )
+
+                let dictionary = try jsonDictionary(from: request)
+                #expect(dictionary["processId"] as? String == "process-123")
+                let attributes = try #require(dictionary["attributes"] as? [String: String])
+                #expect(attributes["sdk-init-token"] == "challenge-token")
+                #expect(attributes["platform"] == "ios")
+            }
+
+            @Test
+            func `document status response decodes all document metadata`() throws {
+                let json = """
+                {
+                    "status": "VERIFICATION_PENDING",
+                    "documents": [{
+                        "filename": "passport_front.jpg",
+                        "id": "document-123",
+                        "type": "PASSPORT",
+                        "side": "FRONT",
+                        "status": "ACCEPTED",
+                        "errors": []
+                    }]
+                }
+                """
+
+                let response = try JSONDecoder().decode(DocumentStatusResponse.self, from: Data(json.utf8))
+                #expect(response.status == .verificationPending)
+                #expect(response.documents.count == 1)
+                #expect(response.documents[0].filename == "passport_front.jpg")
+                #expect(response.documents[0].side == .front)
+                #expect(response.documents[0].errors?.isEmpty == true)
+            }
+
+            @Test
+            func `identity status response decodes rejection reason`() throws {
+                let json = """
+                {
+                    "processId": "process-123",
+                    "processType": "standard",
+                    "identityVerificationStatus": "REJECTED",
+                    "identityVerificationPhase": "COMPLETED",
+                    "rejectReason": "document_expired"
+                }
+                """
+
+                let response = try JSONDecoder().decode(IdentityStatusResponse.self, from: Data(json.utf8))
+                #expect(response.status == .rejected)
+                #expect(response.phase == .completed)
+                #expect(response.rejectReason == "document_expired")
+                #expect(response.consentRequired == nil)
+            }
+
+            @Test
+            func `presence check attributes decode nested arrays and scalar values`() throws {
+                let json = """
+                {
+                    "sessionAttributes": {
+                        "enabled": true,
+                        "score": 9.5,
+                        "values": ["one", 2, false, null, {"nested": "value"}]
+                    }
+                }
+                """
+
+                let response = try JSONDecoder().decode(PresenceCheckInitResponse.self, from: Data(json.utf8))
+                #expect(response.attributes["enabled"] as? Bool == true)
+                #expect(response.attributes["score"] as? Double == 9.5)
+                let values = try #require(response.attributes["values"] as? [Any])
+                #expect(values.count == 4)
+                #expect(values[0] as? String == "one")
+                #expect(values[1] as? Double == 2)
+                #expect(values[2] as? Bool == false)
+                #expect((values[3] as? [String: Any])?["nested"] as? String == "value")
+            }
+        }
+
+        // MARK: - Scan Process Edge Case Tests
+
+        struct ScanProcessEdgeCaseTests {
+
+            @Test
+            func `server data replaces the previous snapshot for a document`() {
+                let process = WDOVerificationScanProcess(types: ["ID_CARD"])
+                process.feed([
+                    Document(filename: "front.jpg", id: "front-1", type: "ID_CARD", side: .front, status: .accepted, errors: nil),
+                    Document(filename: "back.jpg", id: "back-1", type: "ID_CARD", side: .back, status: .accepted, errors: nil)
+                ])
+
+                process.feed([
+                    Document(filename: "front.jpg", id: "front-2", type: "ID_CARD", side: .front, status: .rejected, errors: ["blur"])
+                ])
+
+                let document = process.documents[0]
+                #expect(document.sides.count == 1)
+                #expect(document.sides[0].serverId == "front-2")
+                #expect(document.uploadState == .rejected)
+            }
+
+            @Test
+            func `empty server data preserves documents without uploaded sides`() {
+                let process = WDOVerificationScanProcess(types: ["ID_CARD", "PASSPORT"])
+                process.feed([])
+
+                #expect(process.documents.allSatisfy { $0.sides.isEmpty })
+                #expect(process.nextDocumentToScan?.type == "ID_CARD")
+            }
+
+            @Test
+            func `v2 cache retains rejected document as next document to scan`() throws {
+                let process = WDOVerificationScanProcess(types: ["ID_CARD", "PASSPORT"])
+                process.feed([
+                    Document(filename: "id.jpg", id: "id-1", type: "ID_CARD", side: .front, status: .rejected, errors: ["blur"]),
+                    Document(filename: "passport.jpg", id: "passport-1", type: "PASSPORT", side: .front, status: .accepted, errors: nil)
+                ])
+
+                let restored = try #require(WDOVerificationScanProcess(cacheData: try process.dataForCache()))
+                #expect(restored.documents[0].uploadState == .rejected)
+                #expect(restored.nextDocumentToScan?.type == "ID_CARD")
+            }
+        }
+
+        private func jsonDictionary<T: Encodable>(from value: T) throws -> [String: Any] {
+            let data = try JSONEncoder().encode(value)
+            let object = try JSONSerialization.jsonObject(with: data)
+            return try #require(object as? [String: Any])
+        }
+extension ConfigurationDocumentSelectionTests {
     @Test
     func `fills from remaining when groups dont cover total`() throws {
         let json = """
