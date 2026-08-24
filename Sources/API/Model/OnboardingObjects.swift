@@ -23,6 +23,17 @@ struct StartOnboardingRequest<T: Codable>: Codable {
     let processType: String?
 }
 
+/// Object that starts the re-verification (Re-KYC) process for an already activated PowerAuth instance.
+struct StartReVerificationRequest<T: Encodable>: Encodable {
+    let identification: T
+    let processType: String?
+}
+
+/// Default additional data sent together with the Re-KYC start request when no custom value is provided.
+struct DefaultReVerificationData: Encodable {
+    let source = "re-verification"
+}
+
 /// For request that needs to identify the current process.
 struct ProcessRequest: Codable {
     let processId: String
@@ -38,6 +49,26 @@ struct ProcessResponse: Codable {
     /// If not present (`nil`), the activation will be created later in the onboarding process
     /// using identity attributes.
     let activationCode: String?
+    /// Type of the activation used for this process.
+    let activationType: ActivationType?
+}
+
+/// Type of the activation associated with an onboarding/verification process.
+enum ActivationType: String, Codable {
+    /// Activation is initialized by the onboarding server and the activation code is returned when the process starts.
+    case code = "CODE"
+    /// Activation is initialized by the SDK.
+    case identity = "IDENTITY"
+    /// An already existing (and active) PowerAuth activation is reused for this process (Re-KYC).
+    case alreadyExists = "ACTIVATION_ALREADY_EXISTS"
+    /// Value returned by the server is not recognized by this version of the SDK.
+    case unknown
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = ActivationType(rawValue: rawValue) ?? .unknown
+    }
 }
 
 /// Status of the onboarding

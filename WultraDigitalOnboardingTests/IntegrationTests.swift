@@ -21,6 +21,12 @@ import PowerAuthCore
 @testable import WultraDigitalOnboarding
 internal import WultraPowerAuthNetworking
 
+// MARK: - NOTE TO THE TESTS -
+// These tests expect to run against enrollment-onboarding-server that is connected to
+// mock providers for document scan and presence check.
+// It is not sending real documents to the server, but rather JSON instructions for the mock server.
+// (see getMockDocumentToUpload)
+
 class IntegrationTests: BaseTestClass {
     
     override init() {
@@ -43,12 +49,12 @@ class IntegrationTests: BaseTestClass {
         try await env.test { x in
             do {
                 let result = try await x.activation.status()
-                throw SimpleError("Expected to throw error but got \(result)")
+                throw SimpleError("[\(x.processType)] Expected to throw error but got \(result)")
             } catch let error as WPNError {
                 guard error.reason == .wdo_activation_notRunning else {
-                    throw SimpleError("Invalid error type: \(error)")
+                    throw SimpleError("[\(x.processType)] Invalid error type: \(error)")
                 }
-                print("Expected error: \(error)")
+                print("[\(x.processType)] Expected error: \(error)")
             }
         }
     }
@@ -61,17 +67,17 @@ class IntegrationTests: BaseTestClass {
                 // There is a bug on the server, when OTP is not required, it ignores it
                 // so it cannot be simulated
                 // https://github.com/wultra/powerauth-server/issues/2249
-                print("Skipping test as OTP is not required")
+                print("[\(x.processType)] Skipping test as OTP is not required")
                 return
             }
             try await x.start()
             do {
                 let otp = config.otpForIdentification ? nil : "123456"
                 try await x.activate(otp: otp)
-                throw SimpleError("Activate should fail")
+                throw SimpleError("[\(x.processType)] Activate should fail")
             } catch let error {
                 // make sure that powerauth activation failed
-                #expect(error.isPowerAuthError, "Error throw during activation: \(error)")
+                #expect(error.isPowerAuthError, "[\(x.processType)] Error throw during activation: \(error)")
             }
         }
     }
@@ -118,7 +124,7 @@ class IntegrationTests: BaseTestClass {
             try await x.assertVerificationState(.scanDocument)
             
             guard case .scanDocument(let process) = selectResult.state else {
-                throw SimpleError("Unexpected state: \(startResult.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected state: \(startResult.shadowState)")
             }
             
             // make sure all selected document are in the process
@@ -135,22 +141,9 @@ class IntegrationTests: BaseTestClass {
                  var statusResult = try await x.verification.status()
                  while statusResult.state.shadowState == .processing {
                      guard retryCount < maxRetries else {
-                         throw SimpleError("Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+                         throw SimpleError("[\(x.processType)] Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
                      }
                      retryCount += 1
-                     // handle onboarding approval when processing is waiting for manual approval
-                     if case .processing(let item) = statusResult.state, item == .onboardingApproval {
-                         if let userId = x.lastCredentials.map({ "mockuser_\($0.clientNumber)" }) {
-                             print("Process is waiting for onboarding approval, approving...")
-                             try await approveOnboarding(
-                                env: env,
-                                processId: statusResult.serverData.processId,
-                                userId: userId
-                            )
-                         } else {
-                             print("Process is waiting for onboarding approval but no env/userId provided — waiting...")
-                         }
-                     }
                      try await Task.sleep(for: .seconds(pollIntervalSeconds))
                      statusResult = try await x.verification.status()
                 }
@@ -164,7 +157,7 @@ class IntegrationTests: BaseTestClass {
             
             // we should be in the scanDocument status (no document uploaded yet)
             guard case .scanDocument(let newProcess) = newStatus.state else {
-                throw SimpleError("Unexpected state: \(startResult.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected state: \(newStatus.state.shadowState)")
             }
             
             // make sure all selected document are in the process
@@ -172,42 +165,9 @@ class IntegrationTests: BaseTestClass {
                 #expect(newProcess.documents.contains { $0.type == documentToScan.patchedType })
             }
             
-            // empty jpeg used for document uploads
-            let dummyJpeg =
-            Data(base64Encoded: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCABkAGQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5/ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA//2Q==")!
-            
             // if services are not mocked on the server, we can't continue past document upload
             guard env.servicesMock else {
-                
-                // -- end APP RESTART SIMULATION
-                
-                // now lets try to upload fake files to test reupload
-                for documentToScan in documentsToScan {
-
-                    var documentsToUpload = [WDODocumentFile(data: dummyJpeg, type: documentToScan.patchedType, side: .front, originalDocumentId: nil, dataSignature: nil)]
-                    if documentToScan.sideCount == 2 {
-                        documentsToUpload.append(WDODocumentFile(data: dummyJpeg, type: documentToScan.patchedType, side: .back, originalDocumentId: nil, dataSignature: nil))
-                    }
-                    // upload to server
-                    _ = try await x.verification.documentsSubmit(files: documentsToUpload)
-                    // wait for processing
-                    _ = try await waitForNonProcessingStatus()
-                    // set testing callback to verify that all documents (in second try) have originalDocumentID
-                    // that were automatically added by the submit method...
-                    x.verification._testing_Callback = { _, data in
-                        guard let files = data as? [WDODocumentFile] else {
-                            D.fatalError("Unexpected type")
-                        }
-                        guard files.allSatisfy({ $0.originalDocumentId != nil }) else {
-                            D.fatalError("All documents should have originalDocumentId")
-                        }
-                    }
-                    // again
-                    _ = try await x.verification.documentsSubmit(files: documentsToUpload)
-                    x.verification._testing_Callback = nil
-                }
-                
-                print("Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'")
+                print("[\(x.processType)] Skipping rest of onboarding flow — servicesMock is disabled for '\(env.name)'; services are not mocked and the server expects real documents.")
                 return
             }
 
@@ -218,14 +178,10 @@ class IntegrationTests: BaseTestClass {
             // (with mocked services this shouldn't happen, but handle it for robustness)
             if state.shadowState == .scanDocument {
                 guard case .scanDocument = state else {
-                    throw SimpleError("Unexpected state: \(state.shadowState)")
+                    throw SimpleError("[\(x.processType)] Unexpected state: \(state.shadowState)")
                 }
                 for doc in documentsToScan {
-                    var filesToUpload = [WDODocumentFile(data: dummyJpeg, type: doc.patchedType, side: .front, originalDocumentId: nil)]
-                    if doc.sideCount == 2 {
-                        filesToUpload.append(WDODocumentFile(data: dummyJpeg, type: doc.patchedType, side: .back, originalDocumentId: nil))
-                    }
-                    _ = try await x.verification.documentsSubmit(files: filesToUpload)
+                    _ = try await x.verification.documentsSubmit(files: try doc.uploadFiles())
                     state = try await waitForNonProcessingStatus()
                 }
             }
@@ -282,27 +238,116 @@ class IntegrationTests: BaseTestClass {
 
             // at this point we should be in success or endstate
             if state.shadowState == .success {
-                print("Full onboarding flow completed successfully!")
+                print("[\(x.processType)] Full onboarding flow completed successfully!")
             } else if state.shadowState == .failed {
-                throw SimpleError("Verification ended in failed state — mocked services should not fail")
+                throw SimpleError("[\(x.processType)] Verification ended in failed state — mocked services should not fail")
             } else if state.shadowState == .endstate {
-                throw SimpleError("Verification ended in endstate — mocked services should not reach endstate")
+                throw SimpleError("[\(x.processType)] Verification ended in endstate — mocked services should not reach endstate")
             } else {
-                throw SimpleError("Unexpected final state: \(state.shadowState)")
+                throw SimpleError("[\(x.processType)] Unexpected final state: \(state.shadowState)")
             }
         }
     }
     
     @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification after onboarding-based activation`(env: ServerEnvironment) async throws {
+        try await env.test { x in
+            guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
+                return
+            }
+
+            let preReKycStatus = try await activePowerAuth.fetchActivationStatus()
+            #expect(preReKycStatus.needVerification == false)
+
+            // Re-KYC operates on the now-active PowerAuth instance, which may differ from x.powerAuth
+            // if activationFinish swapped to a new one.
+            let reKycHelper = try TestHelper(environment: env, processType: env.reKycProcessType, customPaInstance: activePowerAuth)
+
+            let reVerificationResult = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(reVerificationResult.state.shadowState == .intro)
+
+            guard case .intro(let consentRequired) = reVerificationResult.state else {
+                throw SimpleError("[\(x.processType)] Expected intro state after startReVerification, got: \(reVerificationResult.state.shadowState)")
+            }
+
+            // startReVerification alone must not flip needVerification yet - only `identity/init`
+            // (triggered by the subsequent `start(consentApprovedByUser:)` call) does that.
+            let statusAfterReVerification = try await activePowerAuth.fetchActivationStatus()
+            #expect(statusAfterReVerification.needVerification == false)
+
+            let startResult = try await reKycHelper.verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
+            #expect(startResult.shadowState == .documentsToScanSelect)
+            try await reKycHelper.assertVerificationState(.documentsToScanSelect)
+
+            // The reliable check regardless of which flag name the backend uses.
+            let status = try await activePowerAuth.fetchActivationStatus()
+            #expect(status.needVerification)
+
+            // drive the re-verification flow to completion, same as a regular onboarding verification
+            let reKycConfig = try await reKycHelper.getConfig()
+            guard let reKycActivePowerAuth = try await reKycHelper.driveVerificationToSuccess(config: reKycConfig) else {
+                return
+            }
+
+            // once re-verification succeeds, needVerification should be cleared again
+            let finalStatus = try await reKycActivePowerAuth.fetchActivationStatus()
+            #expect(finalStatus.needVerification == false)
+
+            print("Re-KYC test succesfull")
+        }
+    }
+    
+    @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification called twice in a row`(env: ServerEnvironment) async throws {
+        try await env.test { x in
+            guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
+                return
+            }
+
+            let reKycHelper = try TestHelper(environment: env, processType: env.reKycProcessType, customPaInstance: activePowerAuth)
+
+            let first = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(first.state.shadowState == .intro, "[\(x.processType)] Expected intro state after first startReVerification, got: \(first.state.shadowState)")
+
+            let second = try await reKycHelper.verification.startReVerification(processType: env.reKycProcessType)
+            #expect(second.state.shadowState == .intro, "[\(x.processType)] Expected intro state after second startReVerification, got: \(second.state.shadowState)")
+        }
+    }
+    
+    @Test(arguments: ServerEnvironment.loaded)
+    func `start re-verification with unknown process type fails`(env: ServerEnvironment) async throws {
+        try await env.test { x in
+            guard let activePowerAuth = try await x.startAndActivateAndVerify() else {
+                return
+            }
+
+            let reKycHelper = try TestHelper(environment: env, processType: env.reKycProcessType, customPaInstance: activePowerAuth)
+            let unknownProcessType = "unknown-re-kyc-\(UUID().uuidString)"
+
+            do {
+                let result = try await reKycHelper.verification.startReVerification(processType: unknownProcessType)
+                throw SimpleError("[\(x.processType)] Expected startReVerification with unknown process type '\(unknownProcessType)' to fail, got state: \(result.state.shadowState)")
+            } catch let error as WDOVerificationService.Fail {
+                #expect(!error.cause.networkIsNotReachable, "[\(x.processType)] Failure should not be a network connectivity error: \(error.cause)")
+                print("[\(x.processType)] Expected failure for unknown re-KYC process type: \(error.cause)")
+            }
+
+            // an unknown process type must not have started a re-verification, so needVerification stays false
+            let status = try await activePowerAuth.fetchActivationStatus()
+            #expect(status.needVerification == false)
+        }
+    }
+
+    @Test(arguments: ServerEnvironment.loaded)
     func `cancel verification`(env: ServerEnvironment) async throws {
         
         try await env.test { x in
             // start valid onboarding
-            guard try await x.startAndActivate() != nil else {
+            guard let (_, consentRequired) = try await x.startAndActivate() else {
                 return
             }
             
-            _ = try await x.verification.start(consentApprovedByUser: .notRequired) // for simplicity not required
+            _ = try await x.verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
             
             // we should now be in document to scan select state
             try await x.assertVerificationState(.documentsToScanSelect)
@@ -327,59 +372,6 @@ class IntegrationTests: BaseTestClass {
             let paStatus = try await x.powerAuth.fetchActivationStatus()
             #expect(paStatus.state == .removed)
         }
-    }
-
-    /// Calls private test API to approve the onboarding process (simulates backoffice approval).
-    private func approveOnboarding(env: ServerEnvironment, processId: String, userId: String) async throws {
-
-        guard let authorization = env.authorization else {
-            throw SimpleError("Cannot approve onboarding — no authorization configured for environment '\(env.name)'")
-        }
-
-        let baseUrl = env.esoUrl.hasSuffix("/") ? String(env.esoUrl.dropLast()) : env.esoUrl
-
-        // step 1: get verification ID for the process
-        let verificationsUrl = URL(string: "\(baseUrl)/api/private/test/process/\(processId)/identityVerifications")!
-        var getRequest = URLRequest(url: verificationsUrl)
-        getRequest.httpMethod = "GET"
-        getRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        getRequest.setValue("Basic \(authorization)", forHTTPHeaderField: "Authorization")
-
-        let (data, response) = try await URLSession.shared.data(for: getRequest)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw SimpleError("Failed to get identity verifications for process \(processId)")
-        }
-
-        let verificationIds = try JSONDecoder().decode([String].self, from: data)
-        guard let verificationId = verificationIds.first else {
-            print("No verification ID found for process \(processId), skipping approval.")
-            return
-        }
-
-        print("Found verification ID: \(verificationId) for process \(processId)")
-
-        // step 2: approve the verification
-        let approveUrl = URL(string: "\(baseUrl)/api/private/client/approve")!
-        var postRequest = URLRequest(url: approveUrl)
-        postRequest.httpMethod = "POST"
-        postRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        postRequest.setValue("Basic \(authorization)", forHTTPHeaderField: "Authorization")
-
-        let body: [String: Any] = [
-            "processId": processId,
-            "identityVerificationId": verificationId,
-            "userId": userId,
-            "approvalResult": "OK",
-            "approvalResultReason": ""
-        ]
-        postRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        let (_, approveResponse) = try await URLSession.shared.data(for: postRequest)
-        guard let approveHttpResponse = approveResponse as? HTTPURLResponse, approveHttpResponse.statusCode == 200 else {
-            throw SimpleError("Failed to approve onboarding for process \(processId), verification \(verificationId)")
-        }
-
-        print("Onboarding approved for process \(processId), verification \(verificationId)")
     }
 }
 
@@ -410,17 +402,5 @@ extension WDOConfigurationResponse {
         }
         
         return selected
-    }
-}
-
-extension WDOConfigurationDocument {
-    // TODO: Remove me after 2026
-    // There was a BUG on a server, where driving license was named incorectly
-    // This fixes it in environments where it wasn't deployed yet.
-    var patchedType: String {
-        if type == "DRIVING_LICENCE" {
-            return "DRIVING_LICENSE"
-        }
-        return type
     }
 }
