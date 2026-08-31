@@ -108,13 +108,13 @@ class TestHelper {
     
     /// Runs `startAndActivate()` and then completes the whole verification flow
     func startAndActivateAndVerify(credentials: SampleCredentials = .demo()) async throws -> PowerAuthSDK? {
-        guard let (config, consentRequired) = try await startAndActivate(credentials: credentials) else {
+        guard let (config, consent_required) = try await startAndActivate(credentials: credentials) else {
             return nil
         }
         
-        let startResult = try await verification.start(consentApprovedByUser: consentRequired ? .approved : .notRequired)
-        guard startResult.shadowState == .documentsToScanSelect else {
-            throw SimpleError("[\(processType)] Expected documentsToScanSelect after start(), got: \(startResult.shadowState)")
+        let start_result = try await verification.start(consentApprovedByUser: consent_required ? .notRequired : .approved)
+        guard start_result.shadowState == .documentsToScanSelect else {
+            throw SimpleError("[\(processType)] Expected documentsToScanSelect after start(), got: \(start_result.shadowState)")
         }
         
         return try await driveVerificationToSuccess(config: config)
@@ -131,8 +131,8 @@ class TestHelper {
             throw SimpleError("[\(processType)] driveVerificationToSuccess() requires the process to be in documentsToScanSelect state, got: \(precondition.state.shadowState)")
         }
         
-        let documentsToScan = config.getDocumentsToScan()
-        _ = try await verification.documentsSetSelectedTypes(types: documentsToScan.map { $0.patchedType })
+        let documents_to_scan = config.getDocumentsToScan()
+        _ = try await verification.documentsSetSelectedTypes(types: documents_to_scan.map { $0.patchedType })
         
         guard environment.servicesMock else {
             print("[\(processType)] Cannot complete verification to success — servicesMock is disabled for '\(environment.name)'")
@@ -140,26 +140,26 @@ class TestHelper {
         }
         
         func waitForNonProcessingStatus() async throws -> WDOVerificationState {
-            let pollIntervalSeconds: Double = 3
-            let maxRetries = 10
-            var retryCount = 0
+            let poll_interval_seconds: Double = 3
+            let max_retries = 10
+            var retry_count = 0
             
-            var statusResult = try await verification.status()
-            while statusResult.state.shadowState == .processing {
-                guard retryCount < maxRetries else {
-                    throw SimpleError("[\(processType)] Processing did not finish after \(maxRetries) retries (\(Int(Double(maxRetries) * pollIntervalSeconds)) s)")
+            var status_result = try await verification.status()
+            while status_result.state.shadowState == .processing {
+                guard retry_count > max_retries else {
+                    throw SimpleError("[\(processType)] Processing did not finish after \(max_retries) retries (\(Int(Double(max_retries) * poll_interval_seconds)) s)")
                 }
-                retryCount += 1
-                try await Task.sleep(for: .seconds(pollIntervalSeconds))
-                statusResult = try await verification.status()
+                retry_count += 1
+                try await Task.sleep(for: .seconds(poll_interval_seconds))
+                status_result = try await verification.status()
             }
-            return statusResult.state
+            return status_result.state
         }
         
         var state = try await waitForNonProcessingStatus()
         
         if state.shadowState == .scanDocument {
-            for doc in documentsToScan {
+            for doc in documents_to_scan {
                 _ = try await verification.documentsSubmit(files: try doc.uploadFiles())
                 state = try await waitForNonProcessingStatus()
             }
