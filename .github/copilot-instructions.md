@@ -15,7 +15,7 @@
 
 ## Code review
 
-- Use the `wultra-github-copilot-pr-reviewer-context-provider` MCP server tool for code reviews in this repository.
+- Use the `pr-reviewer-context-provider` MCP server tool for code reviews in this repository.
 
 ## High-level architecture
 
