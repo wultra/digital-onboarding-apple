@@ -29,7 +29,7 @@ let package = Package(
     ],
     dependencies: [
         // Replace VERSION_DEFINITION with the actual package version.
-        .package(url: "https://github.com/wultra/digital-onboarding-apple.git", .from("VERSION_DEFINITION"))
+        .package(url: "https://github.com/wultra/digital-onboarding-apple.git", from: "VERSION_DEFINITION")
     ],
     targets: [
         .target(
@@ -53,8 +53,7 @@ pod 'WultraDigitalOnboarding'
 For testing against Wultra demo/mock servers, the SDK offers demo-only
 `WDOActivationService.getOTP(...)` and `WDOVerificationService.getOTP(...)` methods that
 retrieve the OTP directly, without waiting for an SMS or email. These are guarded by the
-`ENABLE_ONBOARDING_DEMO` compilation flag and are **not** compiled in by default, so they
-never ship in production builds.
+`ENABLE_ONBOARDING_DEMO` compilation flag and are **not** compiled in by default.
 
 > ⚠️ Never enable this in a production application. The demo endpoints are only available on
 > Wultra demo/mock deployments.
@@ -70,7 +69,7 @@ on the dependency (this works in any build configuration, not just `debug`):
 dependencies: [
     .package(
         url: "https://github.com/wultra/digital-onboarding-apple.git",
-        .from("VERSION_DEFINITION"),
+        from: "VERSION_DEFINITION",
         traits: [.defaults, "ENABLE_ONBOARDING_DEMO"]
     )
 ]
