@@ -1,6 +1,6 @@
 # Changelog
 
-## TBA
+## 3.1.1
 
 - Raised the Swift Package Manager tools version to `6.1` (requires Xcode 16.3+).
 - The demo-only `getOTP()` endpoints are now exposed to SPM consumers through the `ENABLE_ONBOARDING_DEMO` package trait. Enable it on the package dependency to compile the demo endpoints in (off by default). See [SDK Integration](SDK-Integration.md#demo-endpoints-getotp).
