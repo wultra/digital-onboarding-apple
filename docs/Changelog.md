@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.1
+
+- Raised the Swift Package Manager tools version to `6.1` (requires Xcode 16.3+).
+- The demo-only `getOTP()` endpoints are now exposed to SPM consumers through the `ENABLE_ONBOARDING_DEMO` package trait. Enable it on the package dependency to compile the demo endpoints in (off by default). See [SDK Integration](SDK-Integration.md#demo-endpoints-getotp).
+
 ## 3.1.0
 
 - Added `WDOVerificationService.startReVerification` to support Re-KYC (repeated identity verification) for an already active PowerAuth instance, without creating a new activation. Requires PA Enrollment Onboarding Server `2.2.3` or newer.

@@ -17,12 +17,6 @@
       "devChange": true
     },
     {
-      "description": "Example integration in the documentation.",
-      "path": "docs/SDK-Integration.md",
-      "type": "version_replace",
-      "match": "\"%VERSION%\""
-    },
-    {
       "description": "Changelog for the Wultra documentation.",
       "path": "docs/Changelog.md",
       "type": "tba_replace",

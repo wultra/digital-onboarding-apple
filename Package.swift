@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.1
 
 import PackageDescription
 
@@ -9,6 +9,12 @@ let package = Package(
     ],
     products: [
         .library(name: "WultraDigitalOnboarding", targets: ["WultraDigitalOnboarding"])
+    ],
+    traits: [
+        .trait(
+            name: "ENABLE_ONBOARDING_DEMO",
+            description: "Exposes demo-only getOTP endpoints for Wultra demo/mock servers. Do not enable in production."
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/wultra/powerauth-mobile-sdk.git", .upToNextMinor(from: "2.0.0")),
@@ -24,5 +30,5 @@ let package = Package(
             path: "Sources"
         )
     ],
-    swiftLanguageVersions: [.v5]
+    swiftLanguageModes: [.v5]
 )

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                  = 'WultraDigitalOnboarding'
-  s.version               = '3.1.0'
+  s.version               = '3.1.1'
   # Metadata
   s.license               = { :type => 'Apache License, Version 2.0', :file => 'LICENSE' }
   s.summary               = 'Wultra Digital Onboarding SDK'
