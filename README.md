@@ -29,7 +29,7 @@ Elevate your standard device activation, user login, and request signing scenari
 
 | Requuirement |      Value          |  
 |--------------|---------------------|
-| Min. system  |  __iOS 13__         | 
+| Min. system  |  __iOS 15__         | 
 | Integration  |  __Cocoapods, SPM__ | 
 
 ### Other resources
