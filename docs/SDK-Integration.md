@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- iOS 13.0+
+- iOS 15.0+
 - Xcode 16.3+ (Swift Package Manager integration uses [package traits](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0450-swiftpm-package-traits.md), which require the Swift 6.1 toolchain)
 - [PowerAuth Mobile SDK](https://github.com/wultra/powerauth-mobile-sdk) needs to be available in your project
 - [Enrollment Onboarding Server](https://developers.wultra.com/components/enrollment-server/develop/documentation/onboarding/index)
@@ -19,7 +19,7 @@ import PackageDescription
 let package = Package(
     name: "YourLibrary",
     platforms: [
-        .iOS(.v13)
+        .iOS(.v15)
     ],
     products: [
         .library(
