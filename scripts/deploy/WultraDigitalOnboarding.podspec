@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.source                = { :git => 'https://github.com/wultra/digital-onboarding-apple.git', :tag => s.version }
   # Deployment targets
   s.swift_version         = '5.9'
-  s.ios.deployment_target = '13.0'
+  s.ios.deployment_target = '15.0'
   
   s.source_files          = 'Sources/**/*.swift'
   s.dependency 'WultraPowerAuthNetworking', '~> 2.0'
