@@ -2,8 +2,6 @@
 
 ## TBA
 
-Suggested next version: `4.0.0` (breaking changes).
-
 - **⚠️ BREAKING**: Upgraded to **PowerAuth mobile SDK `2.1.x`** (patch releases of `2.1` are accepted, `2.2` is not). PowerAuth `2.1.x` requires iOS 15.0+. Requires a WultraPowerAuthNetworking release built on PowerAuth `2.1.x` (not yet released at the time of writing).
 - **⚠️ BREAKING**: Raised the minimum supported iOS version from 13 to 15 (required by the PowerAuth mobile SDK dependencies and Xcode 27).
 
