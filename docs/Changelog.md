@@ -3,6 +3,7 @@
 ## TBA
 
 - **⚠️ BREAKING**: Raised the minimum supported iOS version from 13 to 15 (required by the PowerAuth mobile SDK dependencies and Xcode 27).
+- **⚠️ BREAKING**: Upgraded to **PowerAuth mobile SDK `2.1.x`** and **WultraPowerAuthNetworking `3.0.x`**.
 
 ## 3.1.1
 
