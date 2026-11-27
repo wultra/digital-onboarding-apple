@@ -886,16 +886,16 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/wultra/powerauth-mobile-sdk.git";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = "2.0.0";
+				kind = upToNextMajorVersion;
+				minimumVersion = "2.1.0";
 			};
 		};
 		A3060C6A5F5ACE1043EB11ED /* XCRemoteSwiftPackageReference "networking-apple" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/wultra/networking-apple.git";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = "2.0.0";
+				kind = upToNextMajorVersion;
+				minimumVersion = "3.0.0";
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
